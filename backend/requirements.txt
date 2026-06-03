@@ -1,0 +1,7 @@
+requests
+fastapi
+uvicorn
+pydantic
+dotenv
+azure-storage-blob
+azure-storage-file-share
