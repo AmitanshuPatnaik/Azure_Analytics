@@ -15,11 +15,7 @@ async def login(credentials: LoginRequest):
             detail="Invalid email or password"
         )
 
-    token = create_access_token(
-        {
-            "email": credentials.email
-        }
-    )
+    token = create_access_token({"email": credentials.email})
 
     return {
         "access_token": token,
