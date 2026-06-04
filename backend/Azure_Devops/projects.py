@@ -4,6 +4,8 @@ import urllib3
 import os
 from dotenv import load_dotenv
 
+from Azure_Devops.error_handler import handle_error_response
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 load_dotenv()
@@ -20,11 +22,7 @@ def fetch_projects():
     response = requests.get(url,auth=auth,verify=False)
 
     if response.status_code != 200:
-        return {
-            "success": False,
-            "status_code": response.status_code,
-            "error": response.text
-        }
+        return handle_error_response(response, "Projects")
 
     projects = []
 

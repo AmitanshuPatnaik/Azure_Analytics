@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 
 from Azure_Devops.projects import fetch_projects
+from Azure_Devops.error_handler import handle_error_response
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -50,14 +51,10 @@ def fetch_work_items(project_name):
     url = f"{base_url}/{collection}/_apis/wit/workitems?ids={ids_string}&api-version=7.1"
     auth = HTTPBasicAuth("", pat)
 
-    response = requests.get(url, auth=auth)
+    response = requests.get(url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return {
-            "success": False,
-            "status_code": response.status_code,
-            "error": response.text
-        }
+        return handle_error_response(response, f"Work Items in project '{project_name}'")
 
     work_items = []
 

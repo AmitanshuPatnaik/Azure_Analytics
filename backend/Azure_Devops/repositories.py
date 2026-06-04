@@ -3,8 +3,10 @@ from requests.auth import HTTPBasicAuth
 import urllib3
 import os
 from dotenv import load_dotenv
+from fastapi.responses import JSONResponse
 
 from Azure_Devops.projects import fetch_projects
+from Azure_Devops.error_handler import handle_error_response
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,11 +25,7 @@ def fetch_repositories(project_name):
     response = requests.get(url=url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return {
-            "success" : False,
-            "status_code" : response.status_code,
-            "error" : response.text
-        }
+        return handle_error_response(response, "Repository")
     
     repos = []
 
@@ -41,31 +39,29 @@ def fetch_repositories(project_name):
         })
 
     return {
-        "success" : True,
-        "count" : len(repos),
-        "repositories" : repos
+        "count": len(repos),
+        "repositories": repos
     }
 
 
 def fetch_all_repositories():
     projects = fetch_projects()
 
-    if not projects["success"]:
+    if isinstance(projects, JSONResponse):
         return projects
 
     all_repos = []
 
     for project in projects["projects"]:
         project_name = project["name"]
-
         repos = fetch_repositories(project_name)
 
-        if repos["success"]:
-            for repo in repos["repositories"]:
-                all_repos.append(repo)
+        if isinstance(repos, JSONResponse):
+            continue
+
+        all_repos.extend(repos["repositories"])
 
     return {
-        "success": True,
         "count": len(all_repos),
         "repositories": all_repos
     }
@@ -77,11 +73,7 @@ def fetch_files(project_name, repo_name):
     response = requests.get(url=url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return {
-            "success" : True,
-            "status_code" : response.status_code,
-            "error" : response.text
-        }
+        return handle_error_response(response, f"Repository '{repo_name}'")
     
     return response.json()
 
@@ -92,11 +84,7 @@ def fetch_commits(project_name, repo_name):
     response = requests.get(url=url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return {
-            "success" : False,
-            "status_code" : response.status_code,
-            "error" : response.text
-        }
+        return handle_error_response(response, f"Repository '{repo_name}'")
     
     commits = []
 
@@ -122,11 +110,7 @@ def fetch_pushes(project_name, repo_name):
     response = requests.get(url=url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return {
-            "success" : False,
-            "status_code" : response.status_code,
-            "error" : response.text
-        }
+        return handle_error_response(response, f"Repository '{repo_name}'")
     
     pushes = []
 
@@ -151,11 +135,7 @@ def fetch_branches(project_name, repo_name):
     response = requests.get(url=url,auth=auth,verify=False)
 
     if response.status_code != 200:
-        return {
-            "success": False,
-            "status_code": response.status_code,
-            "error": response.text
-        }
+        return handle_error_response(response, f"Repository '{repo_name}'")
 
     branches = []
 
@@ -178,11 +158,7 @@ def fetch_tags(project_name, repo_name):
     response = requests.get(url=url,auth=auth,verify=False)
 
     if response.status_code != 200:
-        return {
-            "success": False,
-            "status_code": response.status_code,
-            "error": response.text
-        }
+        return handle_error_response(response, f"Repository '{repo_name}'")
 
     tags = []
 
@@ -205,11 +181,7 @@ def fetch_pull_requests(project_name, repo_name):
     response = requests.get(url=url,auth=auth,verify=False)
 
     if response.status_code != 200:
-        return {
-            "success": False,
-            "status_code": response.status_code,
-            "error": response.text
-        }
+        return handle_error_response(response, f"Repository '{repo_name}'")
 
     prs = []
 

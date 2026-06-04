@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 
 from Azure_Devops.projects import fetch_projects
+from Azure_Devops.error_handler import handle_error_response
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,11 +24,7 @@ def fetch_test_plans(project_name):
     response = requests.get(url=url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return {
-            "success" : False,
-            "status_code" : response.status_code,
-            "error" : response.text
-        }
+        return handle_error_response(response, f"Test Plans in project '{project_name}'")
     
     tps = []
 
