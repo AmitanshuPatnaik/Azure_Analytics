@@ -25,7 +25,8 @@ def fetch_pipelines(project_name):
         pipelines.append({
             "id" : pipeline["id"],
             "name" : pipeline["name"],
-            "folder" : pipeline.get("folder")
+            "folder" : pipeline.get("folder"),
+            "url" : pipeline["url"]
         })
 
     return {

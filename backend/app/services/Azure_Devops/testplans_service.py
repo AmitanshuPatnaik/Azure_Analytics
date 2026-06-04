@@ -25,9 +25,12 @@ def fetch_test_plans(project_name):
         tps.append({
             "id": tp["id"],
             "name": tp["name"],
+            "owner" : tp["owner"]["displayName"],
             "state": tp["state"],
             "areaPath": tp.get("areaPath"),
-            "iteration": tp.get("iteration")
+            "iteration": tp.get("iteration"),
+            "startDate" : tp["startDate"],
+            "endDate" : tp["endDate"]
         })
 
     return {
