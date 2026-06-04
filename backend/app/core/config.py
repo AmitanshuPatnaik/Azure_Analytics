@@ -6,3 +6,10 @@ with open("config.json", "r") as f:
 base_url = config["azure_devops_url"]
 collection = config["azure_collection_name"]
 pat = config["azure_pat"]
+
+email = config["email"]
+password = config["password"]
+
+secret = config["JWT_SECRET_KEY"]
+algorithm = config["JWT_ALGORITHM"]
+expiry = config["JWT_EXPIRATION_MINUTES"]

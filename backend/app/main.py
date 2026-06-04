@@ -7,6 +7,7 @@ from app.routes.pipelines_routes import router as pipelines_router
 from app.routes.projects_routes import router as projects_router
 from app.routes.repositories_routes import router as repositories_router
 from app.routes.testplans_routes import router as testplans_router
+from app.routes.auth_routes import router as auth_router
 
 app = FastAPI()
 
@@ -28,6 +29,8 @@ app.include_router(pipelines_router, prefix="/api")
 app.include_router(boards_router, prefix="/api")
 
 app.include_router(testplans_router, prefix="/api")
+
+app.include_router(auth_router)
 
 
 if __name__ == "__main__":
