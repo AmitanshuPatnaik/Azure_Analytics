@@ -13,3 +13,7 @@ password = config["password"]
 secret = config["JWT_SECRET_KEY"]
 algorithm = config["JWT_ALGORITHM"]
 expiry = config["JWT_EXPIRATION_MINUTES"]
+
+tenant_id = config["AZURE_TENANT_ID"]
+client_id = config["AZURE_CLIENT_ID"]
+client_secret = config["AZURE_CLIENT_SECRET"]
