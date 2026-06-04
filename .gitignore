@@ -6,3 +6,5 @@
 *.pyo
 *.pyd
 *.env
+
+*config.json

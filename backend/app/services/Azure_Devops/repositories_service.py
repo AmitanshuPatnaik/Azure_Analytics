@@ -1,31 +1,24 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
-import os
-from dotenv import load_dotenv
 from fastapi.responses import JSONResponse
 
-from Azure_Devops.projects import fetch_projects
-from Azure_Devops.error_handler import handle_error_response
+from app.core.config import base_url, collection, pat
+from app.services.Azure_Devops.projects_service import fetch_projects
+from app.exceptions.handler import handle_error_response
+from app.core.auth import auth
+from app.core.constants import API_VERSION, RESOURCE_REPOSITORY
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-load_dotenv()
-
-base_url = os.getenv("AZURE_DEVOPS_URL")
-collection = os.getenv("AZURE_COLLECTION_NAME")
-pat = os.getenv("AZURE_PAT")
-
-auth = HTTPBasicAuth("", pat)
-
 
 def fetch_repositories(project_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories?api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories?api-version={API_VERSION}"
 
     response = requests.get(url=url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return handle_error_response(response, "Repository")
+        return handle_error_response(response, f"{RESOURCE_REPOSITORY}")
     
     repos = []
 
@@ -68,7 +61,7 @@ def fetch_all_repositories():
 
 
 def fetch_files(project_name, repo_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/items?scopePath=/&recursionLevel=Full&api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/items?scopePath=/&recursionLevel=Full&api-version={API_VERSION}"
 
     response = requests.get(url=url, auth=auth, verify=False)
 
@@ -79,7 +72,7 @@ def fetch_files(project_name, repo_name):
 
 
 def fetch_commits(project_name, repo_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/commits?api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/commits?api-version={API_VERSION}"
 
     response = requests.get(url=url, auth=auth, verify=False)
 
@@ -105,7 +98,7 @@ def fetch_commits(project_name, repo_name):
 
 
 def fetch_pushes(project_name, repo_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/pushes?api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/pushes?api-version={API_VERSION}"
 
     response = requests.get(url=url, auth=auth, verify=False)
 
@@ -130,7 +123,7 @@ def fetch_pushes(project_name, repo_name):
 
 def fetch_branches(project_name, repo_name):
 
-    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/refs?filter=heads/&api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/refs?filter=heads/&api-version={API_VERSION}"
 
     response = requests.get(url=url,auth=auth,verify=False)
 
@@ -153,7 +146,7 @@ def fetch_branches(project_name, repo_name):
 
 
 def fetch_tags(project_name, repo_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/refs?filter=tags/&api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/refs?filter=tags/&api-version={API_VERSION}"
 
     response = requests.get(url=url,auth=auth,verify=False)
 
@@ -176,7 +169,7 @@ def fetch_tags(project_name, repo_name):
 
 
 def fetch_pull_requests(project_name, repo_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/pullrequests?searchCriteria.status=all&api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/pullrequests?searchCriteria.status=all&api-version={API_VERSION}"
 
     response = requests.get(url=url,auth=auth,verify=False)
 

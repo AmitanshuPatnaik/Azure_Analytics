@@ -1,30 +1,23 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
-import os
-from dotenv import load_dotenv
 
-from Azure_Devops.projects import fetch_projects
-from Azure_Devops.error_handler import handle_error_response
+from app.core.config import base_url, collection, pat
+from app.services.Azure_Devops.projects_service import fetch_projects
+from app.exceptions.handler import handle_error_response
+from app.core.auth import auth
+from app.core.constants import API_VERSION, RESOURCE_TESTPLAN
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-load_dotenv()
-
-base_url = os.getenv("AZURE_DEVOPS_URL")
-collection = os.getenv("AZURE_COLLECTION_NAME")
-pat = os.getenv("AZURE_PAT")
-
-auth = HTTPBasicAuth("", pat)
-
 
 def fetch_test_plans(project_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/testplan/plans/?api-version=7.1-preview.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/testplan/plans/?api-version={API_VERSION}-preview.1"
 
     response = requests.get(url=url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return handle_error_response(response, f"Test Plans in project '{project_name}'")
+        return handle_error_response(response, f"{RESOURCE_TESTPLAN} in project '{project_name}'")
     
     tps = []
 

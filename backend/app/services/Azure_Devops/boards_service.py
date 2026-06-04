@@ -1,25 +1,18 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
-import os
-from dotenv import load_dotenv
 
-from Azure_Devops.projects import fetch_projects
-from Azure_Devops.error_handler import handle_error_response
+from app.core.config import base_url, collection, pat
+from app.services.Azure_Devops.projects_service import fetch_projects
+from app.exceptions.handler import handle_error_response
+from app.core.auth import auth
+from app.core.constants import API_VERSION, RESOURCE_WORKITEM
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-load_dotenv()
-
-base_url = os.getenv("AZURE_DEVOPS_URL")
-collection = os.getenv("AZURE_COLLECTION_NAME")
-pat = os.getenv("AZURE_PAT")
-
-auth = HTTPBasicAuth("", pat)
-
 
 def fetch_work_item_ids(project_name):
-    url = f"{base_url}/{collection}/{project_name}/_apis/wit/wiql?api-version=7.1"
+    url = f"{base_url}/{collection}/{project_name}/_apis/wit/wiql?api-version={API_VERSION}"
 
     query = {
         "query": """
@@ -48,13 +41,13 @@ def fetch_work_items(project_name):
 
     ids_string = ",".join(map(str, ids[:100]))
 
-    url = f"{base_url}/{collection}/_apis/wit/workitems?ids={ids_string}&api-version=7.1"
+    url = f"{base_url}/{collection}/_apis/wit/workitems?ids={ids_string}&api-version={API_VERSION}"
     auth = HTTPBasicAuth("", pat)
 
     response = requests.get(url, auth=auth, verify=False)
 
     if response.status_code != 200:
-        return handle_error_response(response, f"Work Items in project '{project_name}'")
+        return handle_error_response(response, f"{RESOURCE_WORKITEM} in project '{project_name}'")
 
     work_items = []
 
