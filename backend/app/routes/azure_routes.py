@@ -40,7 +40,7 @@ async def get_yearly_costs(subscription_id: str):
 
 
 @router.get("/costs/{subscription_id}/resourcegroups")
-async def get_rg_costs(subscription_id: str):
+async def get_resource_group_costs(subscription_id: str):
     return fetch_resource_group_costs(subscription_id)
 
 
