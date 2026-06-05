@@ -10,6 +10,7 @@ from app.routes.testplans_routes import router as testplans_router
 from app.routes.auth_routes import router as auth_router
 from app.routes.azure_routes import router as azure_router
 
+
 app = FastAPI()
 
 app.add_middleware(
