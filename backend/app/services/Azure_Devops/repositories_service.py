@@ -183,13 +183,13 @@ def fetch_pull_requests(project_name, repo_name):
             "pullRequestId": pr["pullRequestId"],
             "title": pr["title"],
             "status": pr["status"],
-            "description" : pr["description"],
+            "description" : pr.get("description"),
             "createdBy": pr["createdBy"]["displayName"],
             "creationDate": pr["creationDate"],
-            "closedDate" : pr["closedDate"],
+            "closedDate" : pr.get("closedDate"),
             "sourceBranch": pr["sourceRefName"],
             "targetBranch": pr["targetRefName"],
-            "mergeStatus" : pr["mergeStatus"]
+            "mergeStatus" : pr.get("mergeStatus")
         })
 
     return {

@@ -3,12 +3,13 @@ import time
 from fastapi.responses import JSONResponse
 
 from app.services.Azure.azure_auth import get_azure_token
+from app.core.config import azure_cost_base_url
 
 
 def fetch_costs(subscription_id):
     token = get_azure_token()
 
-    url = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
+    url = f"{azure_cost_base_url}/{subscription_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
 
     headers = {
         "Authorization": f"Bearer {token}",

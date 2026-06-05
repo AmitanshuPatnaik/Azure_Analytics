@@ -62,7 +62,8 @@ def fetch_work_items(project_name):
             "assignedTo": fields.get("System.AssignedTo", {}).get("displayName")
                 if isinstance(fields.get("System.AssignedTo"),dict)
                 else None,
-            "createdDate": fields.get("System.CreatedDate")
+            "createdDate": fields.get("System.CreatedDate"),
+            "description" : fields.get("System.Description")
         })
 
     return {

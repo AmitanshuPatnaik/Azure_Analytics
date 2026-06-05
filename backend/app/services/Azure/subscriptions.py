@@ -1,6 +1,7 @@
 import requests
 
 from app.services.Azure.azure_auth import get_azure_token
+from app.core.config import azure_management_base_url
 
 
 def fetch_subscriptions():
@@ -10,7 +11,7 @@ def fetch_subscriptions():
         "Authorization": f"Bearer {token}"
     }
 
-    url = "https://management.azure.com/subscriptions?api-version=2020-01-01"
+    url = f"{azure_management_base_url}?api-version=2020-01-01"
 
     response = requests.get(url, headers=headers)
 

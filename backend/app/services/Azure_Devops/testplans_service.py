@@ -23,14 +23,14 @@ def fetch_test_plans(project_name):
 
     for tp in response.json()["value"]:
         tps.append({
-            "id": tp["id"],
-            "name": tp["name"],
-            "owner" : tp["owner"]["displayName"],
-            "state": tp["state"],
+            "id": tp.get("id"),
+            "name": tp.get("name"),
+            "owner": tp.get("owner", {}).get("displayName", "Unassigned") if tp.get("owner") else "Unassigned",
+            "state": tp.get("state"),
             "areaPath": tp.get("areaPath"),
             "iteration": tp.get("iteration"),
-            "startDate" : tp["startDate"],
-            "endDate" : tp["endDate"]
+            "startDate" : tp.get("startDate"),
+            "endDate" : tp.get("endDate")
         })
 
     return {
