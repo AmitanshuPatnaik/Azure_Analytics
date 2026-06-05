@@ -1,50 +1,36 @@
+from datetime import datetime
 import requests
 import time
+
 from fastapi.responses import JSONResponse
 
 from app.services.Azure.azure_auth import get_azure_token
-from app.core.config import azure_cost_base_url
 
 
-def fetch_costs(subscription_id):
+def execute_cost_query(subscription_id, payload):
+
     token = get_azure_token()
 
-    url = f"{azure_cost_base_url}/{subscription_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
+    url = (
+        f"https://management.azure.com/"
+        f"subscriptions/{subscription_id}"
+        f"/providers/Microsoft.CostManagement/query"
+        f"?api-version=2023-03-01"
+    )
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "MonthToDate",
-        "dataset": {
-            "granularity": "Daily",
-            "aggregation": {
-                "totalCost": {
-                    "name": "Cost",
-                    "function": "Sum"
-                }
-            }
-        }
-    }
-
     for attempt in range(3):
-        response = requests.post(url, headers=headers,json=payload)
 
-        """
-        print("\nCOST API")
-        print("Status Code:", response.status_code)
+        response = requests.post(
+            url=url,
+            headers=headers,
+            json=payload
+        )
 
-        print("\nHeaders:")
-        for key, value in response.headers.items():
-            print(f"{key}: {value}")
-
-        print("\nBody:")
-        print(response.text)
-        """
-        
         if response.status_code == 200:
             return response.json()
 
@@ -62,4 +48,218 @@ def fetch_costs(subscription_id):
         content={
             "error": "Azure Cost Management rate limit exceeded"
         }
+    )
+
+
+def fetch_total_cost(subscription_id):
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "MonthToDate",
+        "dataset": {
+            "granularity": "None",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            }
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
+    )
+
+
+def fetch_daily_costs(subscription_id):
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "MonthToDate",
+        "dataset": {
+            "granularity": "Daily",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            }
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
+    )
+
+
+def fetch_monthly_costs(subscription_id):
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "TheLast6Months",
+        "dataset": {
+            "granularity": "Monthly",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            }
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
+    )
+
+
+def fetch_yearly_costs(subscription_id):
+
+    current_year = datetime.now().year
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "Custom",
+        "timePeriod": {
+            "from": f"{current_year}-01-01T00:00:00Z",
+            "to": datetime.utcnow().strftime(
+                "%Y-%m-%dT23:59:59Z"
+            )
+        },
+        "dataset": {
+            "granularity": "Monthly",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            }
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
+    )
+
+
+def fetch_resource_group_costs(subscription_id):
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "MonthToDate",
+        "dataset": {
+            "granularity": "None",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            },
+            "grouping": [
+                {
+                    "type": "Dimension",
+                    "name": "ResourceGroup"
+                }
+            ]
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
+    )
+
+
+def fetch_service_costs(subscription_id):
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "MonthToDate",
+        "dataset": {
+            "granularity": "None",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            },
+            "grouping": [
+                {
+                    "type": "Dimension",
+                    "name": "ServiceName"
+                }
+            ]
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
+    )
+
+
+def fetch_resource_costs(subscription_id):
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "MonthToDate",
+        "dataset": {
+            "granularity": "None",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            },
+            "grouping": [
+                {
+                    "type": "Dimension",
+                    "name": "ResourceId"
+                }
+            ]
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
+    )
+
+
+def fetch_top_resources(subscription_id):
+
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "MonthToDate",
+        "dataset": {
+            "granularity": "None",
+            "aggregation": {
+                "totalCost": {
+                    "name": "Cost",
+                    "function": "Sum"
+                }
+            },
+            "grouping": [
+                {
+                    "type": "Dimension",
+                    "name": "ResourceId"
+                }
+            ],
+            "sorting": [
+                {
+                    "direction": "descending",
+                    "name": "Cost"
+                }
+            ]
+        }
+    }
+
+    return execute_cost_query(
+        subscription_id,
+        payload
     )

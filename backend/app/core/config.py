@@ -17,5 +17,6 @@ expiry = config["JWT_EXPIRATION_MINUTES"]
 tenant_id = config["AZURE_TENANT_ID"]
 client_id = config["AZURE_CLIENT_ID"]
 client_secret = config["AZURE_CLIENT_SECRET"]
+
 azure_cost_base_url = config["azure_cost_base_url"]
 azure_management_base_url = config["azure_management_base_url"]
