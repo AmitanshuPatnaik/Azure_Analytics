@@ -1,11 +1,10 @@
 from datetime import datetime
 import requests
 import time
-
 from fastapi.responses import JSONResponse
 
 from app.services.Azure.azure_auth import get_azure_token
-
+from app.core.config import azure_cost_base_url
 
 def execute_cost_query(subscription_id, payload):
 
@@ -263,3 +262,22 @@ def fetch_top_resources(subscription_id):
         subscription_id,
         payload
     )
+
+def fetch_budgets(subscription_id):
+    token = get_azure_token()
+
+    url = f"{azure_cost_base_url}/{subscription_id}/providers/Microsoft.Consumption/budgets?api-version=2024-08-01"
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    response = requests.get(url,headers=headers)
+
+    if response.status_code != 200:
+        return JSONResponse(
+            status_code=response.status_code,
+            content=response.json()
+        )
+
+    return response.json()

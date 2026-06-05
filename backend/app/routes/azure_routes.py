@@ -9,7 +9,8 @@ from app.services.Azure.costs import (
     fetch_resource_group_costs,
     fetch_service_costs,
     fetch_resource_costs,
-    fetch_top_resources
+    fetch_top_resources,
+    fetch_budgets
 )
 
 router = APIRouter(prefix="/azure", tags=["Azure"])
@@ -56,3 +57,7 @@ async def get_resource_costs(subscription_id: str):
 @router.get("/costs/{subscription_id}/top-resources")
 async def get_top_resources(subscription_id: str):
     return fetch_top_resources(subscription_id)
+
+@router.get("/costs/{subscription_id}/budgets")
+async def get_budgets(subscription_id: str):
+    return fetch_budgets(subscription_id)
