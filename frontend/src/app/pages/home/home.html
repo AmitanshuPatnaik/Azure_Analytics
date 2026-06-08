@@ -38,18 +38,16 @@
   </div>
 
   <div class="card">
-    <h3>Monthly Cost</h3>
-    @if (trendDataError) {
-      <div class="error-inline">{{ trendDataError }}</div>
+    <h3>Yearly Cost</h3>
+    @if (yearlyCostError) {
+      <div class="error-inline">{{ yearlyCostError }}</div>
+    } @else if (isLoadingYearlyCost) {
+      <div class="error-inline">Loading...</div>
     } @else {
-      <select class="month-dropdown" (change)="onTrendMonthChange($event)">
-        @for (m of trendMonths; track m) {
-          <option [value]="m" [selected]="m === selectedTrendMonth">{{ m }}</option>
-        }
-      </select>
-      <h2>₹{{ monthlyCostTotal | number:'1.2-2' }}</h2>
+      <h2>₹{{ yearlyCost | number:'1.2-2' }}</h2>
     }
   </div>
+
 
 </div>
 

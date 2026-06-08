@@ -58,6 +58,11 @@ export class Home implements OnInit {
   serviceCosts: any[] = [];
   isLoadingAzure = false;
 
+  // Yearly cost state
+  yearlyCost = 0;
+  yearlyCostError: string | null = null;
+  isLoadingYearlyCost = false;
+
   // New properties for dynamic bindings
   monthlyCostTotal = 0;
   activePipelinesCount = 0;
@@ -236,13 +241,14 @@ export class Home implements OnInit {
         } else if (res && Array.isArray(res) && res.length > 0) {
           subs = res;
         }
-        
+
         if (subs && subs.length > 0) {
           this.subscriptions = subs;
           // Auto-select first subscription to load Azure costs immediately on page open
           if (!this.selectedSubscriptionId) {
             this.selectedSubscriptionId = subs[0].subscriptionId;
             this.loadSubscriptionMetrics(this.selectedSubscriptionId);
+            this.loadYearlyCost(this.selectedSubscriptionId);
           }
         } else {
           this.subscriptions = [];
@@ -452,6 +458,30 @@ export class Home implements OnInit {
         this.topResources = [];
         this.serviceCosts = [];
         this.azureError = err.error?.detail || err.error?.message || err.message || `Failed to load Azure subscription metrics for ${subId}.`;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadYearlyCost(subId: string) {
+    this.isLoadingYearlyCost = true;
+    this.yearlyCostError = null;
+    this.azureApi.getYearlyCosts(subId).subscribe({
+      next: (res: any) => {
+        const rows = res?.rows || res?.yearly_costs || [];
+        if (rows && rows.length > 0 && rows[0].length > 0) {
+          // Sum all rows to get the full year-to-date total
+          this.yearlyCost = rows.reduce((sum: number, row: any[]) => sum + (row[0] || 0), 0);
+        } else {
+          this.yearlyCost = 0;
+        }
+        this.isLoadingYearlyCost = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.yearlyCost = 0;
+        this.yearlyCostError = err.error?.detail || err.error?.message || err.message || 'Failed to load yearly cost.';
+        this.isLoadingYearlyCost = false;
         this.cdr.detectChanges();
       }
     });
