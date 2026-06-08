@@ -52,15 +52,15 @@ export class Home implements OnInit {
 
   // Azure state
   selectedSubscriptionId = '';
-  totalCost = 42860;
+  totalCost = 0;
   budgets: any[] = [];
   topResources: any[] = [];
   serviceCosts: any[] = [];
   isLoadingAzure = false;
 
   // New properties for dynamic bindings
-  monthlyCostTotal = 42860;
-  activePipelinesCount = 18;
+  monthlyCostTotal = 0;
+  activePipelinesCount = 0;
   projectDistribution: any[] = [];
   pieChartStyle = '';
   trendData: any[] = [];
@@ -84,69 +84,18 @@ export class Home implements OnInit {
   repoPushes: any[] = [];
   isLoadingRepoDetails = false;
 
-  // Fallback structures for empty check
-  private mockServicesStatus = [
-    { service: 'Azure DevOps', status: 'Healthy' },
-    { service: 'CI/CD Pipelines', status: 'Healthy' },
-    { service: 'Azure Monitor', status: 'Warning' },
-    { service: 'Azure Storage', status: 'Healthy' },
-    { service: 'AKS Cluster', status: 'Healthy' }
-  ];
-
-  // Mock datasets for fallbacks
-  private mockProjects = [
-    { id: 'PROJ-001', name: 'CI/CD Automation Platform', description: 'End-to-end CI/CD automation platform', state: 'Active', visibility: 'Private', url: 'https://dev.azure.com/project1' },
-    { id: 'PROJ-002', name: 'Infrastructure Monitoring', description: 'Infrastructure monitoring system', state: 'Active', visibility: 'Private', url: 'https://dev.azure.com/project2' },
-    { id: 'PROJ-003', name: 'Cloud Cost Optimizer', description: 'Cloud cost optimization solution', state: 'Active', visibility: 'Public', url: 'https://dev.azure.com/project3' },
-    { id: 'PROJ-004', name: 'Release Management Portal', description: 'Release management platform', state: 'Active', visibility: 'Private', url: 'https://dev.azure.com/project4' },
-    { id: 'PROJ-005', name: 'Log Analytics Dashboard', description: 'Log analytics system', state: 'Active', visibility: 'Private', url: 'https://dev.azure.com/project5' },
-    { id: 'PROJ-006', name: 'Container Deployment Manager', description: 'Kubernetes deployment manager', state: 'Critical', visibility: 'Private', url: 'https://dev.azure.com/project6' }
-  ];
-
-  private mockRepos = [
-    { id: 'repo-1', name: 'frontend-ui', project: 'CI/CD Automation Platform', defaultBranch: 'refs/heads/main', remoteUrl: 'https://dev.azure.com/project1/frontend-ui' },
-    { id: 'repo-2', name: 'backend-api', project: 'CI/CD Automation Platform', defaultBranch: 'refs/heads/main', remoteUrl: 'https://dev.azure.com/project1/backend-api' },
-    { id: 'repo-3', name: 'devops-scripts', project: 'Infrastructure Monitoring', defaultBranch: 'refs/heads/main', remoteUrl: 'https://dev.azure.com/project2/devops-scripts' }
-  ];
-
-  private mockPipelines = [
-    { id: 'pipe-1', name: 'Frontend Build', folder: '/CI-CD', url: 'https://dev.azure.com/pipelines/1' },
-    { id: 'pipe-2', name: 'Backend Deploy', folder: '/Deployments', url: 'https://dev.azure.com/pipelines/2' },
-    { id: 'pipe-3', name: 'Production Release', folder: '/Releases', url: 'https://dev.azure.com/pipelines/3' }
-  ];
-
-  private mockWorkItems = [
-    { id: 101, title: 'User Authentication Module', type: 'Feature', state: 'Completed', assignedTo: 'John Doe' },
-    { id: 102, title: 'UI Enhancement', type: 'User Story', state: 'In Progress', assignedTo: 'Jane Smith' },
-    { id: 103, title: 'API Integration', type: 'Task', state: 'Pending', assignedTo: 'Alex Johnson' }
-  ];
-
-  private mockTestPlans = [
-    { id: 201, name: 'Login Testing', owner: 'Jane Smith', state: 'Passed', startDate: '2026-06-01', endDate: '2026-06-03' },
-    { id: 202, name: 'API Testing', owner: 'John Doe', state: 'Passed', startDate: '2026-06-02', endDate: '2026-06-04' },
-    { id: 203, name: 'Performance Testing', owner: 'Sarah Connor', state: 'Running', startDate: '2026-06-05', endDate: '2026-06-10' }
-  ];
-
-  private mockSubs = [
-    { subscriptionId: 'sub-dev-01', displayName: 'DevOps-Development-Subscription' },
-    { subscriptionId: 'sub-prod-02', displayName: 'DevOps-Production-Subscription' }
-  ];
-
-  // Mock repo details
-  private mockCommits = [
-    { commitId: 'c1', author: 'John Doe', date: '2026-06-08', comment: 'Initial commit' },
-    { commitId: 'c2', author: 'Jane Smith', date: '2026-06-08', comment: 'Update README' }
-  ];
-  private mockPRs = [
-    { pullRequestId: 1, title: 'Feature: User Login', createdBy: 'Jane Smith', creationDate: '2026-06-07', status: 'Active' }
-  ];
-  private mockBranches = [
-    { name: 'main', objectId: 'b1' },
-    { name: 'develop', objectId: 'b2' }
-  ];
-  private mockPushes = [
-    { pushId: 1, date: '2026-06-08', pushedBy: 'John Doe' }
-  ];
+  // Error state properties for UI feedback
+  projectsError: string | null = null;
+  reposError: string | null = null;
+  subscriptionsError: string | null = null;
+  pipelinesError: string | null = null;
+  workItemsError: string | null = null;
+  testPlansError: string | null = null;
+  azureError: string | null = null;
+  trendDataError: string | null = null;
+  servicesStatusError: string | null = null;
+  activePipelinesError: string | null = null;
+  repoDetailsError: string | null = null;
 
   constructor(
     public dashboardService: DashboardService,
@@ -203,15 +152,21 @@ export class Home implements OnInit {
 
   loadProjects() {
     this.isLoadingProjects = true;
+    this.projectsError = null;
     this.projectsApi.getProjects().subscribe({
       next: (res: any) => {
-        if (res && res.success && res.projects && res.projects.length > 0) {
-          this.projects = res.projects;
-        } else if (res && res.projects && res.projects.length > 0) {
-          this.projects = res.projects;
+        let projs = [];
+        if (res && res.success && res.projects) {
+          projs = res.projects;
+        } else if (res && res.projects) {
+          projs = res.projects;
+        }
+
+        if (projs && projs.length > 0) {
+          this.projects = projs;
         } else {
-          console.warn('Backend returned empty projects list, using fallbacks');
-          this.projects = this.mockProjects;
+          this.projects = [];
+          this.projectsError = res?.message || 'No projects returned from backend.';
         }
         this.isLoadingProjects = false;
 
@@ -235,18 +190,10 @@ export class Home implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Could not fetch projects from backend, using fallbacks', err);
-        this.projects = this.mockProjects;
+        console.warn('Could not fetch projects from backend', err);
+        this.projects = [];
+        this.projectsError = err.error?.detail || err.error?.message || err.message || 'Failed to load projects from backend.';
         this.isLoadingProjects = false;
-        if (this.projects.length > 0) {
-          const firstProjName = this.projects[0].name;
-          this.selectedPipelineProject = firstProjName;
-          this.selectedBoardProject = firstProjName;
-          this.selectedTestPlanProject = firstProjName;
-          this.loadPipelines(firstProjName);
-          this.loadWorkItems(firstProjName);
-          this.loadTestPlans(firstProjName);
-        }
         this.calculateProjectDistribution();
         this.cdr.detectChanges();
       }
@@ -255,21 +202,23 @@ export class Home implements OnInit {
 
   loadRepositories() {
     this.isLoadingRepos = true;
+    this.reposError = null;
     this.reposApi.getAllRepositories().subscribe({
       next: (res: any) => {
         if (res && res.repositories && res.repositories.length > 0) {
           this.repositories = res.repositories;
         } else {
-          console.warn('Backend returned empty repositories list, using fallbacks');
-          this.repositories = this.mockRepos;
+          this.repositories = [];
+          this.reposError = 'No repositories found on backend.';
         }
         this.isLoadingRepos = false;
         this.calculateProjectDistribution();
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Could not fetch repositories from backend, using fallbacks', err);
-        this.repositories = this.mockRepos;
+        console.warn('Could not fetch repositories from backend', err);
+        this.repositories = [];
+        this.reposError = err.error?.detail || err.error?.message || err.message || 'Failed to load repositories.';
         this.isLoadingRepos = false;
         this.calculateProjectDistribution();
         this.cdr.detectChanges();
@@ -278,6 +227,7 @@ export class Home implements OnInit {
   }
 
   loadSubscriptions() {
+    this.subscriptionsError = null;
     this.azureApi.getSubscriptions().subscribe({
       next: (res: any) => {
         let subs = [];
@@ -285,48 +235,55 @@ export class Home implements OnInit {
           subs = res.subscriptions;
         } else if (res && Array.isArray(res) && res.length > 0) {
           subs = res;
-        } else {
-          subs = this.mockSubs;
         }
-        this.subscriptions = subs;
-
-        // Auto-select first subscription to load Azure costs immediately on page open
-        if (subs.length > 0 && !this.selectedSubscriptionId) {
-          this.selectedSubscriptionId = subs[0].subscriptionId;
-          this.loadSubscriptionMetrics(this.selectedSubscriptionId);
+        
+        if (subs && subs.length > 0) {
+          this.subscriptions = subs;
+          // Auto-select first subscription to load Azure costs immediately on page open
+          if (!this.selectedSubscriptionId) {
+            this.selectedSubscriptionId = subs[0].subscriptionId;
+            this.loadSubscriptionMetrics(this.selectedSubscriptionId);
+          }
+        } else {
+          this.subscriptions = [];
+          this.subscriptionsError = 'No Azure subscriptions found.';
         }
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Could not fetch Azure subscriptions, using fallbacks', err);
-        this.subscriptions = this.mockSubs;
-        if (this.mockSubs.length > 0 && !this.selectedSubscriptionId) {
-          this.selectedSubscriptionId = this.mockSubs[0].subscriptionId;
-          this.loadSubscriptionMetrics(this.selectedSubscriptionId);
-        }
+        console.warn('Could not fetch Azure subscriptions', err);
+        this.subscriptions = [];
+        this.subscriptionsError = err.error?.detail || err.error?.message || err.message || 'Failed to load Azure subscriptions.';
         this.cdr.detectChanges();
       }
     });
   }
 
   loadActivePipelinesCount() {
+    this.activePipelinesError = null;
     this.pipelinesApi.getActivePipelinesCount().subscribe({
       next: (res: any) => {
-        if (res && res.count !== undefined) {
+        if (res && res.success && res.count !== undefined) {
           this.activePipelinesCount = res.count;
+        } else if (res && !res.success) {
+          this.activePipelinesCount = 0;
+          this.activePipelinesError = res?.message || 'Failed to get active pipelines count.';
         } else {
-          this.activePipelinesCount = 18;
+          this.activePipelinesCount = 0;
+          this.activePipelinesError = 'Invalid response format for active pipelines count.';
         }
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.activePipelinesCount = 18;
+      error: (err) => {
+        this.activePipelinesCount = 0;
+        this.activePipelinesError = err.error?.detail || err.error?.message || err.message || 'Failed to get active pipelines count.';
         this.cdr.detectChanges();
       }
     });
   }
 
   loadTrendData() {
+    this.trendDataError = null;
     this.azureApi.getCostTrend().subscribe({
       next: (res: any) => {
         console.log(res)
@@ -340,39 +297,41 @@ export class Home implements OnInit {
           this.monthlyCostTotal = latest.cost;
           
           this.generateChartPoints();
+        } else {
+          this.trendData = [];
+          this.trendMonths = [];
+          this.monthlyCostTotal = 0;
+          this.trendDataError = 'No cost trend data returned.';
         }
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.trendData = [
-          { month: 'January', cost: 15000 },
-          { month: 'February', cost: 22000 },
-          { month: 'March', cost: 28000 },
-          { month: 'April', cost: 31000 },
-          { month: 'May', cost: 38000 },
-          { month: 'June', cost: 42860 }
-        ];
-        this.trendMonths = this.trendData.map(d => d.month);
-        this.selectedTrendMonth = 'June';
-        this.monthlyCostTotal = 42860;
-        this.generateChartPoints();
+      error: (err) => {
+        console.warn('Failed to load cost trend data', err);
+        this.trendData = [];
+        this.trendMonths = [];
+        this.monthlyCostTotal = 0;
+        this.trendDataError = err.error?.detail || err.error?.message || err.message || 'Failed to load cost trend data.';
         this.cdr.detectChanges();
       }
     });
   }
 
   loadServicesStatus() {
+    this.servicesStatusError = null;
     this.statusApi.getServicesStatus().subscribe({
       next: (res: any) => {
         if (res && res.length > 0) {
           this.servicesStatus = res;
         } else {
-          this.servicesStatus = this.mockServicesStatus;
+          this.servicesStatus = [];
+          this.servicesStatusError = 'No services status data found.';
         }
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.servicesStatus = this.mockServicesStatus;
+      error: (err) => {
+        console.warn('Failed to load services status', err);
+        this.servicesStatus = [];
+        this.servicesStatusError = err.error?.detail || err.error?.message || err.message || 'Failed to load services status.';
         this.cdr.detectChanges();
       }
     });
@@ -380,19 +339,22 @@ export class Home implements OnInit {
 
   loadPipelines(projName: string) {
     this.isLoadingPipelines = true;
+    this.pipelinesError = null;
     this.pipelinesApi.getPipelines(projName).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.pipelines = res.pipelines || [];
         } else {
-          this.pipelines = this.mockPipelines;
+          this.pipelines = [];
+          this.pipelinesError = res?.message || 'Failed to load pipelines from backend.';
         }
         this.isLoadingPipelines = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn(`Could not load pipelines for project ${projName}, using fallbacks`, err);
-        this.pipelines = this.mockPipelines;
+        console.warn(`Could not load pipelines for project ${projName}`, err);
+        this.pipelines = [];
+        this.pipelinesError = err.error?.detail || err.error?.message || err.message || `Failed to load pipelines for project ${projName}.`;
         this.isLoadingPipelines = false;
         this.cdr.detectChanges();
       }
@@ -401,19 +363,22 @@ export class Home implements OnInit {
 
   loadWorkItems(projName: string) {
     this.isLoadingWorkItems = true;
+    this.workItemsError = null;
     this.boardsApi.getWorkItems(projName).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.workItems = res.workItems || [];
         } else {
-          this.workItems = this.mockWorkItems;
+          this.workItems = [];
+          this.workItemsError = res?.message || 'Failed to load work items from backend.';
         }
         this.isLoadingWorkItems = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn(`Could not load work items for project ${projName}, using fallbacks`, err);
-        this.workItems = this.mockWorkItems;
+        console.warn(`Could not load work items for project ${projName}`, err);
+        this.workItems = [];
+        this.workItemsError = err.error?.detail || err.error?.message || err.message || `Failed to load work items for project ${projName}.`;
         this.isLoadingWorkItems = false;
         this.cdr.detectChanges();
       }
@@ -422,19 +387,22 @@ export class Home implements OnInit {
 
   loadTestPlans(projName: string) {
     this.isLoadingTestPlans = true;
+    this.testPlansError = null;
     this.testPlansApi.getTestPlans(projName).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.testPlans = res.test_plans || [];
         } else {
-          this.testPlans = this.mockTestPlans;
+          this.testPlans = [];
+          this.testPlansError = res?.message || 'Failed to load test plans from backend.';
         }
         this.isLoadingTestPlans = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn(`Could not load test plans for project ${projName}, using fallbacks`, err);
-        this.testPlans = this.mockTestPlans;
+        console.warn(`Could not load test plans for project ${projName}`, err);
+        this.testPlans = [];
+        this.testPlansError = err.error?.detail || err.error?.message || err.message || `Failed to load test plans for project ${projName}.`;
         this.isLoadingTestPlans = false;
         this.cdr.detectChanges();
       }
@@ -443,6 +411,7 @@ export class Home implements OnInit {
 
   loadSubscriptionMetrics(subId: string) {
     this.isLoadingAzure = true;
+    this.azureError = null;
     
     const totalCost$ = this.azureApi.getTotalCost(subId);
     const budgets$ = this.azureApi.getBudgets(subId);
@@ -461,51 +430,28 @@ export class Home implements OnInit {
       })
     ).subscribe({
       next: (res: any) => {
-        this.totalCost = res.total && res.total.total_cost !== undefined ? res.total.total_cost : 42860;
+        this.totalCost = res.total && res.total.total_cost !== undefined ? res.total.total_cost : 0;
         
         this.budgets = res.budgets && res.budgets.budgets && res.budgets.budgets.length > 0
           ? res.budgets.budgets
-          : [
-              { name: 'Monthly-DevOps-Budget', amount: 50000, timeGrain: 'Monthly' }
-            ];
+          : [];
 
         this.topResources = res.topResources && res.topResources.top_resources && res.topResources.top_resources.length > 0
           ? res.topResources.top_resources
-          : [
-              [15400, 'AKS-Cluster-Primary'],
-              [9800, 'SQL-Database-Prod'],
-              [5400, 'VM-AppServer-01'],
-              [3100, 'StorageAccountLogs']
-            ];
+          : [];
 
         this.serviceCosts = res.services && res.services.services && res.services.services.length > 0
           ? res.services.services
-          : [
-              [18500, 'Virtual Machines'],
-              [15400, 'Azure Kubernetes Service'],
-              [6400, 'Azure SQL Database'],
-              [2560, 'Storage Accounts']
-            ];
+          : [];
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Error loading Azure subscription metrics, using fallbacks', err);
-        this.totalCost = 42860;
-        this.budgets = [
-          { name: 'Monthly-DevOps-Budget', amount: 50000, timeGrain: 'Monthly' }
-        ];
-        this.topResources = [
-          [15400, 'AKS-Cluster-Primary'],
-          [9800, 'SQL-Database-Prod'],
-          [5400, 'VM-AppServer-01'],
-          [3100, 'StorageAccountLogs']
-        ];
-        this.serviceCosts = [
-          [18500, 'Virtual Machines'],
-          [15400, 'Azure Kubernetes Service'],
-          [6400, 'Azure SQL Database'],
-          [2560, 'Storage Accounts']
-        ];
+        console.warn('Error loading Azure subscription metrics', err);
+        this.totalCost = 0;
+        this.budgets = [];
+        this.topResources = [];
+        this.serviceCosts = [];
+        this.azureError = err.error?.detail || err.error?.message || err.message || `Failed to load Azure subscription metrics for ${subId}.`;
         this.cdr.detectChanges();
       }
     });
@@ -790,7 +736,7 @@ onTrendMonthChange(event: Event): void {
     this.selectedSubscriptionId = subId;
 
     if (!subId) {
-      this.totalCost = 42860;
+      this.totalCost = 0;
       this.budgets = [];
       this.topResources = [];
       this.serviceCosts = [];
@@ -805,18 +751,22 @@ onTrendMonthChange(event: Event): void {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'commits';
     this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
     this.reposApi.getCommits(this.selectedProject.name, repo.name).subscribe({
       next: (res: any) => {
         if (res && res.success && res.commits) {
           this.repoCommits = res.commits;
         } else {
-          this.repoCommits = this.mockCommits;
+          this.repoCommits = [];
+          this.repoDetailsError = 'No commits found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.repoCommits = this.mockCommits;
+      error: (err) => {
+        console.warn('Failed to load commits', err);
+        this.repoCommits = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch commits.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       }
@@ -827,18 +777,22 @@ onTrendMonthChange(event: Event): void {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'prs';
     this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
     this.reposApi.getPullRequests(this.selectedProject.name, repo.name).subscribe({
       next: (res: any) => {
         if (res && res.success && res.pullRequests) {
           this.repoPRs = res.pullRequests;
         } else {
-          this.repoPRs = this.mockPRs;
+          this.repoPRs = [];
+          this.repoDetailsError = 'No pull requests found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.repoPRs = this.mockPRs;
+      error: (err) => {
+        console.warn('Failed to load pull requests', err);
+        this.repoPRs = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pull requests.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       }
@@ -849,18 +803,22 @@ onTrendMonthChange(event: Event): void {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'branches';
     this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
     this.reposApi.getBranches(this.selectedProject.name, repo.name).subscribe({
       next: (res: any) => {
         if (res && res.success && res.branches) {
           this.repoBranches = res.branches;
         } else {
-          this.repoBranches = this.mockBranches;
+          this.repoBranches = [];
+          this.repoDetailsError = 'No branches found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.repoBranches = this.mockBranches;
+      error: (err) => {
+        console.warn('Failed to load branches', err);
+        this.repoBranches = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch branches.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       }
@@ -871,18 +829,22 @@ onTrendMonthChange(event: Event): void {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'pushes';
     this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
     this.reposApi.getPushes(this.selectedProject.name, repo.name).subscribe({
       next: (res: any) => {
         if (res && res.success && res.pushes) {
           this.repoPushes = res.pushes;
         } else {
-          this.repoPushes = this.mockPushes;
+          this.repoPushes = [];
+          this.repoDetailsError = 'No pushes found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.repoPushes = this.mockPushes;
+      error: (err) => {
+        console.warn('Failed to load pushes', err);
+        this.repoPushes = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pushes.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
       }

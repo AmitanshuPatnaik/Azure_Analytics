@@ -13,7 +13,8 @@ import { CommonModule } from '@angular/common';
 })
 export class Login {
 
-  isLogin = true; // 🔥 controls Login vs Signup
+  isLogin = true;
+  errorMessage: string | null = null;
 
   constructor(
     private router: Router,
@@ -23,18 +24,20 @@ export class Login {
   // 🔁 TOGGLE LOGIN / SIGNUP
   toggleMode() {
     this.isLogin = !this.isLogin;
+    this.errorMessage = null;
   }
 
   // 🔐 FORM SUBMIT
   onSubmit(form: NgForm) {
 
     const data = form.value;
+    this.errorMessage = null;
 
     if (this.isLogin) {
 
       // LOGIN
       if (!data.email || !data.password) {
-        alert("Please enter email and password");
+        this.errorMessage = "Please enter email and password";
         return;
       }
 
@@ -46,7 +49,7 @@ export class Login {
         },
         error: (err) => {
           console.error("Login failed:", err);
-          alert("Login failed! Please check your credentials.");
+          this.errorMessage = err.error?.detail || err.error?.message || err.message || "Login failed! Please check your credentials.";
         }
       });
 
@@ -54,13 +57,13 @@ export class Login {
 
       // SIGNUP
       if (!data.name || !data.email || !data.password) {
-        alert("Please fill all fields");
+        this.errorMessage = "Please fill all fields";
         return;
       }
 
       console.log("Signup:", data);
 
-      alert("Signup successful! Now login.");
+      this.errorMessage = "Signup successful! Now login.";
 
       this.isLogin = true; // switch back to login
       form.reset();

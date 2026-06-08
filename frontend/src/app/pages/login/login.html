@@ -4,6 +4,12 @@
 
     <h2>{{ isLogin ? 'Login' : 'Sign Up' }}</h2>
 
+    @if (errorMessage) {
+      <div class="error-message" style="color: #b91c1c; background-color: #fef2f2; border: 1px solid #fee2e2; padding: 10px; border-radius: 6px; font-size: 14px; text-align: center; font-weight: 500; margin-bottom: 5px;">
+        {{ errorMessage }}
+      </div>
+    }
+
     <form #form="ngForm" (ngSubmit)="onSubmit(form)">
 
       <!-- NAME (ONLY FOR SIGNUP) -->

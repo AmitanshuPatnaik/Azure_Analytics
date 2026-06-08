@@ -1,6 +1,5 @@
 import requests
 import time
-from fastapi.responses import JSONResponse
 
 from app.services.Azure.azure_auth import get_azure_token
 from app.core.config import azure_cost_base_url
@@ -66,14 +65,14 @@ def fetch_total_cost(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
-    
+
     # Safely extract the raw cost number out of Azure's return matrix
-    total_amount = 42860 # Fallback default to keep UI secure
+    total_amount = 0
     if "properties" in result and "rows" in result["properties"]:
         rows = result["properties"]["rows"]
         if rows and len(rows) > 0 and len(rows[0]) > 0:
             total_amount = rows[0][0]
-            
+
     return {"success": True, "total_cost": total_amount, "amount": total_amount}
 
 # 2. Fetch costs broken down by Service categories (e.g., Storage, Virtual Machines)
@@ -204,13 +203,30 @@ def fetch_top_resources(subscription_id: str):
 
 # 9. Fetch active Cloud Spending budgets thresholds
 def fetch_budgets(subscription_id: str):
-    # Standard fallback placeholder array to protect UI bounds 
-    return {
-        "success": True,
-        "budgets": [
-            {"name": "Monthly-DevOps-Budget", "amount": 50000, "timeGrain": "Monthly"}
-        ]
-    }
+    try:
+        token = get_azure_token()
+        url = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.Consumption/budgets?api-version=2023-05-01"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            budgets = []
+            for b in data.get("value", []):
+                if not isinstance(b, dict):
+                    continue
+                props = b.get("properties", {})
+                budgets.append({
+                    "name": b.get("name"),
+                    "amount": props.get("amount"),
+                    "timeGrain": props.get("timeGrain")
+                })
+            return {"success": True, "budgets": budgets}
+        return {"success": True, "budgets": []}
+    except Exception as e:
+        return {"success": True, "budgets": [], "error": str(e)}
 
 
 def fetch_aggregated_monthly_costs():

@@ -29,7 +29,22 @@ def fetch_subscriptions():
                 "subscriptions": []
             }
 
-        return response.json()
+        data = response.json()
+        # Azure returns {"value": [...]} — normalize to {"subscriptions": [...]}
+        raw_subs = data.get("value", [])
+        subscriptions = []
+        for sub in raw_subs:
+            if not isinstance(sub, dict):
+                continue
+            subscriptions.append({
+                "subscriptionId": sub.get("subscriptionId"),
+                "displayName": sub.get("displayName"),
+                "state": sub.get("state")
+            })
+        return {
+            "success": True,
+            "subscriptions": subscriptions
+        }
     except Exception as e:
         return {
             "success": False,
