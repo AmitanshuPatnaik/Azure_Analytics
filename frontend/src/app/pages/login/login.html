@@ -1,0 +1,55 @@
+<div class="login-container">
+
+  <div class="login-card">
+
+    <h2>{{ isLogin ? 'Login' : 'Sign Up' }}</h2>
+
+    <form #form="ngForm" (ngSubmit)="onSubmit(form)">
+
+      <!-- NAME (ONLY FOR SIGNUP) -->
+      <input
+        *ngIf="!isLogin"
+        type="text"
+        name="name"
+        placeholder="Name"
+        ngModel
+        required
+      />
+
+      <!-- EMAIL -->
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        ngModel
+        required
+      />
+
+      <!-- PASSWORD -->
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        ngModel
+        required
+      />
+
+      <!-- BUTTON -->
+      <button type="submit">
+        {{ isLogin ? 'Login' : 'Sign Up' }}
+      </button>
+
+    </form>
+
+    <!-- TOGGLE LINK -->
+    <p class="toggle-text">
+      {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
+
+      <span (click)="toggleMode()">
+        {{ isLogin ? "Sign Up" : "Login" }}
+      </span>
+    </p>
+
+  </div>
+
+</div>

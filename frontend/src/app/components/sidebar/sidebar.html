@@ -1,0 +1,63 @@
+@if(dashboardService.sidebarVisible){
+
+<div class="sidebar">
+
+  @if(dashboardService.selectedModule === 'DevOps'){
+
+    <div
+      class="menu-item"
+      (click)="dashboardService.selectedPage='projects'">
+
+      📁 Projects
+
+    </div>
+
+    <div
+      class="menu-item"
+      (click)="dashboardService.selectedPage='repos'">
+
+      📦 Repositories
+
+    </div>
+
+    <div
+      class="menu-item"
+      (click)="dashboardService.selectedPage='pipelines'">
+
+      ⚙ Pipelines
+
+    </div>
+
+    <div
+      class="menu-item"
+      (click)="dashboardService.selectedPage='boards'">
+
+      📋 Boards
+
+    </div>
+
+    <div
+      class="menu-item"
+      (click)="dashboardService.selectedPage='testplans'">
+
+      🧪 Test Plans
+
+    </div>
+
+  }
+
+  @if(dashboardService.selectedModule === 'Azure'){
+
+    <div
+      class="menu-item"
+      (click)="dashboardService.selectedPage='azure'">
+
+      ☁ Azure Resources
+
+    </div>
+
+  }
+
+</div>
+
+}
