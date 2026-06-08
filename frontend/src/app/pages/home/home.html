@@ -1,0 +1,539 @@
+<div class="home-container">
+
+  <app-sidebar></app-sidebar>
+
+  <div class="dashboard-content">
+
+    @if(dashboardService.selectedPage === 'home'){
+
+<h1>CloudOps Analytics Dashboard</h1>
+
+<div class="cards">
+
+  <div class="card">
+    <h3>Total Repositories</h3>
+    <h2>{{ repositories.length }}</h2>
+  </div>
+
+  <div class="card">
+    <h3>Total Projects</h3>
+    <h2>{{ projects.length }}</h2>
+  </div>
+
+  <div class="card">
+    <h3>Active Pipelines</h3>
+    <h2>18</h2>
+  </div>
+
+  <div class="card">
+    <h3>Monthly Cost</h3>
+    <h2>$42,860</h2>
+  </div>
+
+</div>
+
+<div class="dashboard-row">
+
+  <!-- PIE CHART CARD -->
+  <div class="chart-card">
+
+    <div class="chart-header">
+      <h2>Project Repository Distribution</h2>
+
+      <!-- FIXED BUTTON (NO openModal ERROR) -->
+      <button
+        class="details-btn"
+        (click)="openProject(projects[0])">
+        View Details
+      </button>
+
+    </div>
+
+    <div class="pie-wrapper">
+
+      <div class="project-pie-chart"></div>
+
+      <div class="pie-legend">
+
+        <div><span class="dot p1"></span> CI/CD Automation Platform (3)</div>
+        <div><span class="dot p2"></span> Infrastructure Monitoring (2)</div>
+        <div><span class="dot p3"></span> Cloud Cost Optimizer (4)</div>
+        <div><span class="dot p4"></span> Release Management Portal (5)</div>
+        <div><span class="dot p5"></span> Log Analytics Dashboard (2)</div>
+        <div><span class="dot p6"></span> Container Deployment Manager (6)</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- COST TREND CARD -->
+  <div class="chart-card">
+
+    <div class="chart-header">
+      <h2>Cloud Cost Trend</h2>
+
+      <select class="month-dropdown">
+        <option>January</option>
+        <option>February</option>
+        <option>March</option>
+        <option>April</option>
+        <option>May</option>
+        <option>June</option>
+      </select>
+
+    </div>
+
+    <div class="graph-container">
+
+      <div class="y-axis">
+        <span>50K</span>
+        <span>40K</span>
+        <span>30K</span>
+        <span>20K</span>
+        <span>10K</span>
+      </div>
+
+      <div class="graph-area">
+
+        <div class="grid-line"></div>
+        <div class="grid-line"></div>
+        <div class="grid-line"></div>
+        <div class="grid-line"></div>
+
+        <svg width="100%" height="250">
+
+          <polyline
+            points="20,200 120,160 220,130 320,100 420,70 520,40"
+            fill="none"
+            stroke="#2563eb"
+            stroke-width="4">
+          </polyline>
+
+          <circle cx="20" cy="200" r="5" fill="#2563eb"/>
+          <circle cx="120" cy="160" r="5" fill="#2563eb"/>
+          <circle cx="220" cy="130" r="5" fill="#2563eb"/>
+          <circle cx="320" cy="100" r="5" fill="#2563eb"/>
+          <circle cx="420" cy="70" r="5" fill="#2563eb"/>
+          <circle cx="520" cy="40" r="5" fill="#2563eb"/>
+
+        </svg>
+
+        <div class="x-axis">
+          <span>Jan</span>
+          <span>Feb</span>
+          <span>Mar</span>
+          <span>Apr</span>
+          <span>May</span>
+          <span>Jun</span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="section">
+
+  <h2>DevOps Services Summary</h2>
+
+  <table>
+
+    <tr>
+      <th>Service</th>
+      <th>Status</th>
+    </tr>
+
+    <tr><td>Azure DevOps</td><td>Healthy</td></tr>
+    <tr><td>CI/CD Pipelines</td><td>Healthy</td></tr>
+    <tr><td>Azure Monitor</td><td>Warning</td></tr>
+    <tr><td>Azure Storage</td><td>Healthy</td></tr>
+    <tr><td>AKS Cluster</td><td>Healthy</td></tr>
+
+  </table>
+
+</div>
+
+}
+    @if(dashboardService.selectedPage === 'projects'){
+
+<h1>Projects</h1>
+
+<div class="cards">
+
+  @for (project of projects; track project.id) {
+    <div class="card">
+      <h3>{{ project.name }}</h3>
+      <hr>
+      <p><strong>State:</strong> {{ project.state || 'Active' }}</p>
+      <p><strong>Visibility:</strong> {{ project.visibility || 'Private' }}</p>
+      <button (click)="openProject(project)">View Project</button>
+    </div>
+  } @empty {
+    <div class="card" style="grid-column: span 3; text-align: center;">
+      <p>No projects found.</p>
+    </div>
+  }
+
+</div>
+
+}
+
+<!-- PROJECT MODAL -->
+@if(showProjectDetails){
+
+<div class="modal-overlay">
+
+  <div class="modal-card">
+
+    <div class="modal-header">
+      <h2>Project Details</h2>
+
+      <button class="close-btn" (click)="closeProjectModal()">✕</button>
+    </div>
+
+    <table>
+
+      <tr>
+        <th>Field</th>
+        <th>Value</th>
+      </tr>
+
+      <tr>
+        <td>ID</td>
+        <td>{{selectedProject?.id}}</td>
+      </tr>
+
+      <tr>
+        <td>Name</td>
+        <td>{{selectedProject?.name}}</td>
+      </tr>
+
+      <tr>
+        <td>Description</td>
+        <td>{{selectedProject?.description}}</td>
+      </tr>
+
+      <tr>
+        <td>State</td>
+        <td>{{selectedProject?.state}}</td>
+      </tr>
+
+      <tr>
+        <td>Visibility</td>
+        <td>{{selectedProject?.visibility}}</td>
+      </tr>
+
+      <tr>
+        <td>URL</td>
+        <td>{{selectedProject?.url}}</td>
+      </tr>
+
+    </table>
+
+  </div>
+
+</div>
+
+}
+
+    @if(dashboardService.selectedPage === 'repos'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Repositories</h1>
+        <div>
+          <label for="project-filter" style="margin-right: 10px; font-weight: 500;">Filter by Project:</label>
+          <select id="project-filter" class="month-dropdown" style="width: auto;" (change)="onProjectFilterChange($event)">
+            <option value="">All Projects</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <table>
+        <tr>
+          <th>Repository Name</th>
+          <th>Project</th>
+          <th>Default Branch</th>
+          <th>Remote URL</th>
+        </tr>
+
+        @for (repo of filteredRepositories; track repo.id) {
+          <tr>
+            <td>{{ repo.name }}</td>
+            <td>{{ repo.project }}</td>
+            <td>{{ repo.defaultBranch || 'N/A' }}</td>
+            <td>
+              @if (repo.remoteUrl) {
+                <a [href]="repo.remoteUrl" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">View Remote</a>
+              } @else {
+                N/A
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" style="text-align: center;">No repositories found.</td>
+          </tr>
+        }
+      </table>
+
+    }
+
+    @if(dashboardService.selectedPage === 'pipelines'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Pipelines</h1>
+        <div>
+          <label for="pipeline-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+          <select id="pipeline-proj" class="month-dropdown" style="width: auto;" (change)="onPipelineProjectChange($event)">
+            <option value="">Select Project</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (!selectedPipelineProject) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select a project to view its pipelines.</p>
+        </div>
+      } @else if (isLoadingPipelines) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading pipelines...</p>
+        </div>
+      } @else {
+        <table>
+          <tr>
+            <th>Pipeline Name</th>
+            <th>Folder</th>
+            <th>URL</th>
+          </tr>
+
+          @for (pipeline of pipelines; track pipeline.id) {
+            <tr>
+              <td>{{ pipeline.name }}</td>
+              <td>{{ pipeline.folder || '/' }}</td>
+              <td>
+                <a [href]="pipeline.url" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Open Pipeline</a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" style="text-align: center;">No pipelines found for this project.</td>
+            </tr>
+          }
+        </table>
+      }
+
+    }
+
+    @if(dashboardService.selectedPage === 'boards'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Boards (Work Items)</h1>
+        <div>
+          <label for="board-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+          <select id="board-proj" class="month-dropdown" style="width: auto;" (change)="onBoardProjectChange($event)">
+            <option value="">Select Project</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (!selectedBoardProject) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select a project to view work items.</p>
+        </div>
+      } @else if (isLoadingWorkItems) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading work items...</p>
+        </div>
+      } @else {
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Type</th>
+            <th>State</th>
+            <th>Assigned To</th>
+          </tr>
+
+          @for (item of workItems; track item.id) {
+            <tr>
+              <td>{{ item.id }}</td>
+              <td>{{ item.title }}</td>
+              <td>{{ item.type || 'N/A' }}</td>
+              <td>{{ item.state }}</td>
+              <td>{{ item.assignedTo || 'Unassigned' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" style="text-align: center;">No work items found for this project.</td>
+            </tr>
+          }
+        </table>
+      }
+
+    }
+
+    @if(dashboardService.selectedPage === 'testplans'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Test Plans</h1>
+        <div>
+          <label for="testplan-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+          <select id="testplan-proj" class="month-dropdown" style="width: auto;" (change)="onTestPlanProjectChange($event)">
+            <option value="">Select Project</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (!selectedTestPlanProject) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select a project to view test plans.</p>
+        </div>
+      } @else if (isLoadingTestPlans) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading test plans...</p>
+        </div>
+      } @else {
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>State</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+          </tr>
+
+          @for (plan of testPlans; track plan.id) {
+            <tr>
+              <td>{{ plan.id }}</td>
+              <td>{{ plan.name }}</td>
+              <td>{{ plan.owner }}</td>
+              <td>{{ plan.state }}</td>
+              <td>{{ plan.startDate || 'N/A' }}</td>
+              <td>{{ plan.endDate || 'N/A' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" style="text-align: center;">No test plans found for this project.</td>
+            </tr>
+          }
+        </table>
+      }
+
+    }
+
+    @if(dashboardService.selectedPage === 'azure'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Azure Resources & Cost Analytics</h1>
+        <div>
+          <label for="sub-select" style="margin-right: 10px; font-weight: 500;">Select Subscription:</label>
+          <select id="sub-select" class="month-dropdown" style="width: auto;" (change)="onSubscriptionChange($event)">
+            <option value="">Select Subscription</option>
+            @for (sub of subscriptions; track sub.subscriptionId) {
+              <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (!selectedSubscriptionId) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select an Azure subscription to view cost metrics.</p>
+        </div>
+      } @else if (isLoadingAzure) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading Azure cost metrics...</p>
+        </div>
+      } @else {
+        <div class="cards">
+
+          <div class="card">
+            <h3>MTD Total Cost</h3>
+            <h2>${{ totalCost | number:'1.2-2' }}</h2>
+          </div>
+
+          <div class="card">
+            <h3>Budgets set</h3>
+            @for (b of budgets; track b.name) {
+              <p style="margin: 5px 0;"><strong>{{ b.name }}:</strong> ${{ b.amount }} ({{ b.timeGrain }})</p>
+            } @empty {
+              <h2>No budget</h2>
+            }
+          </div>
+
+        </div>
+
+        <div class="dashboard-row" style="margin-top: 20px; display: flex; gap: 20px;">
+
+          <!-- TOP RESOURCES SPEND -->
+          <div class="chart-card" style="flex: 1;">
+            <div class="chart-header">
+              <h2>Top High-Spending Resources</h2>
+            </div>
+            <table>
+              <tr>
+                <th>Resource</th>
+                <th>Spend</th>
+              </tr>
+              @for (row of topResources; track row[1]) {
+                <tr>
+                  <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" [title]="row[1]">{{ row[1] }}</td>
+                  <td>${{ row[0] | number:'1.2-2' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="2" style="text-align: center;">No cost rows returned.</td>
+                </tr>
+              }
+            </table>
+          </div>
+
+          <!-- SERVICES SPEND -->
+          <div class="chart-card" style="flex: 1;">
+            <div class="chart-header">
+              <h2>Costs by Service</h2>
+            </div>
+            <table>
+              <tr>
+                <th>Service Name</th>
+                <th>Spend</th>
+              </tr>
+              @for (row of serviceCosts; track row[1]) {
+                <tr>
+                  <td>{{ row[1] }}</td>
+                  <td>${{ row[0] | number:'1.2-2' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="2" style="text-align: center;">No cost rows returned.</td>
+                </tr>
+              }
+            </table>
+          </div>
+
+        </div>
+      }
+
+    }
+
+  </div>
+
+</div>

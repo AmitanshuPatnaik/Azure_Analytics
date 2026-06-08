@@ -1,0 +1,61 @@
+.login-container{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#f4f4f4;
+}
+
+.login-card{
+  width:350px;
+  background:white;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,0,0,0.1);
+
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+/* FORM STACKS VERTICALLY */
+form{
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+input{
+  padding:10px;
+  width:100%;
+  box-sizing:border-box;
+}
+
+/* BUTTON BELOW INPUTS */
+button{
+  padding:10px;
+  cursor:pointer;
+  width:100%;
+}
+.signup-text{
+  margin-top: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.signup-text span{
+  color: blue;
+  cursor: pointer;
+  font-weight: bold;
+}
+.toggle-text{
+  margin-top: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.toggle-text span{
+  color: blue;
+  cursor: pointer;
+  font-weight: bold;
+}
