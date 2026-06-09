@@ -1,0 +1,799 @@
+<div class="home-container">
+
+  <app-sidebar></app-sidebar>
+
+  <div class="dashboard-content">
+
+    @if(dashboardService.selectedPage === 'home'){
+
+<h1>CloudOps Analytics Dashboard</h1>
+
+<div class="cards">
+
+  <div class="card">
+    <h3>Total Repositories</h3>
+    @if (reposError) {
+      <div class="error-inline">{{ reposError }}</div>
+    } @else {
+      <h2>{{ repositories.length }}</h2>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Total Projects</h3>
+    @if (projectsError) {
+      <div class="error-inline">{{ projectsError }}</div>
+    } @else {
+      <h2>{{ projects.length }}</h2>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Active Pipelines</h3>
+    @if (activePipelinesError) {
+      <div class="error-inline">{{ activePipelinesError }}</div>
+    } @else {
+      <h2>{{ activePipelinesCount }}</h2>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Yearly Cost</h3>
+    @if (yearlyCostError) {
+      <div class="error-inline">{{ yearlyCostError }}</div>
+    } @else if (isLoadingYearlyCost) {
+      <div class="error-inline">Loading...</div>
+    } @else {
+      <h2>₹{{ yearlyCost | number:'1.2-2' }}</h2>
+    }
+  </div>
+
+
+</div>
+
+<div class="dashboard-row">
+
+  <!-- PIE CHART CARD -->
+  <div class="chart-card">
+
+    <div class="chart-header">
+      <h2>Project Repository Distribution</h2>
+
+      <button
+        class="details-btn"
+        (click)="openProjectDistributionDetailsModal()"
+        [disabled]="projectsError || reposError">
+        View Details
+      </button>
+
+    </div>
+
+    @if (projectsError || reposError) {
+      <div class="error-block">
+        Could not display distribution: {{ projectsError || reposError }}
+      </div>
+    } @else {
+      <div class="pie-wrapper">
+
+        <div class="project-pie-chart" [style.background]="pieChartStyle"></div>
+
+        <div class="pie-legend">
+          @for (item of projectDistribution; track item.name) {
+            <div>
+              <span class="dot" [style.backgroundColor]="item.color"></span>
+              {{ item.name }} ({{ item.count }})
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+
+  </div>
+
+  <!-- COST TREND CARD -->
+  <div class="chart-card">
+
+    <div class="chart-header">
+      <h2>Cloud Cost Trend</h2>
+    </div>
+
+    @if (trendDataError) {
+      <div class="error-block">
+        Could not display cost trend: {{ trendDataError }}
+      </div>
+    } @else {
+      <div class="graph-container">
+        <svg
+          viewBox="0 0 620 280"
+          width="100%"
+          height="280">
+
+          <!-- Y Axis Grid + Labels -->
+          @for (lbl of yAxisLabels; track $index) {
+
+            <line
+              x1="55"
+              [attr.y1]="30 + ($index * 45)"
+              x2="585"
+              [attr.y2]="30 + ($index * 45)"
+              stroke="#e2e8f0"
+              stroke-width="1">
+            </line>
+
+            <text
+              x="45"
+              [attr.y]="34 + ($index * 45)"
+              text-anchor="end"
+              fill="#64748b"
+              font-size="12">
+              {{ lbl }}
+            </text>
+
+          }
+
+          <!-- Trend Line -->
+          <polyline
+            *ngIf="polylinePoints"
+            [attr.points]="polylinePoints"
+            fill="none"
+            stroke="#2563eb"
+            stroke-width="4"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+          </polyline>
+
+          <!-- Data Points -->
+          @for (c of circlePoints; track c.month) {
+
+            <circle
+              [attr.cx]="c.cx"
+              [attr.cy]="c.cy"
+              r="6"
+              fill="#2563eb"
+              stroke="#fff"
+              stroke-width="2">
+
+              <title>
+                {{ c.month }} :
+                ₹{{ c.cost | number:'1.0-0' }}
+              </title>
+
+            </circle>
+
+            <!-- X Axis Labels -->
+            <text
+              [attr.x]="c.cx"
+              y="275"
+              text-anchor="middle"
+              fill="#64748b"
+              font-size="12"
+              font-weight="500">
+
+              {{ c.month?.substring(0,3) }}
+
+            </text>
+          }
+
+        </svg>
+      </div>
+    }
+
+  </div>
+
+</div>
+
+<div class="section">
+
+  <h2>DevOps Services Summary</h2>
+
+  @if (servicesStatusError) {
+    <div class="error-block">
+      Could not load services status: {{ servicesStatusError }}
+    </div>
+  } @else {
+    <table>
+
+      <tr>
+        <th>Service</th>
+        <th>Status</th>
+      </tr>
+
+      @for (srv of servicesStatus; track srv.service) {
+        <tr>
+          <td>{{ srv.service }}</td>
+          <td>{{ srv.status }}</td>
+        </tr>
+      }
+
+    </table>
+  }
+
+</div>
+
+}
+    @if(dashboardService.selectedPage === 'projects'){
+
+<h1>Projects</h1>
+
+@if (projectsError) {
+  <div class="error-banner">
+    Could not load projects: {{ projectsError }}
+  </div>
+} @else {
+  <div class="cards">
+
+    @for (project of projects; track project.id || $index) {
+      <div class="card">
+        <h3>{{ project.name }}</h3>
+        <hr>
+        <p><strong>State:</strong> {{ project.state || 'Active' }}</p>
+        <p><strong>Visibility:</strong> {{ project.visibility || 'Private' }}</p>
+        <button (click)="openProject(project)">View Project</button>
+      </div>
+    } @empty {
+      <div class="card" style="grid-column: span 3; text-align: center;">
+        <p>No projects found.</p>
+      </div>
+    }
+
+  </div>
+}
+
+}
+
+<!-- PROJECT MODAL -->
+@if(showProjectDetails){
+
+<div class="modal-overlay">
+
+  <div class="modal-card" style="max-height: 85vh; overflow-y: auto; width: 800px; max-width: 95%;">
+
+    <div class="modal-header">
+      <h2>Project Details</h2>
+
+      <button class="close-btn" (click)="closeProjectModal()">✕</button>
+    </div>
+
+    <table style="margin-top: 10px;">
+
+      <tr>
+        <th>Field</th>
+        <th>Value</th>
+      </tr>
+
+      <tr>
+        <td>ID</td>
+        <td>{{selectedProject?.id}}</td>
+      </tr>
+
+      <tr>
+        <td>Name</td>
+        <td>{{selectedProject?.name}}</td>
+      </tr>
+
+      <tr>
+        <td>Description</td>
+        <td>{{selectedProject?.description}}</td>
+      </tr>
+
+      <tr>
+        <td>State</td>
+        <td>{{selectedProject?.state}}</td>
+      </tr>
+
+      <tr>
+        <td>Visibility</td>
+        <td>{{selectedProject?.visibility}}</td>
+      </tr>
+
+      <tr>
+        <td>URL</td>
+        <td>
+          <a [href]="selectedProject?.url" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Open in DevOps</a>
+        </td>
+      </tr>
+
+    </table>
+
+    <!-- Repository Details & Operations Section -->
+    <h3 style="margin-top: 25px; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">Repository Details & Operations</h3>
+    @if (reposError) {
+      <div class="error-banner">{{ reposError }}</div>
+    } @else if (selectedProjectRepos.length === 0) {
+      <p style="color: #6b7280; font-size: 14px; margin-top: 10px;">No repositories found in this project.</p>
+    } @else {
+      <table style="margin-top: 10px;">
+        <tr>
+          <th>Repository Name</th>
+          <th>Default Branch</th>
+          <th>Actions</th>
+        </tr>
+        @for (repo of selectedProjectRepos; track repo.id || $index) {
+          <tr>
+            <td>{{ repo.name }}</td>
+            <td>{{ repo.defaultBranch || 'N/A' }}</td>
+            <td style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="action-small-btn" (click)="viewRepoCommits(repo)" style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Commits</button>
+              <button class="action-small-btn" (click)="viewRepoPRs(repo)" style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer;">PRs</button>
+              <button class="action-small-btn" (click)="viewRepoBranches(repo)" style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #9333ea; color: white; border: none; border-radius: 4px; cursor: pointer;">Branches</button>
+              <button class="action-small-btn" (click)="viewRepoPushes(repo)" style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #f97316; color: white; border: none; border-radius: 4px; cursor: pointer;">Pushes</button>
+            </td>
+          </tr>
+        }
+      </table>
+    }
+
+    <!-- Repository Dynamic Operations Sub-table -->
+    @if (selectedRepoForDetails) {
+      <div style="margin-top: 25px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+        <h3 style="color: #1e293b; text-transform: uppercase;">
+          {{ activeRepoDetailsTab }} for {{ selectedRepoForDetails.name }}
+        </h3>
+        
+        @if (isLoadingRepoDetails) {
+          <p style="margin-top: 10px; color: #6b7280;">Loading details...</p>
+        } @else if (repoDetailsError) {
+          <div class="error-banner" style="margin-top: 10px;">{{ repoDetailsError }}</div>
+        } @else {
+          <!-- Commits sub-view -->
+          @if (activeRepoDetailsTab === 'commits') {
+            <table style="margin-top: 10px; font-size: 13px;">
+              <tr>
+                <th>Commit ID</th>
+                <th>Author</th>
+                <th>Date</th>
+                <th>Comment</th>
+              </tr>
+              @for (c of repoCommits; track c.commitId || $index) {
+                <tr>
+                  <td><code>{{ c.commitId?.substring(0, 8) }}</code></td>
+                  <td>{{ c.author }}</td>
+                  <td>{{ c.date | date:'short' }}</td>
+                  <td>{{ c.comment }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" style="text-align: center;">No commits found.</td>
+                </tr>
+              }
+            </table>
+          }
+
+          <!-- PRs sub-view -->
+          @if (activeRepoDetailsTab === 'prs') {
+            <table style="margin-top: 10px; font-size: 13px;">
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Created By</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+              @for (pr of repoPRs; track pr.pullRequestId || $index) {
+                <tr>
+                  <td>{{ pr.pullRequestId }}</td>
+                  <td>{{ pr.title }}</td>
+                  <td>{{ pr.createdBy }}</td>
+                  <td>{{ pr.creationDate | date:'short' }}</td>
+                  <td>{{ pr.status }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" style="text-align: center;">No pull requests found.</td>
+                </tr>
+              }
+            </table>
+          }
+
+          <!-- Branches sub-view -->
+          @if (activeRepoDetailsTab === 'branches') {
+            <table style="margin-top: 10px; font-size: 13px;">
+              <tr>
+                <th>Branch Name</th>
+                <th>Object ID</th>
+              </tr>
+              @for (b of repoBranches; track b.name || $index) {
+                <tr>
+                  <td>{{ b.name }}</td>
+                  <td><code>{{ b.objectId }}</code></td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="2" style="text-align: center;">No branches found.</td>
+                </tr>
+              }
+            </table>
+          }
+
+          <!-- Pushes sub-view -->
+          @if (activeRepoDetailsTab === 'pushes') {
+            <table style="margin-top: 10px; font-size: 13px;">
+              <tr>
+                <th>Push ID</th>
+                <th>Date</th>
+                <th>Pushed By</th>
+              </tr>
+              @for (p of repoPushes; track p.pushId || $index) {
+                <tr>
+                  <td>{{ p.pushId }}</td>
+                  <td>{{ p.date | date:'short' }}</td>
+                  <td>{{ p.pushedBy }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" style="text-align: center;">No pushes found.</td>
+                </tr>
+              }
+            </table>
+          }
+        }
+      </div>
+    }
+
+  </div>
+
+</div>
+
+}
+
+<!-- PROJECT REPOSITORY DISTRIBUTION DETAILS MODAL -->
+@if(showProjectDistributionDetails){
+
+<div class="modal-overlay">
+
+  <div class="modal-card" style="max-height: 85vh; overflow-y: auto; width: 800px; max-width: 95%;">
+
+    <div class="modal-header">
+      <h2>Project Repository Distribution Details</h2>
+
+      <button class="close-btn" (click)="closeProjectDistributionDetailsModal()">✕</button>
+    </div>
+
+    <table style="margin-top: 10px;">
+      <tr>
+        <th>Project Name</th>
+        <th>Description</th>
+        <th>State</th>
+        <th>Visibility</th>
+        <th>Repositories Count</th>
+      </tr>
+      @for (item of projectDistribution; track item.name) {
+        <tr>
+          <td style="font-weight: 600; color: #1e293b;">{{ item.name }}</td>
+          <td>{{ getProjectDescription(item.name) }}</td>
+          <td>{{ getProjectState(item.name) }}</td>
+          <td>{{ getProjectVisibility(item.name) }}</td>
+          <td style="font-weight: bold; color: #2563eb; text-align: center;">{{ item.count }}</td>
+        </tr>
+      }
+    </table>
+
+  </div>
+
+</div>
+
+}
+
+    @if(dashboardService.selectedPage === 'repos'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Repositories</h1>
+        <div>
+          <label for="project-filter" style="margin-right: 10px; font-weight: 500;">Filter by Project:</label>
+          <select id="project-filter" class="month-dropdown" style="width: auto;" (change)="onProjectFilterChange($event)">
+            <option value="">All Projects</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (reposError) {
+        <div class="error-banner">
+          Could not load repositories: {{ reposError }}
+        </div>
+      } @else {
+        <table>
+          <tr>
+            <th>Repository Name</th>
+            <th>Project</th>
+            <th>Default Branch</th>
+            <th>Remote URL</th>
+          </tr>
+
+          @for (repo of filteredRepositories; track repo.id || $index) {
+            <tr>
+              <td>{{ repo.name }}</td>
+              <td>{{ repo.project }}</td>
+              <td>{{ repo.defaultBranch || 'N/A' }}</td>
+              <td>
+                @if (repo.remoteUrl) {
+                  <a [href]="repo.remoteUrl" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">View Remote</a>
+                } @else {
+                  N/A
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" style="text-align: center;">No repositories found.</td>
+            </tr>
+          }
+        </table>
+      }
+
+    }
+
+    @if(dashboardService.selectedPage === 'pipelines'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Pipelines</h1>
+        <div>
+          <label for="pipeline-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+          <select id="pipeline-proj" class="month-dropdown" style="width: auto;" [value]="selectedPipelineProject" (change)="onPipelineProjectChange($event)">
+            <option value="">Select Project</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (pipelinesError) {
+        <div class="error-banner">
+          Could not load pipelines: {{ pipelinesError }}
+        </div>
+      } @else if (!selectedPipelineProject) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select a project to view its pipelines.</p>
+        </div>
+      } @else if (isLoadingPipelines) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading pipelines...</p>
+        </div>
+      } @else {
+        <table>
+          <tr>
+            <th>Pipeline Name</th>
+            <th>Folder</th>
+            <th>URL</th>
+          </tr>
+
+          @for (pipeline of pipelines; track pipeline.id || $index) {
+            <tr>
+              <td>{{ pipeline.name }}</td>
+              <td>{{ pipeline.folder || '/' }}</td>
+              <td>
+                <a [href]="pipeline.url" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Open Pipeline</a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" style="text-align: center;">No pipelines found for this project.</td>
+            </tr>
+          }
+        </table>
+      }
+
+    }
+
+    @if(dashboardService.selectedPage === 'boards'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Boards (Work Items)</h1>
+        <div>
+          <label for="board-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+          <select id="board-proj" class="month-dropdown" style="width: auto;" [value]="selectedBoardProject" (change)="onBoardProjectChange($event)">
+            <option value="">Select Project</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (workItemsError) {
+        <div class="error-banner">
+          Could not load work items: {{ workItemsError }}
+        </div>
+      } @else if (!selectedBoardProject) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select a project to view work items.</p>
+        </div>
+      } @else if (isLoadingWorkItems) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading work items...</p>
+        </div>
+      } @else {
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Type</th>
+            <th>State</th>
+            <th>Assigned To</th>
+          </tr>
+
+          @for (item of workItems; track item.id || $index) {
+            <tr>
+              <td>{{ item.id }}</td>
+              <td>{{ item.title }}</td>
+              <td>{{ item.type || 'N/A' }}</td>
+              <td>{{ item.state }}</td>
+              <td>{{ item.assignedTo || 'Unassigned' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" style="text-align: center;">No work items found for this project.</td>
+            </tr>
+          }
+        </table>
+      }
+
+    }
+
+    @if(dashboardService.selectedPage === 'testplans'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Test Plans</h1>
+        <div>
+          <label for="testplan-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+          <select id="testplan-proj" class="month-dropdown" style="width: auto;" [value]="selectedTestPlanProject" (change)="onTestPlanProjectChange($event)">
+            <option value="">Select Project</option>
+            @for (proj of projects; track proj.id) {
+              <option [value]="proj.name">{{ proj.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (testPlansError) {
+        <div class="error-banner">
+          Could not load test plans: {{ testPlansError }}
+        </div>
+      } @else if (!selectedTestPlanProject) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select a project to view test plans.</p>
+        </div>
+      } @else if (isLoadingTestPlans) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading test plans...</p>
+        </div>
+      } @else {
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>State</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+          </tr>
+
+          @for (plan of testPlans; track plan.id || $index) {
+            <tr>
+              <td>{{ plan.id }}</td>
+              <td>{{ plan.name }}</td>
+              <td>{{ plan.owner }}</td>
+              <td>{{ plan.state }}</td>
+              <td>{{ plan.startDate || 'N/A' }}</td>
+              <td>{{ plan.endDate || 'N/A' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" style="text-align: center;">No test plans found for this project.</td>
+            </tr>
+          }
+        </table>
+      }
+
+    }
+
+    @if(dashboardService.selectedPage === 'azure'){
+
+      <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Azure Resources & Cost Analytics</h1>
+        <div>
+          <label for="sub-select" style="margin-right: 10px; font-weight: 500;">Select Subscription:</label>
+          <select id="sub-select" class="month-dropdown" style="width: auto;" [value]="selectedSubscriptionId" (change)="onSubscriptionChange($event)">
+            <option value="">Select Subscription</option>
+            @for (sub of subscriptions; track sub.subscriptionId || $index) {
+              <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (subscriptionsError) {
+        <div class="error-banner">
+          Could not load subscriptions: {{ subscriptionsError }}
+        </div>
+      } @else if (azureError) {
+        <div class="error-banner">
+          Could not load subscription details: {{ azureError }}
+        </div>
+      } @else if (!selectedSubscriptionId) {
+        <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+          <p style="color: #6b7280; font-size: 16px;">Please select an Azure subscription to view cost metrics.</p>
+        </div>
+      } @else if (isLoadingAzure) {
+        <div style="text-align: center; padding: 40px;">
+          <p>Loading Azure cost metrics...</p>
+        </div>
+      } @else {
+        <div class="cards">
+
+          <div class="card">
+            <h3>MTD Total Cost</h3>
+            <h2>₹{{ totalCost | number:'1.2-2' }}</h2>
+          </div>
+
+          <div class="card">
+            <h3>Budgets set</h3>
+            @for (b of budgets; track b.name || $index) {
+              <p style="margin: 5px 0;"><strong>{{ b.name }}:</strong> ₹{{ b.amount }} ({{ b.timeGrain }})</p>
+            } @empty {
+              <h2>No budget</h2>
+            }
+          </div>
+
+        </div>
+
+        <div class="dashboard-row" style="margin-top: 20px; display: flex; gap: 20px;">
+
+          <!-- TOP RESOURCES SPEND -->
+          <div class="chart-card" style="flex: 1;">
+            <div class="chart-header">
+              <h2>Top High-Spending Resources</h2>
+            </div>
+            <table>
+              <tr>
+                <th>Resource</th>
+                <th>Spend</th>
+              </tr>
+              @for (row of topResources; track row[1]) {
+                <tr>
+                  <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" [title]="row[1]">{{ row[1] }}</td>
+                  <td>₹{{ row[0] | number:'1.2-2' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="2" style="text-align: center;">No cost rows returned.</td>
+                </tr>
+              }
+            </table>
+          </div>
+
+          <!-- SERVICES SPEND -->
+          <div class="chart-card" style="flex: 1;">
+            <div class="chart-header">
+              <h2>Costs by Service</h2>
+            </div>
+            <table>
+              <tr>
+                <th>Service Name</th>
+                <th>Spend</th>
+              </tr>
+              @for (row of serviceCosts; track row[1]) {
+                <tr>
+                  <td>{{ row[1] }}</td>
+                  <td>₹{{ row[0] | number:'1.2-2' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="2" style="text-align: center;">No cost rows returned.</td>
+                </tr>
+              }
+            </table>
+          </div>
+
+        </div>
+      }
+
+    }
+
+  </div>
+
+</div>

@@ -1,0 +1,80 @@
+<nav class="navbar">
+
+  <div class="dashboard-menu">
+
+    <span (click)="toggleCloudOps()">
+
+      ☰ CloudOps Hub
+
+    </span>
+
+    @if(showCloudOps){
+
+      <div class="dropdown">
+
+        <div
+          class="dropdown-item"
+          (click)="selectDevOps()">
+
+          📁 DevOps
+
+        </div>
+
+        <div
+          class="dropdown-item"
+          (click)="selectAzure()">
+
+          ☁ Azure
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+
+  <div class="links">
+
+    <a
+      routerLink="/home"
+      (click)="dashboardService.selectedPage='home';
+               dashboardService.sidebarVisible=false">
+
+      Home
+
+    </a>
+
+    <a routerLink="/about">
+
+      About
+
+    </a>
+
+    <div class="account">
+
+      <span (click)="toggleLogout()">
+
+        Account ▼
+
+      </span>
+
+      @if(showLogout){
+
+        <div class="logout-menu">
+
+          <button (click)="logout()">
+
+            Logout
+
+          </button>
+
+        </div>
+
+      }
+
+    </div>
+
+  </div>
+
+</nav>
