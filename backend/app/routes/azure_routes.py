@@ -86,7 +86,23 @@ async def get_service_costs(subscription_id: str):
 
 @router.get("/costs/{subscription_id}/top-resources")
 async def get_top_resources(subscription_id: str):
-    return cache.get(f"topresources:{subscription_id}", {"success": True, "top_resources": [], "rows": []})
+    """
+    Top high-spending resources — corrected to use the authentic 'topresources' key
+    with a live API fallback strategy if the cache is cold.
+    """
+    cached = cache.get(f"topresources:{subscription_id}")
+    
+    # If cache is populated and contains valid asset records, return it instantly
+    if cached and isinstance(cached, dict) and cached.get("top_resources"):
+        return cached
+        
+    # Live fallback gate if the background daemon thread has not populated this key yet
+    live_fallback = fetch_top_resources(subscription_id)
+    if live_fallback and live_fallback.get("success") and live_fallback.get("top_resources"):
+        cache.set(f"topresources:{subscription_id}", live_fallback)
+        return live_fallback
+        
+    return cached if cached else {"success": True, "top_resources": [], "rows": []}
 
 
 @router.get("/costs/{subscription_id}/budgets")

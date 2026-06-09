@@ -23,7 +23,8 @@ from app.services.Azure.costs import (
     fetch_top_resources,
     fetch_budgets,
     fetch_yearly_costs,
-    fetch_aggregated_monthly_costs,
+    fetch_aggregated_monthly_costs
+    # fetch_monthly_costs
 )
 
 logger = logging.getLogger(__name__)
@@ -110,9 +111,10 @@ def _sync_costs_for_subscription(sub_id: str) -> None:
     # ── Top high-spending resources ──────────────────────────────────────── #
     try:
         result = fetch_top_resources(sub_id)
-        if isinstance(result, dict) and result.get("success"):
+        # Verify the payload structure is successful and contains valid items before committing to memory
+        if isinstance(result, dict) and result.get("success") and result.get("top_resources"):
             cache.set(f"topresources:{sub_id}", result)
-            logger.info("[SyncWorker] topresources cached for sub=%s", sub_id)
+            logger.info("[SyncWorker] ✓ topresources successfully validated and cached for sub=%s", sub_id)
     except Exception as exc:
         logger.warning("[SyncWorker] topresources sync failed for sub=%s: %s", sub_id, exc)
 
