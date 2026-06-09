@@ -158,8 +158,28 @@ def fetch_yearly_costs(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
-    rows = result.get("properties", {}).get("rows", [])
-    return {"success": True, "yearly_costs": rows, "rows": rows}
+    
+    # Safely isolate the nested rows from Azure's return structure
+    rows = []
+    if isinstance(result, dict) and "properties" in result:
+        rows = result["properties"].get("rows", [])
+    elif isinstance(result, dict):
+        rows = result.get("rows", [])
+        
+    # 🎯 THE CRUCIAL FIX: Extract the single float value out of the array matrix
+    yearly_amount = 0.0
+    if rows and len(rows) > 0 and len(rows[0]) > 0:
+        yearly_amount = rows[0][0]
+        
+    # Return an enriched payload contract that satisfies any frontend key variation
+    return {
+        "success": True, 
+        "yearly_costs": rows, 
+        "rows": rows,
+        "yearly_cost": yearly_amount,
+        "amount": yearly_amount,
+        "total_cost": yearly_amount
+    }
 
 # 7. Fetch granular raw resource asset costs
 def fetch_resource_costs(subscription_id: str):
@@ -231,6 +251,8 @@ def fetch_budgets(subscription_id: str):
 
 def fetch_aggregated_monthly_costs():
     from app.services.Azure.subscriptions import fetch_subscriptions
+    from app.core.data_cache import cache # Safeguarded local lookup import
+    
     try:
         subs_data = fetch_subscriptions()
     except Exception:
@@ -242,27 +264,32 @@ def fetch_aggregated_monthly_costs():
     elif isinstance(subs_data, list):
         subs = subs_data
 
+    # Emergency safety layer used ONLY if both the cache and Azure are completely offline
     fallback_data = [
-        {"month": "January", "cost": 15000},
-        {"month": "February", "cost": 7000},
-        {"month": "March", "cost": 6000},
-        {"month": "April", "cost": 3000},
-        {"month": "May", "cost": 7000},
-        {"month": "June", "cost": 4860}
+        {"month": "January", "cost": 0}, {"month": "February", "cost": 0},
+        {"month": "March", "cost": 0}, {"month": "April", "cost": 0},
+        {"month": "May", "cost": 0}, {"month": "June", "cost": 0}
     ]
 
     if not subs:
-        return {"success": True, "trend": fallback_data}
+        return {"success": False, "trend": fallback_data, "error": "No subscriptions found"}
 
     aggregated = {}
     has_real_data = False
+    
     for sub in subs:
         sub_id = sub.get("subscriptionId")
         if not sub_id:
             continue
         try:
-            res = fetch_monthly_costs(sub_id)
-            if res.get("success") and res.get("rows"):
+            # 🎯 READ FROM PRE-FETCHED WORKER MEMORY (Bypasses Azure 429 Throttling)
+            res = cache.get(f"monthly:{sub_id}")
+            
+            # Defensive live fallback if the background cache worker hasn't processed this sub yet
+            if not res or not isinstance(res, dict) or not res.get("rows"):
+                res = fetch_monthly_costs(sub_id)
+            
+            if res and res.get("success") and res.get("rows"):
                 has_real_data = True
                 for row in res["rows"]:
                     if len(row) >= 2:
@@ -274,8 +301,9 @@ def fetch_aggregated_monthly_costs():
         except Exception:
             pass
 
+    # 🎯 THE TRUTH RULE: Flag as False if live data fails so the router retries
     if not has_real_data:
-        return {"success": True, "trend": fallback_data}
+        return {"success": False, "trend": fallback_data, "error": "API rate-limited or cache warming up"}
 
     month_order = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     trend = []
@@ -284,7 +312,7 @@ def fetch_aggregated_monthly_costs():
             trend.append({"month": m, "cost": round(aggregated[m], 2)})
 
     if not trend:
-        return {"success": True, "trend": fallback_data}
+        return {"success": False, "trend": fallback_data, "error": "Trend aggregation compiled empty"}
 
     return {"success": True, "trend": trend}
 
