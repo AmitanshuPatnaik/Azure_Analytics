@@ -165,23 +165,15 @@ export class Home implements OnInit {
         this.loadTestPlans(this.selectedTestPlanProject);
       }
     } else if (page === 'azure') {
+      // Initialise daily-trend date defaults on first visit
+      if (!this.costTrendFromDate) {
+        const now  = new Date();
+        this.costTrendToDate   = now.toISOString().slice(0, 10);
+        this.costTrendFromDate = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+        this.costTrendMinDate  = `${now.getFullYear()}-01-01`;
+      }
       if (this.selectedSubscriptionId) {
         this.loadSubscriptionMetrics(this.selectedSubscriptionId);
-      } else {
-        this.loadSubscriptions();
-      }
-    } else if (page === 'cost-trend') {
-      if (!this.costTrendFromDate) {
-        // Initialise defaults: today-7 → today, min = Jan 1 of current year
-        const now  = new Date();
-        const to   = now.toISOString().slice(0, 10);
-        const from = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
-        const minD = `${now.getFullYear()}-01-01`;
-        this.costTrendToDate   = to;
-        this.costTrendFromDate = from;
-        this.costTrendMinDate  = minD;
-      }
-      if (this.selectedSubscriptionId) {
         this.loadDailyCostRange();
       } else {
         this.loadSubscriptions();
@@ -285,6 +277,7 @@ export class Home implements OnInit {
             this.selectedSubscriptionId = subs[0].subscriptionId;
             this.loadSubscriptionMetrics(this.selectedSubscriptionId);
             this.loadYearlyCost(this.selectedSubscriptionId);
+            this.loadDailyCostRange();
           }
         } else {
           this.subscriptions = [];
@@ -932,13 +925,15 @@ onTrendMonthChange(event: Event): void {
     this.selectedSubscriptionId = subId;
 
     if (!subId) {
-      this.totalCost = 0;
-      this.budgets = [];
+      this.totalCost    = 0;
+      this.budgets      = [];
       this.topResources = [];
       this.serviceCosts = [];
+      this.costTrendPoints = [];
       return;
     }
     this.loadSubscriptionMetrics(subId);
+    this.loadDailyCostRange();
   }
 
   // --- Repository details operations handlers ---
