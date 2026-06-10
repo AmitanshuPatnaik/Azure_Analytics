@@ -29,13 +29,14 @@ def fetch_projects():
         for project in data.get("value", []):
             if not isinstance(project, dict):
                 continue
+            proj_name = project.get("name", "")
             projects.append({
                 "id": project.get("id"),
-                "name": project.get("name"),
+                "name": proj_name,
                 "description": project.get("description"),
                 "state": project.get("state"),
                 "visibility": project.get("visibility"),
-                "url": project.get("url")
+                "url": f"{base_url}/{collection}/{proj_name}" if proj_name else project.get("url")
             })
 
         return {

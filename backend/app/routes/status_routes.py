@@ -1,13 +1,30 @@
 from fastapi import APIRouter
 from app.services.Azure_Devops.projects_service import fetch_projects
 from app.services.Azure_Devops.pipelines_service import fetch_pipelines
-from app.services.Azure.subscriptions import fetch_subscriptions
+from app.services.Azure.azure_auth import get_azure_token
+import requests
 
 router = APIRouter(prefix="/status", tags=["Status"])
 
+
+def _check_azure_service(url: str, token: str) -> str:
+    """Return 'Healthy' if the Azure Management URL responds, else 'Warning'.
+    404 is accepted — endpoint is reachable, resource just doesn't exist."""
+    try:
+        resp = requests.get(
+            url,
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=8
+        )
+        return "Healthy" if resp.status_code in (200, 404) else "Warning"
+    except Exception:
+        return "Warning"
+
+
 @router.get("/services")
 async def get_services_status():
-    # 1. Check Azure DevOps Projects connectivity
+
+    # ── 1. Azure DevOps ──────────────────────────────────────────────────────
     devops_status = "Healthy"
     projects = []
     try:
@@ -19,7 +36,7 @@ async def get_services_status():
     except Exception:
         devops_status = "Warning"
 
-    # 2. Check Pipelines connectivity
+    # ── 2. CI/CD Pipelines ───────────────────────────────────────────────────
     pipelines_status = "Healthy"
     try:
         if devops_status == "Healthy" and projects:
@@ -32,23 +49,45 @@ async def get_services_status():
     except Exception:
         pipelines_status = "Warning"
 
-    # 3. Check Azure Connection Indicator (Monitor, Storage, AKS Cluster)
-    azure_connected = False
+    # ── 3–5. Azure platform services (each independently probed) ─────────────
+    azure_services = []
     try:
-        subs_res = fetch_subscriptions()
-        if isinstance(subs_res, dict) and len(subs_res.get("subscriptions", [])) > 0:
-            azure_connected = True
-        elif isinstance(subs_res, list) and len(subs_res) > 0:
-            azure_connected = True
-    except Exception:
-        pass
+        token = get_azure_token()
 
-    azure_status = "Healthy" if azure_connected else "Warning"
+        # 3. Azure Subscriptions — core ARM subscriptions listing
+        subs_status = _check_azure_service(
+            "https://management.azure.com/subscriptions?api-version=2020-01-01",
+            token
+        )
+
+        # 4. Azure Cost Management — provider registration check
+        cost_status = _check_azure_service(
+            "https://management.azure.com/providers/Microsoft.CostManagement?api-version=2021-04-01",
+            token
+        )
+
+        # 5. Azure Resource Manager — ARM providers endpoint (top=1 for speed)
+        arm_status = _check_azure_service(
+            "https://management.azure.com/providers?api-version=2021-04-01&$top=1",
+            token
+        )
+
+        azure_services = [
+            {"service": "Azure Subscriptions",   "status": subs_status},
+            {"service": "Azure Cost Management",  "status": cost_status},
+            {"service": "Azure Resource Manager", "status": arm_status},
+        ]
+
+    except Exception:
+        # Token acquisition failed — all Azure platform services are unreachable
+        azure_services = [
+            {"service": "Azure Subscriptions",   "status": "Warning"},
+            {"service": "Azure Cost Management",  "status": "Warning"},
+            {"service": "Azure Resource Manager", "status": "Warning"},
+        ]
 
     return [
-        {"service": "Azure DevOps", "status": devops_status},
+        {"service": "Azure DevOps",    "status": devops_status},
         {"service": "CI/CD Pipelines", "status": pipelines_status},
-        {"service": "Azure Monitor", "status": azure_status},
-        {"service": "Azure Storage", "status": azure_status},
-        {"service": "AKS Cluster", "status": azure_status}
+        *azure_services,
     ]

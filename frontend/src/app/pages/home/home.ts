@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { Sidebar } from '../../components/sidebar/sidebar';
 import { DashboardService } from '../../services/dashboard.service';
 import { CommonModule } from '@angular/common';
@@ -22,7 +22,6 @@ import { StatusApiService } from '../../services/api/status-api.service';
 })
 export class Home implements OnInit {
 
-  showProjectDetails = false;
   selectedProject: any = null;
 
   // Real data arrays
@@ -82,10 +81,12 @@ export class Home implements OnInit {
   // Repository details/operations modal variables
   selectedProjectRepos: any[] = [];
   selectedRepoForDetails: any = null;
+  @ViewChild('repoDetailsAnchor') repoDetailsAnchor!: ElementRef;
   activeRepoDetailsTab = '';
   repoCommits: any[] = [];
   repoPRs: any[] = [];
   repoBranches: any[] = [];
+  repoBranchesCount: number | null = null;
   repoPushes: any[] = [];
   isLoadingRepoDetails = false;
 
@@ -702,14 +703,17 @@ onTrendMonthChange(event: Event): void {
     this.selectedProjectRepos = this.repositories.filter(r => r.project === project.name);
     this.selectedRepoForDetails = null;
     this.activeRepoDetailsTab = '';
-    this.showProjectDetails = true;
+    this.repoBranchesCount = null;
+    this.dashboardService.selectedPage = 'project-detail';
   }
 
-  closeProjectModal() {
-    this.showProjectDetails = false;
+  goBackToProjects() {
+    this.selectedProject = null;
     this.selectedProjectRepos = [];
     this.selectedRepoForDetails = null;
     this.activeRepoDetailsTab = '';
+    this.repoBranchesCount = null;
+    this.dashboardService.selectedPage = 'projects';
   }
 
   onProjectFilterChange(event: Event) {
@@ -792,6 +796,7 @@ onTrendMonthChange(event: Event): void {
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       },
       error: (err) => {
         console.warn('Failed to load commits', err);
@@ -799,6 +804,7 @@ onTrendMonthChange(event: Event): void {
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch commits.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       }
     });
   }
@@ -818,6 +824,7 @@ onTrendMonthChange(event: Event): void {
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       },
       error: (err) => {
         console.warn('Failed to load pull requests', err);
@@ -825,6 +832,7 @@ onTrendMonthChange(event: Event): void {
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pull requests.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       }
     });
   }
@@ -838,12 +846,15 @@ onTrendMonthChange(event: Event): void {
       next: (res: any) => {
         if (res && res.success && res.branches) {
           this.repoBranches = res.branches;
+          this.repoBranchesCount = res.count ?? res.branches.length;
         } else {
           this.repoBranches = [];
+          this.repoBranchesCount = null;
           this.repoDetailsError = 'No branches found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       },
       error: (err) => {
         console.warn('Failed to load branches', err);
@@ -851,6 +862,7 @@ onTrendMonthChange(event: Event): void {
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch branches.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       }
     });
   }
@@ -870,6 +882,7 @@ onTrendMonthChange(event: Event): void {
         }
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       },
       error: (err) => {
         console.warn('Failed to load pushes', err);
@@ -877,7 +890,14 @@ onTrendMonthChange(event: Event): void {
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pushes.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
+        this.scrollToRepoDetails();
       }
     });
+  }
+
+  private scrollToRepoDetails() {
+    setTimeout(() => {
+      this.repoDetailsAnchor?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   }
 }

@@ -30,11 +30,12 @@ def fetch_pipelines(project_name):
         for pipeline in data.get("value", []):
             if not isinstance(pipeline, dict):
                 continue
+            pipeline_id = pipeline.get("id")
             pipelines.append({
-                "id" : pipeline.get("id"),
-                "name" : pipeline.get("name"),
+                "id"     : pipeline_id,
+                "name"   : pipeline.get("name"),
                 "folder" : pipeline.get("folder"),
-                "url" : pipeline.get("url")
+                "url"    : f"{base_url}/{collection}/{project_name}/_build?definitionId={pipeline_id}" if pipeline_id else pipeline.get("url")
             })
 
         return {

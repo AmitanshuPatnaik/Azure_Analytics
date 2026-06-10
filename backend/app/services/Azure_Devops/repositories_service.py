@@ -210,21 +210,50 @@ def fetch_branches(project_name, repo_name):
             "message": "Azure DevOps is not configured. Please check config.json.",
             "branches": []
         }
+
     try:
         url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/refs?filter=heads/&api-version={API_VERSION}"
-        response = requests.get(url=url, auth=auth, verify=False, timeout=10)
+
+        response = requests.get(url=url,auth=auth,verify=False,timeout=10)
 
         if response.status_code != 200:
             return handle_error_response(response, f"Repository '{repo_name}'")
 
         branches = []
         data = response.json()
+
         for branch in data.get("value", []):
             if not isinstance(branch, dict):
                 continue
+
+            full_branch_name = branch.get("name", "")
+
+            branch_name = full_branch_name.replace("refs/heads/", "")
+
+            commit_url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/commits?searchCriteria.itemVersion.version={branch_name}&$top=1&api-version={API_VERSION}"
+
+            commit_response = requests.get(url=commit_url, auth=auth, verify=False, timeout=10)
+
+            last_modified_by = None
+            last_modified_date = None
+
+            if commit_response.status_code == 200:
+                commits = (commit_response.json().get("value", []))
+
+                if commits:
+                    latest_commit = commits[0]
+
+                    last_modified_by = (latest_commit.get("author", {}).get("name"))
+
+                    commit_date = (latest_commit.get("author", {}).get("date"))
+
+                    if commit_date:
+                        last_modified_date = (commit_date.split("T")[0])
+
             branches.append({
-                "name": branch.get("name"),
-                "objectId": branch.get("objectId")
+                "name": branch_name,
+                "lastModifiedBy": last_modified_by,
+                "lastModifiedDate": last_modified_date
             })
 
         return {
@@ -232,13 +261,13 @@ def fetch_branches(project_name, repo_name):
             "count": len(branches),
             "branches": branches
         }
+
     except Exception as e:
         return {
             "success": False,
             "message": f"Failed to fetch branches: {str(e)}",
             "branches": []
         }
-
 
 def fetch_tags(project_name, repo_name):
     if not base_url or not collection or not pat:

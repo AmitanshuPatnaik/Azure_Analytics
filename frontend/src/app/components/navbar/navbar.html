@@ -4,31 +4,27 @@
 
     <span (click)="toggleCloudOps()">
 
-      ☰ CloudOps Hub
+      ☰ Watcher Hub
 
     </span>
 
     @if(showCloudOps){
 
-      <div class="dropdown">
+    <div class="dropdown">
 
-        <div
-          class="dropdown-item"
-          (click)="selectDevOps()">
+      <div class="dropdown-item" (click)="selectDevOps()">
 
-          📁 DevOps
-
-        </div>
-
-        <div
-          class="dropdown-item"
-          (click)="selectAzure()">
-
-          ☁ Azure
-
-        </div>
+        📁 DevOps
 
       </div>
+
+      <div class="dropdown-item" (click)="selectAzure()">
+
+        ☁ Azure
+
+      </div>
+
+    </div>
 
     }
 
@@ -36,9 +32,7 @@
 
   <div class="links">
 
-    <a
-      routerLink="/home"
-      (click)="dashboardService.selectedPage='home';
+    <a routerLink="/home" (click)="dashboardService.selectedPage='home';
                dashboardService.sidebarVisible=false">
 
       Home
@@ -61,15 +55,15 @@
 
       @if(showLogout){
 
-        <div class="logout-menu">
+      <div class="logout-menu">
 
-          <button (click)="logout()">
+        <button (click)="logout()">
 
-            Logout
+          Logout
 
-          </button>
+        </button>
 
-        </div>
+      </div>
 
       }
 
