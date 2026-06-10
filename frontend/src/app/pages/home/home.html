@@ -2,6 +2,8 @@
 
   <app-sidebar></app-sidebar>
 
+
+
   <div class="dashboard-content">
 
     @if(dashboardService.selectedPage === 'home'){
@@ -909,53 +911,108 @@
 
     <div class="dashboard-row" style="margin-top: 24px; display: flex; gap: 20px;">
 
-      <!-- TOP RESOURCES SPEND -->
-      <div class="chart-card" style="flex: 1;">
-        <div class="chart-header">
-          <h2>Top High-Spending Resources</h2>
-        </div>
-        <table>
-          <tr>
-            <th>Resource</th>
-            <th>Spend</th>
-          </tr>
-          @for (row of topResources; track row[1]) {
-          <tr>
-            <td>{{ row[1] }}</td>
-            <td>₹{{ row[0] | number:'1.2-2' }}</td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="2" style="text-align: center;">No cost rows returned.</td>
-          </tr>
+      <!-- ── TOP RESOURCES PIE ───────────────────────────────────────────── -->
+      <div class="chart-card" style="flex: 1; position: relative;">
+        <div class="chart-header"><h2>Top High-Spending Resources</h2></div>
+
+        @if (!topResourcesPieSlices.length) {
+          <div style="text-align:center; padding: 40px; color: #6b7280;">No data available.</div>
+        } @else {
+          <!-- Tooltip -->
+          @if (hoveredTopResource) {
+            <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span [style.background]="hoveredTopResource.color" style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
+                <strong style="font-size:13px;">{{ hoveredTopResource.name }}</strong>
+              </div>
+              <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredTopResource.cost | number:'1.2-2' }}</div>
+              <div style="color:#64748b; font-size:11px;">{{ hoveredTopResource.percentage }}% of total</div>
+            </div>
           }
-        </table>
+
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
+            <!-- SVG Pie -->
+            <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
+              @for (s of topResourcesPieSlices; track s.name) {
+                <path [attr.d]="s.path"
+                  [attr.fill]="s.color"
+                  stroke="#fff" stroke-width="2"
+                  style="cursor:pointer; transition: opacity 0.15s;"
+                  [style.opacity]="hoveredTopResource && hoveredTopResource.name !== s.name ? '0.55' : '1'"
+                  (mouseenter)="hoveredTopResource = s"
+                  (mouseleave)="hoveredTopResource = null">
+                </path>
+              }
+            </svg>
+
+            <!-- Legend -->
+            <div style="flex:1; padding-right:4px;">
+              @for (s of topResourcesPieSlices; track s.name) {
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
+                  (mouseenter)="hoveredTopResource = s" (mouseleave)="hoveredTopResource = null">
+                  <span [style.background]="s.color"
+                    style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
+                  <span style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
+                  <span style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{ s.percentage }}%</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
 
-      <!-- SERVICES SPEND -->
-      <div class="chart-card" style="flex: 1;">
-        <div class="chart-header">
-          <h2>Costs by Service</h2>
-        </div>
-        <table>
-          <tr>
-            <th>Service Name</th>
-            <th>Spend</th>
-          </tr>
-          @for (row of serviceCosts; track row[1]) {
-          <tr>
-            <td>{{ row[1] }}</td>
-            <td>₹{{ row[0] | number:'1.2-2' }}</td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="2" style="text-align: center;">No cost rows returned.</td>
-          </tr>
+      <!-- ── SERVICES PIE ────────────────────────────────────────────────── -->
+      <div class="chart-card" style="flex: 1; position: relative;">
+        <div class="chart-header"><h2>Costs by Service</h2></div>
+
+        @if (!serviceCostsPieSlices.length) {
+          <div style="text-align:center; padding: 40px; color: #6b7280;">No data available.</div>
+        } @else {
+          <!-- Tooltip -->
+          @if (hoveredServiceCost) {
+            <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span [style.background]="hoveredServiceCost.color" style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
+                <strong style="font-size:13px;">{{ hoveredServiceCost.name }}</strong>
+              </div>
+              <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredServiceCost.cost | number:'1.2-2' }}</div>
+              <div style="color:#64748b; font-size:11px;">{{ hoveredServiceCost.percentage }}% of total</div>
+            </div>
           }
-        </table>
+
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
+            <!-- SVG Pie -->
+            <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
+              @for (s of serviceCostsPieSlices; track s.name) {
+                <path [attr.d]="s.path"
+                  [attr.fill]="s.color"
+                  stroke="#fff" stroke-width="2"
+                  style="cursor:pointer; transition: opacity 0.15s;"
+                  [style.opacity]="hoveredServiceCost && hoveredServiceCost.name !== s.name ? '0.55' : '1'"
+                  (mouseenter)="hoveredServiceCost = s"
+                  (mouseleave)="hoveredServiceCost = null">
+                </path>
+              }
+            </svg>
+
+            <!-- Legend -->
+            <div style="flex:1; padding-right:4px;">
+              @for (s of serviceCostsPieSlices; track s.name) {
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
+                  (mouseenter)="hoveredServiceCost = s" (mouseleave)="hoveredServiceCost = null">
+                  <span [style.background]="s.color"
+                    style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
+                  <span style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
+                  <span style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{ s.percentage }}%</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
 
     </div>
+
     }
 
     }

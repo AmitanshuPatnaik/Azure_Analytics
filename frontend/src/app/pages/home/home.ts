@@ -589,6 +589,84 @@ export class Home implements OnInit {
     }));
   }
 
+  // ── Pie charts ──────────────────────────────────────────────────────────
+
+  readonly PIE_COLORS = [
+    '#2563eb', '#7c3aed', '#db2777', '#16a34a', '#ea580c',
+    '#d97706', '#0891b2', '#9333ea', '#dc2626', '#65a30d',
+    '#0284c7', '#c026d3', '#f59e0b', '#4f46e5', '#e11d48',
+  ];
+
+  // Hover state
+  hoveredTopResource: any = null;
+  hoveredServiceCost: any = null;
+
+  private buildPieSlices(rows: any[]): any[] {
+    if (!rows?.length) return [];
+    const filtered = rows.filter((r: any) => (r[0] || 0) > 0);
+    if (!filtered.length) return [];
+    const total = filtered.reduce((s: number, r: any) => s + (r[0] || 0), 0);
+    if (!total) return [];
+
+    const cx = 150, cy = 150, radius = 120;
+    let angle = -Math.PI / 2; // start at 12 o'clock
+
+    return filtered.map((row: any, i: number) => {
+      const cost = row[0] || 0;
+      const pct  = cost / total;
+      const sweep = pct * 2 * Math.PI;
+      const end   = angle + sweep;
+
+      const x1 = cx + radius * Math.cos(angle);
+      const y1 = cy + radius * Math.sin(angle);
+      const x2 = cx + radius * Math.cos(end);
+      const y2 = cy + radius * Math.sin(end);
+
+      // Label midpoint
+      const midAngle = angle + sweep / 2;
+      const lx = cx + (radius * 0.65) * Math.cos(midAngle);
+      const ly = cy + (radius * 0.65) * Math.sin(midAngle);
+
+      let path: string;
+
+      if (pct >= 1) {
+        // 100% slice: SVG arc can't draw a full circle in one command
+        // (start === end point). Split into two 180° arcs instead.
+        const xMid = cx + radius * Math.cos(angle + Math.PI);
+        const yMid = cy + radius * Math.sin(angle + Math.PI);
+        path = [
+          `M ${cx} ${cy}`,
+          `L ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+          `A ${radius} ${radius} 0 1 1 ${xMid.toFixed(2)} ${yMid.toFixed(2)}`,
+          `A ${radius} ${radius} 0 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+          `Z`
+        ].join(' ');
+      } else {
+        const largeArc = pct > 0.5 ? 1 : 0;
+        path = `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${radius} ${radius} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+      }
+
+      angle = end;
+      return {
+        name:       row[1] || 'Unknown',
+        cost,
+        color:      this.PIE_COLORS[i % this.PIE_COLORS.length],
+        path,
+        percentage: Math.round(pct * 100),
+        lx:         lx.toFixed(1),
+        ly:         ly.toFixed(1),
+      };
+    });
+  }
+
+  get topResourcesPieSlices(): any[] {
+    return this.buildPieSlices(this.topResources);
+  }
+
+  get serviceCostsPieSlices(): any[] {
+    return this.buildPieSlices(this.serviceCosts);
+  }
+
   calculateProjectDistribution() {
     if (!this.projects.length || !this.repositories.length) {
       this.projectDistribution = [];

@@ -1,87 +1,92 @@
 .sidebar{
+  width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: #edf3fb;
+  padding: 20px;
+  border-right: 1px solid #d6e1ef;
+  box-sizing: border-box;
+  transition: width 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 
-  width:260px;
+.sidebar.sidebar-collapsed {
+  width: 0;
+  padding: 0;
+  border-right: none;
+}
 
-  height:100vh;
-
-  position:sticky;
-
-  top:0;
-
-  background:#edf3fb;
-
-  padding:20px;
-
-  border-right:1px solid #d6e1ef;
-
-  box-sizing:border-box;
-
+.sidebar-menu {
+  flex: 1;
+  overflow: hidden;
 }
 
 .menu-item{
-
-  background:#4a6fa5;
-
-  color:white;
-
-  padding:14px;
-
-  border-radius:8px;
-
-  cursor:pointer;
-
-  font-weight:bold;
-
-  margin-bottom:10px;
-
-  text-align:left;
-
-  transition:0.3s;
-
+  background: #4a6fa5;
+  color: white;
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: left;
+  transition: 0.3s;
+  white-space: nowrap;
 }
 
 .menu-item:hover{
-
-  background:#3d5d8a;
-
-  transform:translateX(4px);
-
+  background: #3d5d8a;
+  transform: translateX(4px);
 }
 
 .submenu{
-
-  margin-left:10px;
-
-  display:flex;
-
-  flex-direction:column;
-
-  gap:8px;
-
+  margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .submenu-item{
-
-  text-decoration:none;
-
-  color:#1e2a3a;
-
-  background:white;
-
-  padding:12px;
-
-  border-radius:6px;
-
-  border:1px solid #d7dce2;
-
-  font-weight:500;
-
-  cursor:pointer;
-
+  text-decoration: none;
+  color: #1e2a3a;
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #d7dce2;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .submenu-item:hover{
+  background: #dcecff;
+}
 
-  background:#dcecff;
+/* ── Collapse toggle button ─────────────────────────────────── */
+.collapse-btn {
+  position: fixed;
+  left: 228px;
+  bottom: 20px;
+  z-index: 200;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #c0cfe3;
+  background: #fff;
+  color: #4a6fa5;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: background 0.2s, color 0.2s, left 0.3s ease;
+}
 
+.collapse-btn:hover {
+  background: #4a6fa5;
+  color: #fff;
 }
