@@ -37,7 +37,7 @@ export class Navbar {
 
     this.dashboardService.selectedModule = 'DevOps';
 
-    this.dashboardService.selectedPage = 'home';
+    this.dashboardService.selectedPage = 'projects';
 
     this.dashboardService.sidebarVisible = true;
 
