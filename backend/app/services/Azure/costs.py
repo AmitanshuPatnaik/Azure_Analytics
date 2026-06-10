@@ -201,6 +201,15 @@ def fetch_resource_costs(subscription_id: str):
     return {"success": True, "resources": rows, "rows": rows}
 
 # 8. Fetch the top high-spending resource instances
+def _extract_resource_name(resource_id: str) -> str:
+    """Extract the friendly resource name from a full Azure resource ID path.
+    e.g. /subscriptions/.../providers/Microsoft.Storage/storageAccounts/myaccount → myaccount
+    Falls back to the raw value if it cannot be parsed."""
+    if not resource_id or not isinstance(resource_id, str):
+        return resource_id or "Unknown"
+    parts = [p for p in resource_id.strip("/").split("/") if p]
+    return parts[-1] if parts else resource_id
+
 def fetch_top_resources(subscription_id: str):
     payload = {
         "type": "ActualCost",
@@ -219,7 +228,19 @@ def fetch_top_resources(subscription_id: str):
     rows = result.get("properties", {}).get("rows", [])
     # Sort descending by the cost field (index 0 in Azure query array rows)
     sorted_rows = sorted(rows, key=lambda x: x[0], reverse=True) if rows else []
-    return {"success": True, "top_resources": sorted_rows[:10], "rows": sorted_rows[:10]}
+
+    # Replace the full ResourceId path with just the resource name in each row
+    cleaned_rows = []
+    for row in sorted_rows[:10]:
+        if len(row) >= 2:
+            cleaned = list(row)
+            cleaned[1] = _extract_resource_name(str(row[1]))
+            cleaned_rows.append(cleaned)
+        else:
+            cleaned_rows.append(row)
+
+    return {"success": True, "top_resources": cleaned_rows, "rows": cleaned_rows}
+
 
 # 9. Fetch active Cloud Spending budgets thresholds
 def fetch_budgets(subscription_id: str):

@@ -42,7 +42,16 @@ export class Home implements OnInit {
   // Boards state
   selectedBoardProject = '';
   workItems: any[] = [];
+  workItemSprints: string[] = [];          // sprint names returned by backend
   isLoadingWorkItems = false;
+
+  // Board filter state
+  boardFilterSprint   = '';
+  boardFilterType     = '';
+  boardFilterState    = '';
+  boardFilterAssigned = '';
+  collapsedSprints: Set<string> = new Set();
+
 
   // Test Plans state
   selectedTestPlanProject = '';
@@ -374,9 +383,11 @@ export class Home implements OnInit {
     this.boardsApi.getWorkItems(projName).subscribe({
       next: (res: any) => {
         if (res && res.success) {
-          this.workItems = res.workItems || [];
+          this.workItems      = res.workItems || [];
+          this.workItemSprints = res.sprints   || [];
         } else {
-          this.workItems = [];
+          this.workItems      = [];
+          this.workItemSprints = [];
           this.workItemsError = res?.message || 'Failed to load work items from backend.';
         }
         this.isLoadingWorkItems = false;
@@ -384,7 +395,8 @@ export class Home implements OnInit {
       },
       error: (err) => {
         console.warn(`Could not load work items for project ${projName}`, err);
-        this.workItems = [];
+        this.workItems      = [];
+        this.workItemSprints = [];
         this.workItemsError = err.error?.detail || err.error?.message || err.message || `Failed to load work items for project ${projName}.`;
         this.isLoadingWorkItems = false;
         this.cdr.detectChanges();
@@ -744,12 +756,66 @@ onTrendMonthChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     const projName = select.value;
     this.selectedBoardProject = projName;
+    // Reset filters on project change
+    this.boardFilterSprint   = '';
+    this.boardFilterType     = '';
+    this.boardFilterState    = '';
+    this.boardFilterAssigned = '';
+    this.collapsedSprints    = new Set();
 
     if (!projName) {
-      this.workItems = [];
+      this.workItems      = [];
+      this.workItemSprints = [];
       return;
     }
     this.loadWorkItems(projName);
+  }
+
+  // ── Board computed helpers ────────────────────────────────────────────────
+
+  get filteredWorkItems(): any[] {
+    return this.workItems.filter(item => {
+      if (this.boardFilterSprint   && item.sprint      !== this.boardFilterSprint)   return false;
+      if (this.boardFilterType     && item.type        !== this.boardFilterType)     return false;
+      if (this.boardFilterState    && item.state       !== this.boardFilterState)    return false;
+      if (this.boardFilterAssigned && (item.assignedTo || 'Unassigned') !== this.boardFilterAssigned) return false;
+      return true;
+    });
+  }
+
+  get groupedWorkItems(): { sprint: string; items: any[] }[] {
+    const items = this.filteredWorkItems;
+    const map = new Map<string, any[]>();
+    for (const item of items) {
+      const sprint = item.sprint || 'No Sprint';
+      if (!map.has(sprint)) map.set(sprint, []);
+      map.get(sprint)!.push(item);
+    }
+    return Array.from(map.entries()).map(([sprint, items]) => ({ sprint, items }));
+  }
+
+  get boardUniqueTypes(): string[] {
+    return [...new Set(this.workItems.map(i => i.type).filter(Boolean))];
+  }
+
+  get boardUniqueStates(): string[] {
+    return [...new Set(this.workItems.map(i => i.state).filter(Boolean))];
+  }
+
+  get boardUniqueAssignees(): string[] {
+    return [...new Set(this.workItems.map(i => i.assignedTo || 'Unassigned'))];
+  }
+
+  toggleSprintCollapse(sprint: string) {
+    if (this.collapsedSprints.has(sprint)) {
+      this.collapsedSprints.delete(sprint);
+    } else {
+      this.collapsedSprints.add(sprint);
+    }
+  }
+
+  isSprintCollapsed(sprint: string): boolean {
+    return this.collapsedSprints.has(sprint);
   }
 
   onTestPlanProjectChange(event: Event) {
