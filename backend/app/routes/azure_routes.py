@@ -1,9 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from app.core.data_cache import cache
 from app.services.Azure.subscriptions import fetch_subscriptions
 from app.services.Azure.costs import (
     fetch_total_cost,
     fetch_daily_costs,
+    fetch_daily_costs_by_range,
     fetch_monthly_costs,
     fetch_yearly_costs,
     fetch_resource_group_costs,
@@ -128,6 +129,15 @@ async def get_yearly_costs(subscription_id: str):
 @router.get("/costs/{subscription_id}/daily")
 async def get_daily_costs(subscription_id: str):
     return fetch_daily_costs(subscription_id)
+
+
+@router.get("/costs/{subscription_id}/daily-range")
+async def get_daily_costs_by_range(
+    subscription_id: str,
+    from_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    to_date:   str = Query(..., description="End date in YYYY-MM-DD format"),
+):
+    return fetch_daily_costs_by_range(subscription_id, from_date, to_date)
 
 
 @router.get("/costs/{subscription_id}/monthly")

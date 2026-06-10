@@ -66,6 +66,16 @@ export class Home implements OnInit {
   serviceCosts: any[] = [];
   isLoadingAzure = false;
 
+  // Cost Trend (daily range) page state
+  costTrendFromDate = '';
+  costTrendToDate   = '';
+  costTrendMinDate  = '';
+  costTrendPoints: { date: string; cost: number }[] = [];
+  isLoadingCostTrend    = false;
+  costTrendError: string | null = null;
+  costTrendChartWidth   = 620;
+  costTrendChartHeight  = 260;
+
   // Yearly cost state
   yearlyCost = 0;
   yearlyCostError: string | null = null;
@@ -157,6 +167,22 @@ export class Home implements OnInit {
     } else if (page === 'azure') {
       if (this.selectedSubscriptionId) {
         this.loadSubscriptionMetrics(this.selectedSubscriptionId);
+      } else {
+        this.loadSubscriptions();
+      }
+    } else if (page === 'cost-trend') {
+      if (!this.costTrendFromDate) {
+        // Initialise defaults: today-7 → today, min = Jan 1 of current year
+        const now  = new Date();
+        const to   = now.toISOString().slice(0, 10);
+        const from = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+        const minD = `${now.getFullYear()}-01-01`;
+        this.costTrendToDate   = to;
+        this.costTrendFromDate = from;
+        this.costTrendMinDate  = minD;
+      }
+      if (this.selectedSubscriptionId) {
+        this.loadDailyCostRange();
       } else {
         this.loadSubscriptions();
       }
@@ -498,6 +524,76 @@ export class Home implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // ── Daily cost range (Cost Trend page) ───────────────────────────────────
+
+  loadDailyCostRange() {
+    if (!this.selectedSubscriptionId || !this.costTrendFromDate || !this.costTrendToDate) return;
+    this.isLoadingCostTrend = true;
+    this.costTrendError     = null;
+    this.azureApi.getDailyCostsByRange(
+      this.selectedSubscriptionId,
+      this.costTrendFromDate,
+      this.costTrendToDate
+    ).subscribe({
+      next: (res: any) => {
+        this.costTrendPoints    = res?.points || [];
+        this.isLoadingCostTrend = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.costTrendPoints    = [];
+        this.costTrendError     = err.error?.detail || err.error?.message || err.message || 'Failed to load daily costs.';
+        this.isLoadingCostTrend = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  onCostTrendDateChange() {
+    if (this.costTrendFromDate && this.costTrendToDate && this.selectedSubscriptionId) {
+      this.loadDailyCostRange();
+    }
+  }
+
+  // SVG chart helpers for cost-trend page
+  get costTrendMaxCost(): number {
+    if (!this.costTrendPoints.length) return 1;
+    return Math.max(...this.costTrendPoints.map(p => p.cost));
+  }
+
+  get costTrendYLabels(): string[] {
+    const max = this.costTrendMaxCost;
+    const steps = 5;
+    return Array.from({ length: steps + 1 }, (_, i) =>
+      '₹' + Math.round((max / steps) * (steps - i)).toLocaleString()
+    );
+  }
+
+  get costTrendPolyline(): string {
+    const pts = this.costTrendPoints;
+    if (!pts.length) return '';
+    const W = 560; const H = 200; const LEFT = 60; const TOP = 20;
+    const max = this.costTrendMaxCost || 1;
+    return pts.map((p, i) => {
+      const x = LEFT + (i / Math.max(pts.length - 1, 1)) * W;
+      const y = TOP + H - (p.cost / max) * H;
+      return `${x},${y}`;
+    }).join(' ');
+  }
+
+  get costTrendCircles(): { x: number; y: number; date: string; cost: number }[] {
+    const pts = this.costTrendPoints;
+    if (!pts.length) return [];
+    const W = 560; const H = 200; const LEFT = 60; const TOP = 20;
+    const max = this.costTrendMaxCost || 1;
+    return pts.map((p, i) => ({
+      x:    LEFT + (i / Math.max(pts.length - 1, 1)) * W,
+      y:    TOP + H - (p.cost / max) * H,
+      date: p.date,
+      cost: p.cost
+    }));
   }
 
   calculateProjectDistribution() {

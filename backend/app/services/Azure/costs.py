@@ -129,6 +129,46 @@ def fetch_daily_costs(subscription_id: str):
     rows = result.get("properties", {}).get("rows", [])
     return {"success": True, "daily_costs": rows, "rows": rows}
 
+
+# 4b. Fetch day-wise costs for a custom date range
+def fetch_daily_costs_by_range(subscription_id: str, from_date: str, to_date: str):
+    """
+    Fetch daily granularity costs between from_date and to_date (inclusive).
+    Dates should be ISO format strings e.g. '2026-01-01'.
+    Returns a list of { date: 'YYYY-MM-DD', cost: float } dicts sorted by date.
+    """
+    payload = {
+        "type": "ActualCost",
+        "timeframe": "Custom",
+        "timePeriod": {
+            "from": f"{from_date}T00:00:00+00:00",
+            "to":   f"{to_date}T23:59:59+00:00"
+        },
+        "dataset": {
+            "granularity": "Daily",
+            "aggregation": {
+                "totalCost": {"name": "Cost", "function": "Sum"}
+            }
+        }
+    }
+    result = _execute_azure_query(subscription_id, payload)
+    raw_rows = result.get("properties", {}).get("rows", [])
+
+    # Azure returns rows as [cost_float, date_int_YYYYMMDD, currency_str]
+    points = []
+    for row in raw_rows:
+        if len(row) >= 2:
+            cost = float(row[0])
+            raw_date = str(row[1])          # e.g. "20260101"
+            if len(raw_date) == 8 and raw_date.isdigit():
+                label = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
+            else:
+                label = raw_date
+            points.append({"date": label, "cost": round(cost, 2)})
+
+    points.sort(key=lambda p: p["date"])
+    return {"success": True, "points": points, "count": len(points)}
+
 # 5. Fetch monthly historical cost matrices
 def fetch_monthly_costs(subscription_id: str):
     payload = {

@@ -22,6 +22,12 @@ export class AzureApiService {
     return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/daily`);
   }
 
+  getDailyCostsByRange(subscriptionId: string, fromDate: string, toDate: string): Observable<any> {
+    return this.http.get<any>(
+      `${this.baseUrl}/costs/${subscriptionId}/daily-range?from_date=${fromDate}&to_date=${toDate}`
+    );
+  }
+
   getMonthlyCosts(subscriptionId: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/monthly`);
   }
