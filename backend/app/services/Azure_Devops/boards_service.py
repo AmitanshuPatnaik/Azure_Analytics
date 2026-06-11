@@ -57,6 +57,29 @@ def fetch_sprints(project_name):
         return []
 
 
+def get_sprint_sort_key(sprint_name, project_name):
+    import re
+    s_name_lower = sprint_name.lower() if sprint_name else ""
+    p_name_lower = project_name.lower() if project_name else ""
+    
+    # 1. Priority (contains 'priority')
+    if "priority" in s_name_lower:
+        return (0, 0, sprint_name)
+        
+    # 2. Numbered (contains digits)
+    digits = re.findall(r'\d+', sprint_name)
+    if digits:
+        num = int(digits[0])
+        return (1, -num, sprint_name)
+        
+    # 3. Contains project name
+    if p_name_lower in s_name_lower:
+        return (2, 0, sprint_name)
+        
+    # 4. Others
+    return (3, 0, sprint_name)
+
+
 def fetch_work_items(project_name):
     if not base_url or not collection or not pat:
         return {
@@ -169,7 +192,10 @@ def fetch_work_items(project_name):
                 "fields": out_fields,
             })
 
-        sprints = sorted(sprint_set)
+        # Sort raw items using the custom sprint sort key to group them in the correct order for the frontend
+        raw_items.sort(key=lambda x: get_sprint_sort_key(x["fields"]["_sprint"], project_name))
+
+        sprints = sorted(list(sprint_set), key=lambda s: get_sprint_sort_key(s, project_name))
 
         return {
             "success": True,
