@@ -1,8 +1,13 @@
 import requests
 import time
 
+<<<<<<< HEAD
 from app.services.Azure.azure_auth import get_azure_token
 from app.core.config import azure_cost_base_url
+=======
+from services.Azure.azure_auth import get_azure_token
+from core.config import azure_cost_base_url
+>>>>>>> 81abce3 (Modified Backend imports)
 
 def _execute_azure_query(subscription_id: str, payload: dict):
     """
@@ -311,8 +316,13 @@ def fetch_budgets(subscription_id: str):
 
 
 def fetch_aggregated_monthly_costs():
+<<<<<<< HEAD
     from app.services.Azure.subscriptions import fetch_subscriptions
     from app.core.data_cache import cache # Safeguarded local lookup import
+=======
+    from services.Azure.subscriptions import fetch_subscriptions
+    from core.data_cache import cache # Safeguarded local lookup import
+>>>>>>> 81abce3 (Modified Backend imports)
     
     try:
         subs_data = fetch_subscriptions()

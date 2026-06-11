@@ -10,6 +10,7 @@ import threading
 import time
 from datetime import datetime, timezone
 
+<<<<<<< HEAD
 from app.core.data_cache import cache
 
 # ── Service imports ──────────────────────────────────────────────────────── #
@@ -17,6 +18,15 @@ from app.services.Azure_Devops.projects_service import fetch_projects
 from app.services.Azure_Devops.repositories_service import fetch_all_repositories
 from app.services.Azure.subscriptions import fetch_subscriptions
 from app.services.Azure.costs import (
+=======
+from core.data_cache import cache
+
+# ── Service imports ──────────────────────────────────────────────────────── #
+from services.Azure_Devops.projects_service import fetch_projects
+from services.Azure_Devops.repositories_service import fetch_all_repositories
+from services.Azure.subscriptions import fetch_subscriptions
+from services.Azure.costs import (
+>>>>>>> 81abce3 (Modified Backend imports)
     fetch_total_cost,
     fetch_resource_group_costs,
     fetch_service_costs,

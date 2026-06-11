@@ -1,7 +1,13 @@
 from fastapi import APIRouter
+<<<<<<< HEAD
 from app.services.Azure_Devops.projects_service import fetch_projects
 from app.services.Azure_Devops.pipelines_service import fetch_pipelines
 from app.services.Azure.azure_auth import get_azure_token
+=======
+from services.Azure_Devops.projects_service import fetch_projects
+from services.Azure_Devops.pipelines_service import fetch_pipelines
+from services.Azure.azure_auth import get_azure_token
+>>>>>>> 81abce3 (Modified Backend imports)
 import requests
 
 router = APIRouter(prefix="/status", tags=["Status"])

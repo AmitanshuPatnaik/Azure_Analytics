@@ -1,6 +1,10 @@
 from fastapi import APIRouter
 
+<<<<<<< HEAD
 from app.services.Azure_Devops.testplans_service import fetch_test_plans
+=======
+from services.Azure_Devops.testplans_service import fetch_test_plans
+>>>>>>> 81abce3 (Modified Backend imports)
 
 router = APIRouter(tags=["Test Plans"])
 

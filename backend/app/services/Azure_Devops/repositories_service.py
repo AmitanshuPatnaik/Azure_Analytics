@@ -5,11 +5,19 @@ from urllib.parse import quote
 from fastapi.responses import JSONResponse
 from datetime import datetime
 
+<<<<<<< HEAD
 from app.core.config import base_url, collection, pat
 from app.services.Azure_Devops.projects_service import fetch_projects
 from app.exceptions.handler import handle_error_response
 from app.core.auth import auth
 from app.core.constants import API_VERSION, RESOURCE_REPOSITORY
+=======
+from core.config import base_url, collection, pat
+from services.Azure_Devops.projects_service import fetch_projects
+from exceptions.handler import handle_error_response
+from core.auth import auth
+from core.constants import API_VERSION, RESOURCE_REPOSITORY
+>>>>>>> 81abce3 (Modified Backend imports)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

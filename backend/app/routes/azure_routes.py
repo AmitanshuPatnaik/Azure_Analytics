@@ -1,8 +1,15 @@
 from fastapi import APIRouter, Query
+<<<<<<< HEAD
 from app.core.data_cache import cache
 from app.services.Azure.azure_auth import azure_project_var
 from app.services.Azure.subscriptions import fetch_subscriptions
 from app.services.Azure.costs import (
+=======
+from core.data_cache import cache
+from services.Azure.azure_auth import azure_project_var
+from services.Azure.subscriptions import fetch_subscriptions
+from services.Azure.costs import (
+>>>>>>> 81abce3 (Modified Backend imports)
     fetch_total_cost,
     fetch_daily_costs,
     fetch_daily_costs_by_range,
@@ -21,8 +28,15 @@ router = APIRouter(prefix="/azure", tags=["Azure"])
 @router.get("/projects")
 async def get_azure_projects():
     import json
+<<<<<<< HEAD
     try:
         with open("config.json", "r") as f:
+=======
+    import os
+    _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
+    try:
+        with open(_config_path, "r") as f:
+>>>>>>> 81abce3 (Modified Backend imports)
             config = json.load(f)
     except Exception:
         config = {}

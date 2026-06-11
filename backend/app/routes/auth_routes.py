@@ -1,8 +1,14 @@
 from fastapi import APIRouter, HTTPException
 
+<<<<<<< HEAD
 from app.core.auth import create_access_token
 from app.core.config import username, password
 from app.schemas.login import LoginRequest
+=======
+from core.auth import create_access_token
+from core.config import username, password
+from schemas.login import LoginRequest
+>>>>>>> 81abce3 (Modified Backend imports)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

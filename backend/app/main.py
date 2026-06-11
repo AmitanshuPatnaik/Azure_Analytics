@@ -5,16 +5,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from app.routes.boards_routes import router as boards_router
-from app.routes.pipelines_routes import router as pipelines_router
-from app.routes.projects_routes import router as projects_router
-from app.routes.repositories_routes import router as repositories_router
-from app.routes.testplans_routes import router as testplans_router
-from app.routes.auth_routes import router as auth_router
-from app.routes.azure_routes import router as azure_router
-from app.routes.status_routes import router as status_router
+from routes.boards_routes import router as boards_router
+from routes.pipelines_routes import router as pipelines_router
+from routes.projects_routes import router as projects_router
+from routes.repositories_routes import router as repositories_router
+from routes.testplans_routes import router as testplans_router
+from routes.auth_routes import router as auth_router
+from routes.azure_routes import router as azure_router
+from routes.status_routes import router as status_router
 
-from app.core.sync_worker import SyncWorker
+from core.sync_worker import SyncWorker
 
 logger = logging.getLogger(__name__)
 _sync_worker: SyncWorker | None = None

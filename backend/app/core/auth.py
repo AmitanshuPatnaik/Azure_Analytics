@@ -3,8 +3,13 @@ import jwt
 from datetime import datetime, timedelta, UTC
 from fastapi import HTTPException, Header
 
+<<<<<<< HEAD
 from app.core.config import pat
 from app.core.config import secret, algorithm, expiry
+=======
+from core.config import pat
+from core.config import secret, algorithm, expiry
+>>>>>>> 81abce3 (Modified Backend imports)
 
 auth = HTTPBasicAuth("", pat)
 

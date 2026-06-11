@@ -11,8 +11,13 @@ and cannot practically be pre-cached en masse.
 
 from fastapi import APIRouter
 
+<<<<<<< HEAD
 from app.core.data_cache import cache
 from app.services.Azure_Devops.repositories_service import (
+=======
+from core.data_cache import cache
+from services.Azure_Devops.repositories_service import (
+>>>>>>> 81abce3 (Modified Backend imports)
     fetch_branches,
     fetch_commits,
     fetch_files,
