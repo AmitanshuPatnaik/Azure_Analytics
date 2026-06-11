@@ -746,7 +746,8 @@ export class Home implements OnInit {
   }
 
   get serviceCostsPieSlices(): any[] {
-    return this.buildPieSlices(this.serviceCosts);
+    const sorted = [...this.serviceCosts].sort((a, b) => (b[0] || 0) - (a[0] || 0));
+    return this.buildPieSlices(sorted);
   }
 
   calculateProjectDistribution() {
