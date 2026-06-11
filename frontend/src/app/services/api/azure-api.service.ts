@@ -10,53 +10,61 @@ export class AzureApiService {
 
   constructor(private http: HttpClient) {}
 
-  getSubscriptions(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/subscriptions`);
+  private getUrl(path: string, project?: string): string {
+    if (project) {
+      const sep = path.includes('?') ? '&' : '?';
+      return `${this.baseUrl}/${path}${sep}project=${project}`;
+    }
+    return `${this.baseUrl}/${path}`;
   }
 
-  getTotalCost(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/total`);
+  getSubscriptions(project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl('subscriptions', project));
   }
 
-  getDailyCosts(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/daily`);
+  getTotalCost(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/total`, project));
   }
 
-  getDailyCostsByRange(subscriptionId: string, fromDate: string, toDate: string): Observable<any> {
+  getDailyCosts(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/daily`, project));
+  }
+
+  getDailyCostsByRange(subscriptionId: string, fromDate: string, toDate: string, project?: string): Observable<any> {
     return this.http.get<any>(
-      `${this.baseUrl}/costs/${subscriptionId}/daily-range?from_date=${fromDate}&to_date=${toDate}`
+      this.getUrl(`costs/${subscriptionId}/daily-range?from_date=${fromDate}&to_date=${toDate}`, project)
     );
   }
 
-  getMonthlyCosts(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/monthly`);
+  getMonthlyCosts(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/monthly`, project));
   }
 
-  getYearlyCosts(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/yearly`);
+  getYearlyCosts(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/yearly`, project));
   }
 
-  getResourceGroupCosts(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/resourcegroups`);
+  getResourceGroupCosts(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/resourcegroups`, project));
   }
 
-  getServiceCosts(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/services`);
+  getServiceCosts(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/services`, project));
   }
 
-  getResourceCosts(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/resources`);
+  getResourceCosts(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/resources`, project));
   }
 
-  getTopResources(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/top-resources`);
+  getTopResources(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/top-resources`, project));
   }
 
-  getBudgets(subscriptionId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/${subscriptionId}/budgets`);
+  getBudgets(subscriptionId: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/budgets`, project));
   }
 
-  getCostTrend(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/costs/trend`);
+  getCostTrend(project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl('costs/trend', project));
   }
 }

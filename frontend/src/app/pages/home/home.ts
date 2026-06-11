@@ -59,6 +59,8 @@ export class Home implements OnInit {
   isLoadingTestPlans = false;
 
   // Azure state
+  selectedAzureProject = '';
+  azureProjects: string[] = ['AiDocFlo', 'TimeFlow', 'Integrelity'];
   selectedSubscriptionId = '';
   totalCost = 0;
   budgets: any[] = [];
@@ -177,7 +179,7 @@ export class Home implements OnInit {
       if (this.selectedSubscriptionId) {
         this.loadSubscriptionMetrics(this.selectedSubscriptionId);
         this.loadDailyCostRange();
-      } else {
+      } else if (this.selectedAzureProject) {
         this.loadSubscriptions();
       }
     }
@@ -263,7 +265,7 @@ export class Home implements OnInit {
 
   loadSubscriptions() {
     this.subscriptionsError = null;
-    this.azureApi.getSubscriptions().subscribe({
+    this.azureApi.getSubscriptions(this.selectedAzureProject).subscribe({
       next: (res: any) => {
         let subs = [];
         if (res && res.subscriptions && res.subscriptions.length > 0) {
@@ -321,7 +323,7 @@ export class Home implements OnInit {
 
   loadTrendData() {
     this.trendDataError = null;
-    this.azureApi.getCostTrend().subscribe({
+    this.azureApi.getCostTrend(this.selectedAzureProject).subscribe({
       next: (res: any) => {
         console.log(res)
         if (res && res.trend && res.trend.length > 0) {
@@ -472,10 +474,10 @@ export class Home implements OnInit {
     this.isLoadingAzure = true;
     this.azureError = null;
 
-    const totalCost$ = this.azureApi.getTotalCost(subId);
-    const budgets$ = this.azureApi.getBudgets(subId);
-    const topResources$ = this.azureApi.getTopResources(subId);
-    const serviceCosts$ = this.azureApi.getServiceCosts(subId);
+    const totalCost$ = this.azureApi.getTotalCost(subId, this.selectedAzureProject);
+    const budgets$ = this.azureApi.getBudgets(subId, this.selectedAzureProject);
+    const topResources$ = this.azureApi.getTopResources(subId, this.selectedAzureProject);
+    const serviceCosts$ = this.azureApi.getServiceCosts(subId, this.selectedAzureProject);
 
     forkJoin({
       total: totalCost$,
@@ -519,7 +521,7 @@ export class Home implements OnInit {
   loadYearlyCost(subId: string) {
     this.isLoadingYearlyCost = true;
     this.yearlyCostError = null;
-    this.azureApi.getYearlyCosts(subId).subscribe({
+    this.azureApi.getYearlyCosts(subId, this.selectedAzureProject).subscribe({
       next: (res: any) => {
         const rows = res?.rows || res?.yearly_costs || [];
         if (rows && rows.length > 0 && rows[0].length > 0) {
@@ -549,7 +551,8 @@ export class Home implements OnInit {
     this.azureApi.getDailyCostsByRange(
       this.selectedSubscriptionId,
       this.costTrendFromDate,
-      this.costTrendToDate
+      this.costTrendToDate,
+      this.selectedAzureProject
     ).subscribe({
       next: (res: any) => {
         this.costTrendPoints = res?.points || [];
@@ -1114,6 +1117,26 @@ export class Home implements OnInit {
     }
     this.loadSubscriptionMetrics(subId);
     this.loadDailyCostRange();
+  }
+
+  onAzureProjectChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const proj = select.value;
+    this.selectedAzureProject = proj;
+    this.selectedSubscriptionId = '';
+    this.subscriptions = [];
+    this.totalCost = 0;
+    this.budgets = [];
+    this.topResources = [];
+    this.serviceCosts = [];
+    this.costTrendPoints = [];
+    this.yearlyCost = 0;
+
+    if (!proj) {
+      return;
+    }
+    this.loadSubscriptions();
+    this.loadTrendData();
   }
 
   // --- Repository details operations handlers ---

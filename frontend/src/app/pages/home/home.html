@@ -794,15 +794,28 @@
     <div class="tab-header"
       style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h1 style="margin: 0;">Azure Resources & Cost Analytics</h1>
-      <div>
-        <label for="sub-select" style="margin-right: 10px; font-weight: 500;">Select Subscription:</label>
-        <select id="sub-select" class="month-dropdown" style="width: auto;" [value]="selectedSubscriptionId"
-          (change)="onSubscriptionChange($event)">
-          <option value="">Select Subscription</option>
-          @for (sub of subscriptions; track sub.subscriptionId || $index) {
-          <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
-          }
-        </select>
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <div>
+          <label for="azure-proj-select" style="margin-right: 10px; font-weight: 500;">Select Azure Project:</label>
+          <select id="azure-proj-select" class="month-dropdown" style="width: auto;" [value]="selectedAzureProject"
+            (change)="onAzureProjectChange($event)">
+            <option value="">Select Azure Project</option>
+            @for (proj of azureProjects; track proj) {
+            <option [value]="proj">{{ proj }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="sub-select" style="margin-right: 10px; font-weight: 500;">Select Subscription:</label>
+          <select id="sub-select" class="month-dropdown" style="width: auto;" [value]="selectedSubscriptionId"
+            [disabled]="!selectedAzureProject"
+            (change)="onSubscriptionChange($event)">
+            <option value="">Select Subscription</option>
+            @for (sub of subscriptions; track sub.subscriptionId || $index) {
+            <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
+            }
+          </select>
+        </div>
       </div>
     </div>
 
@@ -813,6 +826,10 @@
     } @else if (azureError) {
     <div class="error-banner">
       Could not load subscription details: {{ azureError }}
+    </div>
+    } @else if (!selectedAzureProject) {
+    <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+      <p style="color: #6b7280; font-size: 16px;">Please select an Azure project to view cost metrics.</p>
     </div>
     } @else if (!selectedSubscriptionId) {
     <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">

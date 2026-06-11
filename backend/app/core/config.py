@@ -23,8 +23,17 @@ try:
 except (ValueError, TypeError):
     expiry = 60
 
-tenant_id = config.get("AZURE_TENANT_ID", "")
-client_id = config.get("AZURE_CLIENT_ID", "")
-client_secret = config.get("AZURE_CLIENT_SECRET", "")
+doc_flow_tenant_id = config.get("DOC_FLOW_TENANT_ID", "")
+doc_flow_client_id = config.get("DOC_FLOW_CLIENT_ID", "")
+doc_flow_client_secret = config.get("DOC_FLOW_CLIENT_SECRET", "")
+
+time_flow_tenant_id = config.get("TIME_FLOW_TENANT_ID", "")
+time_flow_client_id = config.get("TIME_FLOW_CLIENT_ID", "")
+time_flow_client_secret = config.get("TIME_FLOW_CLIENT_SECRET", "")
+
+integrelity_tenant_id = config.get("INTEGRELITY_TENANT_ID", "")
+integrelity_client_id = config.get("INTEGRELITY_CLIENT_ID", "")
+integrelity_client_secret = config.get("INTEGRELITY_CLIENT_SECRET", "")
+
 azure_cost_base_url = config.get("azure_cost_base_url", "")
 azure_management_base_url = config.get("azure_management_base_url", "")

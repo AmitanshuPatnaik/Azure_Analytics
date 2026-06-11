@@ -4,7 +4,7 @@ from app.services.Azure.azure_auth import get_azure_token
 from app.core.config import azure_management_base_url
 
 
-def fetch_subscriptions():
+def fetch_subscriptions(project_name: str = None):
     if not azure_management_base_url:
         return {
             "success": False,
@@ -12,7 +12,7 @@ def fetch_subscriptions():
             "subscriptions": []
         }
     try:
-        token = get_azure_token()
+        token = get_azure_token(project_name)
 
         headers = {
             "Authorization": f"Bearer {token}"
