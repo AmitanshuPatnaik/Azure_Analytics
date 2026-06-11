@@ -61,7 +61,8 @@ def fetch_work_items(project_name):
         return {
             "success": False,
             "message": "Azure DevOps is not configured. Please check config.json.",
-            "workItems": [],
+            "count": 0,
+            "value": [],
             "sprints": []
         }
     try:
@@ -71,17 +72,32 @@ def fetch_work_items(project_name):
             return {
                 "success": False,
                 "message": "No work items found",
-                "workItems": [],
+                "count": 0,
+                "value": [],
                 "sprints": []
             }
 
         ids_string = ",".join(map(str, ids[:200]))
 
+        # Fetch all fields required by the sample JSON response format
+        fields_param = (
+            "System.Id,System.WorkItemType,System.Title,System.State,"
+            "System.BoardColumn,System.AssignedTo,"
+            "Microsoft.VSTS.Common.Priority,"
+            "Microsoft.VSTS.Common.Severity,"
+            "Microsoft.VSTS.Common.StateChangeDate,"
+            "Microsoft.VSTS.Scheduling.StartDate,"
+            "Microsoft.VSTS.Scheduling.TargetDate,"
+            "Microsoft.VSTS.Scheduling.OriginalEstimate,"
+            "Microsoft.VSTS.Scheduling.CompletedWork,"
+            "Microsoft.VSTS.Scheduling.RemainingWork,"
+            "System.IterationPath"
+        )
+
         url = (
             f"{base_url}/{collection}/_apis/wit/workitems"
             f"?ids={ids_string}"
-            f"&fields=System.Id,System.Title,System.WorkItemType,System.State,"
-            f"System.AssignedTo,System.CreatedDate,System.IterationPath"
+            f"&fields={fields_param}"
             f"&api-version={API_VERSION}"
         )
         auth_basic = HTTPBasicAuth("", pat)
@@ -91,8 +107,10 @@ def fetch_work_items(project_name):
         if response.status_code != 200:
             return handle_error_response(response, f"{RESOURCE_WORKITEM} in project '{project_name}'")
 
-        work_items = []
+        raw_items = []
+        sprint_set = set()
         data = response.json()
+
         for item in data.get("value", []):
             if not isinstance(item, dict):
                 continue
@@ -100,41 +118,69 @@ def fetch_work_items(project_name):
             if not isinstance(fields, dict):
                 fields = {}
 
-            assigned_to_info = fields.get("System.AssignedTo")
-            assigned_to_name = (
-                assigned_to_info.get("displayName")
-                if isinstance(assigned_to_info, dict)
+            # Extract sprint from iteration path for grouping
+            iteration_path = fields.get("System.IterationPath", "")
+            sprint = iteration_path.split("\\")[-1] if iteration_path else "No Sprint"
+            if sprint:
+                sprint_set.add(sprint)
+
+            # Build the fields object matching the sample JSON format
+            assigned_to_raw = fields.get("System.AssignedTo")
+            assigned_to = (
+                {
+                    "displayName": assigned_to_raw.get("displayName"),
+                    "uniqueName": assigned_to_raw.get("uniqueName")
+                }
+                if isinstance(assigned_to_raw, dict)
                 else None
             )
 
-            # Extract just the sprint name from the iteration path
-            # e.g. "MyProject\\Sprint 1" → "Sprint 1"
-            iteration_path = fields.get("System.IterationPath", "")
-            sprint = iteration_path.split("\\")[-1] if iteration_path else "No Sprint"
+            # Only include optional fields when they are present
+            out_fields = {
+                "System.Id": fields.get("System.Id"),
+                "System.WorkItemType": fields.get("System.WorkItemType"),
+                "System.Title": fields.get("System.Title"),
+                "System.State": fields.get("System.State"),
+                "System.BoardColumn": fields.get("System.BoardColumn"),
+                "System.AssignedTo": assigned_to,
+                "Microsoft.VSTS.Common.Priority": fields.get("Microsoft.VSTS.Common.Priority"),
+                "Microsoft.VSTS.Common.StateChangeDate": fields.get("Microsoft.VSTS.Common.StateChangeDate"),
+                # Sprint stored internally for frontend grouping
+                "_sprint": sprint,
+            }
 
-            work_items.append({
-                "id":          item.get("id"),
-                "title":       fields.get("System.Title"),
-                "type":        fields.get("System.WorkItemType"),
-                "state":       fields.get("System.State"),
-                "assignedTo":  assigned_to_name,
-                "createdDate": fields.get("System.CreatedDate"),
-                "sprint":      sprint,
+            # Optional fields — only add when non-null
+            for opt_key in (
+                "Microsoft.VSTS.Common.Severity",
+                "Microsoft.VSTS.Scheduling.StartDate",
+                "Microsoft.VSTS.Scheduling.TargetDate",
+                "Microsoft.VSTS.Scheduling.OriginalEstimate",
+                "Microsoft.VSTS.Scheduling.CompletedWork",
+                "Microsoft.VSTS.Scheduling.RemainingWork",
+            ):
+                val = fields.get(opt_key)
+                if val is not None:
+                    out_fields[opt_key] = val
+
+            raw_items.append({
+                "id":  item.get("id"),
+                "rev": item.get("rev"),
+                "fields": out_fields,
             })
 
-        # Collect unique sprint names from actual work items
-        sprints = sorted(set(wi["sprint"] for wi in work_items if wi["sprint"]))
+        sprints = sorted(sprint_set)
 
         return {
-            "success":   True,
-            "count":     len(work_items),
-            "workItems": work_items,
-            "sprints":   sprints,
+            "success": True,
+            "count":   len(raw_items),
+            "value":   raw_items,
+            "sprints": sprints,
         }
     except Exception as e:
         return {
             "success": False,
             "message": f"Failed to fetch work items: {str(e)}",
-            "workItems": [],
+            "count": 0,
+            "value": [],
             "sprints": []
         }

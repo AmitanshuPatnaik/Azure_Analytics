@@ -404,7 +404,26 @@ export class Home implements OnInit {
     this.boardsApi.getWorkItems(projName).subscribe({
       next: (res: any) => {
         if (res && res.success) {
-          this.workItems = res.workItems || [];
+          // Map raw Azure DevOps {value:[{id,rev,fields}]} format to flat workItem objects
+          this.workItems = (res.value || []).map((item: any) => {
+            const f = item.fields || {};
+            const assignedTo = f['System.AssignedTo'];
+            return {
+              id:          item.id,
+              rev:         item.rev,
+              title:       f['System.Title'],
+              type:        f['System.WorkItemType'],
+              state:       f['System.State'],
+              boardColumn: f['System.BoardColumn'],
+              assignedTo:  assignedTo?.displayName || null,
+              priority:    f['Microsoft.VSTS.Common.Priority'],
+              severity:    f['Microsoft.VSTS.Common.Severity'] || null,
+              stateChangedDate: f['Microsoft.VSTS.Common.StateChangeDate'] || null,
+              startDate:   f['Microsoft.VSTS.Scheduling.StartDate'] || null,
+              targetDate:  f['Microsoft.VSTS.Scheduling.TargetDate'] || null,
+              sprint:      f['_sprint'] || 'No Sprint',
+            };
+          });
           this.workItemSprints = res.sprints || [];
         } else {
           this.workItems = [];
