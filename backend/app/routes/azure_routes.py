@@ -82,7 +82,21 @@ async def get_resource_group_costs(subscription_id: str):
 
 @router.get("/costs/{subscription_id}/services")
 async def get_service_costs(subscription_id: str):
-    return cache.get(f"services:{subscription_id}", {"success": True, "services": [], "rows": []})
+    """
+    Costs grouped by service name — reads from cache first, falls back to live API.
+    """
+    cached = cache.get(f"services:{subscription_id}")
+
+    if cached and isinstance(cached, dict) and cached.get("rows"):
+        return cached
+
+    # Live fallback if the cache worker hasn't populated this key yet
+    live_fallback = fetch_service_costs(subscription_id)
+    if live_fallback and live_fallback.get("success") and live_fallback.get("rows"):
+        cache.set(f"services:{subscription_id}", live_fallback)
+        return live_fallback
+
+    return cached if cached else {"success": True, "services": [], "rows": []}
 
 
 @router.get("/costs/{subscription_id}/top-resources")
@@ -108,7 +122,21 @@ async def get_top_resources(subscription_id: str):
 
 @router.get("/costs/{subscription_id}/budgets")
 async def get_budgets(subscription_id: str):
-    return cache.get(f"budgets:{subscription_id}", {"success": True, "budgets": []})
+    """
+    Active budget thresholds — reads from cache first, falls back to live API.
+    """
+    cached = cache.get(f"budgets:{subscription_id}")
+
+    if cached and isinstance(cached, dict) and cached.get("budgets") is not None:
+        return cached
+
+    # Live fallback if the cache worker hasn't populated this key yet
+    live_fallback = fetch_budgets(subscription_id)
+    if live_fallback and live_fallback.get("success"):
+        cache.set(f"budgets:{subscription_id}", live_fallback)
+        return live_fallback
+
+    return cached if cached else {"success": True, "budgets": []}
 
 
 @router.get("/costs/{subscription_id}/yearly")
