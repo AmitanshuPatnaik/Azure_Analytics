@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class AzureApiService {
   private baseUrl = 'http://127.0.0.1:8000/api/azure';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private getUrl(path: string, project?: string): string {
     if (project) {
@@ -66,5 +66,9 @@ export class AzureApiService {
 
   getCostTrend(project?: string): Observable<any> {
     return this.http.get<any>(this.getUrl('costs/trend', project));
+  }
+
+  getAzureProjects(): Observable<any> {
+    return this.http.get<any>(this.getUrl('projects'));
   }
 }

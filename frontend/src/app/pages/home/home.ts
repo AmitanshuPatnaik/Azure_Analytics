@@ -60,8 +60,8 @@ export class Home implements OnInit {
 
   // Azure state
   selectedAzureProject = '';
-  azureProjects: string[] = ['AiDocFlo', 'TimeFlow', 'Integrelity'];
-  selectedHomeAzureProject = 'AiDocFlo';
+  azureProjects: string[] = [];
+  selectedHomeAzureProject = '';
   selectedHomeSubscriptionId = '';
   selectedSubscriptionId = '';
   totalCost = 0;
@@ -151,9 +151,14 @@ export class Home implements OnInit {
       this.loadProjects();
       this.loadRepositories();
       this.loadActivePipelinesCount();
-      this.loadTrendData();
       this.loadServicesStatus();
-      if (this.selectedHomeAzureProject) {
+      if (this.azureProjects.length === 0) {
+        this.loadAzureProjects('home');
+      } else {
+        if (!this.selectedHomeAzureProject) {
+          this.selectedHomeAzureProject = this.azureProjects[0];
+        }
+        this.loadTrendData();
         this.loadHomeSubscriptions(this.selectedHomeAzureProject);
       }
     } else if (page === 'repos') {
@@ -183,13 +188,45 @@ export class Home implements OnInit {
       if (this.selectedSubscriptionId) {
         this.loadSubscriptionMetrics(this.selectedSubscriptionId);
         this.loadDailyCostRange();
-      } else if (this.selectedAzureProject) {
+      } else if (this.azureProjects.length === 0) {
+        this.loadAzureProjects('azure');
+      } else {
+        if (!this.selectedAzureProject) {
+          this.selectedAzureProject = this.azureProjects[0];
+        }
         this.loadSubscriptions();
       }
     }
   }
 
   // --- Loader functions ---
+
+  loadAzureProjects(onPage: 'home' | 'azure') {
+    this.azureApi.getAzureProjects().subscribe({
+      next: (res: any) => {
+        if (res && res.projects) {
+          this.azureProjects = res.projects;
+          if (this.azureProjects.length > 0) {
+            if (onPage === 'home') {
+              if (!this.selectedHomeAzureProject) {
+                this.selectedHomeAzureProject = this.azureProjects[0];
+              }
+              this.loadTrendData();
+              this.loadHomeSubscriptions(this.selectedHomeAzureProject);
+            } else if (onPage === 'azure') {
+              if (!this.selectedAzureProject) {
+                this.selectedAzureProject = this.azureProjects[0];
+              }
+              this.loadSubscriptions();
+            }
+          }
+        }
+      },
+      error: (err) => {
+        console.warn('Failed to load Azure projects', err);
+      }
+    });
+  }
 
   loadProjects() {
     this.isLoadingProjects = true;
@@ -463,19 +500,19 @@ export class Home implements OnInit {
             const f = item.fields || {};
             const assignedTo = f['System.AssignedTo'];
             return {
-              id:          item.id,
-              rev:         item.rev,
-              title:       f['System.Title'],
-              type:        f['System.WorkItemType'],
-              state:       f['System.State'],
+              id: item.id,
+              rev: item.rev,
+              title: f['System.Title'],
+              type: f['System.WorkItemType'],
+              state: f['System.State'],
               boardColumn: f['System.BoardColumn'],
-              assignedTo:  assignedTo?.displayName || null,
-              priority:    f['Microsoft.VSTS.Common.Priority'],
-              severity:    f['Microsoft.VSTS.Common.Severity'] || null,
+              assignedTo: assignedTo?.displayName || null,
+              priority: f['Microsoft.VSTS.Common.Priority'],
+              severity: f['Microsoft.VSTS.Common.Severity'] || null,
               stateChangedDate: f['Microsoft.VSTS.Common.StateChangeDate'] || null,
-              startDate:   f['Microsoft.VSTS.Scheduling.StartDate'] || null,
-              targetDate:  f['Microsoft.VSTS.Scheduling.TargetDate'] || null,
-              sprint:      f['_sprint'] || 'No Sprint',
+              startDate: f['Microsoft.VSTS.Scheduling.StartDate'] || null,
+              targetDate: f['Microsoft.VSTS.Scheduling.TargetDate'] || null,
+              sprint: f['_sprint'] || 'No Sprint',
             };
           });
           this.workItemSprints = res.sprints || [];

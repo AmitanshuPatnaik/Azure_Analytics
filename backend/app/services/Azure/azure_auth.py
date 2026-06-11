@@ -40,9 +40,17 @@ def get_azure_token(project_name: str = None):
                 break
 
     if not t_id or not c_id or not c_secret:
-        t_id = config.get("DOC_FLOW_TENANT_ID")
-        c_id = config.get("DOC_FLOW_CLIENT_ID")
-        c_secret = config.get("DOC_FLOW_CLIENT_SECRET")
+        prefixes = []
+        for key in config.keys():
+            if key.endswith("_TENANT_ID"):
+                prefix = key[:-10]
+                if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
+                    prefixes.append(prefix)
+        if prefixes:
+            fallback_prefix = prefixes[0]
+            t_id = config.get(f"{fallback_prefix}_TENANT_ID")
+            c_id = config.get(f"{fallback_prefix}_CLIENT_ID")
+            c_secret = config.get(f"{fallback_prefix}_CLIENT_SECRET")
 
     if not t_id or not c_id or not c_secret:
         raise ValueError("Azure configuration is incomplete or missing in config.json")

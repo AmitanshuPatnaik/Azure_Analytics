@@ -8,12 +8,13 @@
 
     @if(dashboardService.selectedPage === 'home'){
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
       <h1 style="margin: 0;">Watcher Analytics Dashboard</h1>
       <div>
         <label for="home-azure-proj-select" style="margin-right: 10px; font-weight: 500;">Select Azure Project:</label>
-        <select id="home-azure-proj-select" class="month-dropdown" style="width: auto;" [value]="selectedHomeAzureProject"
-          (change)="onHomeAzureProjectChange($event)">
+        <select id="home-azure-proj-select" class="month-dropdown" style="width: auto;"
+          [value]="selectedHomeAzureProject" (change)="onHomeAzureProjectChange($event)">
           <option value="">Select Azure Project</option>
           @for (proj of azureProjects; track proj) {
           <option [value]="proj">{{ proj }}</option>
@@ -826,8 +827,7 @@
         <div>
           <label for="sub-select" style="margin-right: 10px; font-weight: 500;">Select Subscription:</label>
           <select id="sub-select" class="month-dropdown" style="width: auto;" [value]="selectedSubscriptionId"
-            [disabled]="!selectedAzureProject"
-            (change)="onSubscriptionChange($event)">
+            [disabled]="!selectedAzureProject" (change)="onSubscriptionChange($event)">
             <option value="">Select Subscription</option>
             @for (sub of subscriptions; track sub.subscriptionId || $index) {
             <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
@@ -878,72 +878,67 @@
 
     <!-- ── Daily Cost Trend ─────────────────────────────────────────── -->
     <div class="chart-card" style="margin-top: 24px;">
-      <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div class="chart-header"
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <h2 style="margin: 0;">Daily Cost Trend</h2>
         <!-- Date filter -->
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
           <span style="font-size: 13px; font-weight: 600; color: #64748b;">🗓 Date Range:</span>
           <div style="display: flex; align-items: center; gap: 6px;">
             <label style="font-size: 13px; font-weight: 500;">From</label>
-            <input type="date" class="month-dropdown"
-              style="width: auto; font-size: 13px; padding: 4px 8px;"
+            <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 4px 8px;"
               [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="costTrendFromDate"
               (change)="costTrendFromDate = $any($event.target).value; onCostTrendDateChange()">
           </div>
           <div style="display: flex; align-items: center; gap: 6px;">
             <label style="font-size: 13px; font-weight: 500;">To</label>
-            <input type="date" class="month-dropdown"
-              style="width: auto; font-size: 13px; padding: 4px 8px;"
+            <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 4px 8px;"
               [min]="costTrendFromDate" [max]="costTrendMaxDate" [value]="costTrendToDate"
               (change)="costTrendToDate = $any($event.target).value; onCostTrendDateChange()">
           </div>
           @if (costTrendPoints.length) {
-            <span style="font-size: 12px; color: #6b7280;">{{ costTrendPoints.length }} day(s)</span>
+          <span style="font-size: 12px; color: #6b7280;">{{ costTrendPoints.length }} day(s)</span>
           }
         </div>
       </div>
 
       @if (costTrendError) {
-        <div class="error-inline">{{ costTrendError }}</div>
+      <div class="error-inline">{{ costTrendError }}</div>
       } @else if (isLoadingCostTrend) {
-        <div style="text-align: center; padding: 40px;"><p style="color: #6b7280;">Loading daily costs...</p></div>
+      <div style="text-align: center; padding: 40px;">
+        <p style="color: #6b7280;">Loading daily costs...</p>
+      </div>
       } @else if (!costTrendPoints.length) {
-        <div style="text-align: center; padding: 40px;">
-          <p style="color: #6b7280; font-size: 14px;">No cost data found for the selected date range.</p>
-        </div>
+      <div style="text-align: center; padding: 40px;">
+        <p style="color: #6b7280; font-size: 14px;">No cost data found for the selected date range.</p>
+      </div>
       } @else {
-        <div class="graph-container">
-          <svg viewBox="0 0 660 260" width="100%" height="260">
+      <div class="graph-container">
+        <svg viewBox="0 0 660 260" width="100%" height="260">
 
-            @for (lbl of costTrendYLabels; track $index) {
-              <line x1="60" [attr.y1]="20 + ($index * 40)"
-                    x2="630" [attr.y2]="20 + ($index * 40)"
-                    stroke="#e2e8f0" stroke-width="1"></line>
-              <text x="55" [attr.y]="24 + ($index * 40)"
-                    text-anchor="end" fill="#64748b" font-size="11">{{ lbl }}</text>
+          @for (lbl of costTrendYLabels; track $index) {
+          <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)" stroke="#e2e8f0"
+            stroke-width="1"></line>
+          <text x="55" [attr.y]="24 + ($index * 40)" text-anchor="end" fill="#64748b" font-size="11">{{ lbl }}</text>
+          }
+
+          @if (costTrendPolyline) {
+          <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'" fill="rgba(37,99,235,0.08)"></polygon>
+          <polyline [attr.points]="costTrendPolyline" fill="none" stroke="#2563eb" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round"></polyline>
+          }
+
+          @for (c of costTrendCircles; track c.date) {
+          <circle [attr.cx]="c.x" [attr.cy]="c.y" r="5" fill="#2563eb" stroke="#fff" stroke-width="2">
+            <title>{{ c.date }}: ₹{{ c.cost | number:'1.2-2' }}</title>
+          </circle>
+          @if (costTrendPoints.length <= 14) { <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b"
+            font-size="10">{{ c.date.slice(5) }}</text>
+            }
             }
 
-            @if (costTrendPolyline) {
-              <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'"
-                fill="rgba(37,99,235,0.08)"></polygon>
-              <polyline [attr.points]="costTrendPolyline"
-                fill="none" stroke="#2563eb" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round"></polyline>
-            }
-
-            @for (c of costTrendCircles; track c.date) {
-              <circle [attr.cx]="c.x" [attr.cy]="c.y" r="5"
-                fill="#2563eb" stroke="#fff" stroke-width="2">
-                <title>{{ c.date }}: ₹{{ c.cost | number:'1.2-2' }}</title>
-              </circle>
-              @if (costTrendPoints.length <= 14) {
-                <text [attr.x]="c.x" y="250" text-anchor="middle"
-                  fill="#64748b" font-size="10">{{ c.date.slice(5) }}</text>
-              }
-            }
-
-          </svg>
-        </div>
+        </svg>
+      </div>
       }
     </div>
     <!-- ── End Daily Cost Trend ──────────────────────────────────────── -->
@@ -952,103 +947,117 @@
 
       <!-- ── TOP RESOURCES PIE ───────────────────────────────────────────── -->
       <div class="chart-card" style="flex: 1; position: relative;">
-        <div class="chart-header"><h2>Top High-Spending Resources</h2></div>
+        <div class="chart-header">
+          <h2>Top High-Spending Resources</h2>
+        </div>
 
         @if (!topResourcesPieSlices.length) {
-          <div style="text-align:center; padding: 40px; color: #6b7280;">No data available.</div>
+        <div style="text-align:center; padding: 40px; color: #6b7280;">No data available.</div>
         } @else {
-          <!-- Tooltip -->
-          @if (hoveredTopResource) {
-            <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                <span [style.background]="hoveredTopResource.color" style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
-                <strong style="font-size:13px;">{{ hoveredTopResource.name }}</strong>
-              </div>
-              <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredTopResource.cost | number:'1.2-2' }}</div>
-              <div style="color:#64748b; font-size:11px;">{{ hoveredTopResource.percentage }}% of total</div>
-            </div>
-          }
-
-          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
-            <!-- SVG Pie -->
-            <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
-              @for (s of topResourcesPieSlices; track s.name) {
-                <path [attr.d]="s.path"
-                  [attr.fill]="s.color"
-                  stroke="#fff" stroke-width="2"
-                  style="cursor:pointer; transition: opacity 0.15s;"
-                  [style.opacity]="hoveredTopResource && hoveredTopResource.name !== s.name ? '0.55' : '1'"
-                  (mouseenter)="hoveredTopResource = s"
-                  (mouseleave)="hoveredTopResource = null">
-                </path>
-              }
-            </svg>
-
-            <!-- Legend -->
-            <div style="flex:1; padding-right:4px;">
-              @for (s of topResourcesPieSlices; track s.name) {
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
-                  (mouseenter)="hoveredTopResource = s" (mouseleave)="hoveredTopResource = null">
-                  <span [style.background]="s.color"
-                    style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
-                  <span style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
-                  <span style="font-size:11.5px; color:#6b7280; white-space:nowrap;">&#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}</span>
-                  <span style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{ s.percentage }}%</span>
-                </div>
-              }
-            </div>
+        <!-- Tooltip -->
+        @if (hoveredTopResource) {
+        <div
+          style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span [style.background]="hoveredTopResource.color"
+              style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
+            <strong style="font-size:13px;">{{ hoveredTopResource.name }}</strong>
           </div>
+          <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredTopResource.cost | number:'1.2-2' }}</div>
+          <div style="color:#64748b; font-size:11px;">{{ hoveredTopResource.percentage }}% of total</div>
+        </div>
+        }
+
+        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
+          <!-- SVG Pie -->
+          <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
+            @for (s of topResourcesPieSlices; track s.name) {
+            <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
+              style="cursor:pointer; transition: opacity 0.15s;"
+              [style.opacity]="hoveredTopResource && hoveredTopResource.name !== s.name ? '0.55' : '1'"
+              (mouseenter)="hoveredTopResource = s" (mouseleave)="hoveredTopResource = null">
+            </path>
+            }
+          </svg>
+
+          <!-- Legend -->
+          <div style="flex:1; padding-right:4px;">
+            @for (s of topResourcesPieSlices; track s.name) {
+            <div
+              style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
+              (mouseenter)="hoveredTopResource = s" (mouseleave)="hoveredTopResource = null">
+              <span [style.background]="s.color"
+                style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
+              <span
+                style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{
+                s.name }}</span>
+              <span style="font-size:11.5px; color:#6b7280; white-space:nowrap;">&#8377;{{
+                s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}</span>
+              <span
+                style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{
+                s.percentage }}%</span>
+            </div>
+            }
+          </div>
+        </div>
         }
       </div>
 
       <!-- ── SERVICES PIE ────────────────────────────────────────────────── -->
       <div class="chart-card" style="flex: 1; position: relative;">
-        <div class="chart-header"><h2>Costs by Service</h2></div>
+        <div class="chart-header">
+          <h2>Costs by Service</h2>
+        </div>
 
         @if (!serviceCostsPieSlices.length) {
-          <div style="text-align:center; padding: 40px; color: #6b7280;">No data available.</div>
+        <div style="text-align:center; padding: 40px; color: #6b7280;">No data available.</div>
         } @else {
-          <!-- Tooltip -->
-          @if (hoveredServiceCost) {
-            <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                <span [style.background]="hoveredServiceCost.color" style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
-                <strong style="font-size:13px;">{{ hoveredServiceCost.name }}</strong>
-              </div>
-              <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredServiceCost.cost | number:'1.2-2' }}</div>
-              <div style="color:#64748b; font-size:11px;">{{ hoveredServiceCost.percentage }}% of total</div>
-            </div>
-          }
-
-          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
-            <!-- SVG Pie -->
-            <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
-              @for (s of serviceCostsPieSlices; track s.name) {
-                <path [attr.d]="s.path"
-                  [attr.fill]="s.color"
-                  stroke="#fff" stroke-width="2"
-                  style="cursor:pointer; transition: opacity 0.15s;"
-                  [style.opacity]="hoveredServiceCost && hoveredServiceCost.name !== s.name ? '0.55' : '1'"
-                  (mouseenter)="hoveredServiceCost = s"
-                  (mouseleave)="hoveredServiceCost = null">
-                </path>
-              }
-            </svg>
-
-            <!-- Legend -->
-            <div style="flex:1; padding-right:4px;">
-              @for (s of serviceCostsPieSlices; track s.name) {
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
-                  (mouseenter)="hoveredServiceCost = s" (mouseleave)="hoveredServiceCost = null">
-                  <span [style.background]="s.color"
-                    style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
-                  <span style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
-                  <span style="font-size:11.5px; color:#6b7280; white-space:nowrap;">&#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}</span>
-                  <span style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{ s.percentage }}%</span>
-                </div>
-              }
-            </div>
+        <!-- Tooltip -->
+        @if (hoveredServiceCost) {
+        <div
+          style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span [style.background]="hoveredServiceCost.color"
+              style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
+            <strong style="font-size:13px;">{{ hoveredServiceCost.name }}</strong>
           </div>
+          <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredServiceCost.cost | number:'1.2-2' }}</div>
+          <div style="color:#64748b; font-size:11px;">{{ hoveredServiceCost.percentage }}% of total</div>
+        </div>
+        }
+
+        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
+          <!-- SVG Pie -->
+          <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
+            @for (s of serviceCostsPieSlices; track s.name) {
+            <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
+              style="cursor:pointer; transition: opacity 0.15s;"
+              [style.opacity]="hoveredServiceCost && hoveredServiceCost.name !== s.name ? '0.55' : '1'"
+              (mouseenter)="hoveredServiceCost = s" (mouseleave)="hoveredServiceCost = null">
+            </path>
+            }
+          </svg>
+
+          <!-- Legend -->
+          <div style="flex:1; padding-right:4px;">
+            @for (s of serviceCostsPieSlices; track s.name) {
+            <div
+              style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
+              (mouseenter)="hoveredServiceCost = s" (mouseleave)="hoveredServiceCost = null">
+              <span [style.background]="s.color"
+                style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
+              <span
+                style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{
+                s.name }}</span>
+              <span style="font-size:11.5px; color:#6b7280; white-space:nowrap;">&#8377;{{
+                s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}</span>
+              <span
+                style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{
+                s.percentage }}%</span>
+            </div>
+            }
+          </div>
+        </div>
         }
       </div>
 

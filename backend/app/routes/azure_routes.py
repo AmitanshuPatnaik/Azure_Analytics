@@ -18,6 +18,28 @@ from app.services.Azure.costs import (
 
 router = APIRouter(prefix="/azure", tags=["Azure"])
 
+@router.get("/projects")
+async def get_azure_projects():
+    import json
+    try:
+        with open("config.json", "r") as f:
+            config = json.load(f)
+    except Exception:
+        config = {}
+    
+    projects = []
+    for key in config.keys():
+        if key.endswith("_TENANT_ID"):
+            prefix = key[:-10]
+            if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
+                if prefix == "DOC_FLOW":
+                    name = "AiDocFlo"
+                else:
+                    words = prefix.lower().split("_")
+                    name = "".join(word.capitalize() for word in words)
+                projects.append(name)
+    return {"success": True, "projects": projects}
+
 # ── Backup Baselines (Used only if both Cache AND Live Azure APIs crash) ─── #
 _COLD_TREND_FALLBACK = {
     "success": True,
