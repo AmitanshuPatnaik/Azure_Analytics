@@ -46,9 +46,9 @@ export class Home implements OnInit {
   isLoadingWorkItems = false;
 
   // Board filter state
-  boardFilterSprint   = '';
-  boardFilterType     = '';
-  boardFilterState    = '';
+  boardFilterSprint = '';
+  boardFilterType = '';
+  boardFilterState = '';
   boardFilterAssigned = '';
   collapsedSprints: Set<string> = new Set();
 
@@ -68,13 +68,13 @@ export class Home implements OnInit {
 
   // Cost Trend (daily range) page state
   costTrendFromDate = '';
-  costTrendToDate   = '';
-  costTrendMinDate  = '';
+  costTrendToDate = '';
+  costTrendMinDate = '';
   costTrendPoints: { date: string; cost: number }[] = [];
-  isLoadingCostTrend    = false;
+  isLoadingCostTrend = false;
   costTrendError: string | null = null;
-  costTrendChartWidth   = 620;
-  costTrendChartHeight  = 260;
+  costTrendChartWidth = 620;
+  costTrendChartHeight = 260;
 
   // Yearly cost state
   yearlyCost = 0;
@@ -132,7 +132,7 @@ export class Home implements OnInit {
     private azureApi: AzureApiService,
     private statusApi: StatusApiService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.dashboardService.selectedPage$.subscribe({
@@ -167,10 +167,12 @@ export class Home implements OnInit {
     } else if (page === 'azure') {
       // Initialise daily-trend date defaults on first visit
       if (!this.costTrendFromDate) {
-        const now  = new Date();
-        this.costTrendToDate   = now.toISOString().slice(0, 10);
+        const now = new Date();
+        // "To" defaults to yesterday — today is incomplete (costs still accumulating)
+        const yesterday = new Date(now.getTime() - 86_400_000);
+        this.costTrendToDate = yesterday.toISOString().slice(0, 10);
         this.costTrendFromDate = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
-        this.costTrendMinDate  = `${now.getFullYear()}-01-01`;
+        this.costTrendMinDate = `${now.getFullYear()}-01-01`;
       }
       if (this.selectedSubscriptionId) {
         this.loadSubscriptionMetrics(this.selectedSubscriptionId);
@@ -325,12 +327,12 @@ export class Home implements OnInit {
         if (res && res.trend && res.trend.length > 0) {
           this.trendData = res.trend;
           this.trendMonths = res.trend.map((d: any) => d.month);
-          
+
           // Set initial selection to the last month in the trend
           const latest = res.trend[res.trend.length - 1];
           this.selectedTrendMonth = latest.month;
           this.monthlyCostTotal = latest.cost;
-          
+
           this.generateChartPoints();
         } else {
           this.trendData = [];
@@ -402,10 +404,10 @@ export class Home implements OnInit {
     this.boardsApi.getWorkItems(projName).subscribe({
       next: (res: any) => {
         if (res && res.success) {
-          this.workItems      = res.workItems || [];
-          this.workItemSprints = res.sprints   || [];
+          this.workItems = res.workItems || [];
+          this.workItemSprints = res.sprints || [];
         } else {
-          this.workItems      = [];
+          this.workItems = [];
           this.workItemSprints = [];
           this.workItemsError = res?.message || 'Failed to load work items from backend.';
         }
@@ -414,7 +416,7 @@ export class Home implements OnInit {
       },
       error: (err) => {
         console.warn(`Could not load work items for project ${projName}`, err);
-        this.workItems      = [];
+        this.workItems = [];
         this.workItemSprints = [];
         this.workItemsError = err.error?.detail || err.error?.message || err.message || `Failed to load work items for project ${projName}.`;
         this.isLoadingWorkItems = false;
@@ -450,7 +452,7 @@ export class Home implements OnInit {
   loadSubscriptionMetrics(subId: string) {
     this.isLoadingAzure = true;
     this.azureError = null;
-    
+
     const totalCost$ = this.azureApi.getTotalCost(subId);
     const budgets$ = this.azureApi.getBudgets(subId);
     const topResources$ = this.azureApi.getTopResources(subId);
@@ -469,7 +471,7 @@ export class Home implements OnInit {
     ).subscribe({
       next: (res: any) => {
         this.totalCost = res.total && res.total.total_cost !== undefined ? res.total.total_cost : 0;
-        
+
         this.budgets = res.budgets && res.budgets.budgets && res.budgets.budgets.length > 0
           ? res.budgets.budgets
           : [];
@@ -524,20 +526,20 @@ export class Home implements OnInit {
   loadDailyCostRange() {
     if (!this.selectedSubscriptionId || !this.costTrendFromDate || !this.costTrendToDate) return;
     this.isLoadingCostTrend = true;
-    this.costTrendError     = null;
+    this.costTrendError = null;
     this.azureApi.getDailyCostsByRange(
       this.selectedSubscriptionId,
       this.costTrendFromDate,
       this.costTrendToDate
     ).subscribe({
       next: (res: any) => {
-        this.costTrendPoints    = res?.points || [];
+        this.costTrendPoints = res?.points || [];
         this.isLoadingCostTrend = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.costTrendPoints    = [];
-        this.costTrendError     = err.error?.detail || err.error?.message || err.message || 'Failed to load daily costs.';
+        this.costTrendPoints = [];
+        this.costTrendError = err.error?.detail || err.error?.message || err.message || 'Failed to load daily costs.';
         this.isLoadingCostTrend = false;
         this.cdr.detectChanges();
       }
@@ -545,33 +547,112 @@ export class Home implements OnInit {
   }
 
   onCostTrendDateChange() {
+    // Clamp toDate to yesterday if user somehow sets it beyond
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    if (this.costTrendToDate > yesterday) {
+      this.costTrendToDate = yesterday;
+    }
     if (this.costTrendFromDate && this.costTrendToDate && this.selectedSubscriptionId) {
       this.loadDailyCostRange();
     }
   }
 
+  /** Always returns yesterday's date (the hard maximum for both date pickers). */
+  get costTrendMaxDate(): string {
+    return new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  }
+
   // SVG chart helpers for cost-trend page
-  get costTrendMaxCost(): number {
+  // ── Chart Y-axis dynamic scaling ─────────────────────────────────────────
+
+  /** Round a value DOWN to the nearest "nice" step. */
+  private niceFloor(value: number): number {
+    if (value <= 0) return 0;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+    const step = magnitude >= 1000 ? magnitude / 2 : magnitude;
+    return Math.floor(value / step) * step;
+  }
+
+  /** Round a value UP to the nearest "nice" step. */
+  private niceCeil(value: number): number {
+    if (value <= 0) return 1;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+    const step = magnitude >= 1000 ? magnitude / 2 : magnitude;
+    return Math.ceil(value / step) * step;
+  }
+
+  /**
+   * Returns a filtered + sorted cost array used for Y-axis scaling.
+   * Excludes values < 15% of the median — these are typically today's
+   * in-progress costs (e.g. ₹10 at 9am vs ₹650 for completed days)
+   * that would otherwise collapse the visible variation into a flat line.
+   */
+  private costTrendScaleValues(): number[] {
+    const costs = this.costTrendPoints.map(p => p.cost);
+    if (costs.length < 2) return costs;
+
+    const sorted = [...costs].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+
+    const filtered = sorted.filter(c => c >= median * 0.15);
+    // Fall back to full array if filtering removes too many points
+    return filtered.length >= Math.ceil(sorted.length * 0.5) ? filtered : sorted;
+  }
+
+  get costTrendYMin(): number {
+    if (!this.costTrendPoints.length) return 0;
+    const values = this.costTrendScaleValues();
+    const min = values[0];
+    const max = values[values.length - 1];
+    const range = max - min;
+
+    // If data is nearly flat, zoom in tightly (±8% around min)
+    if (range < max * 0.005) {
+      return Math.max(0, this.niceFloor(min * 0.92));
+    }
+
+    // Start axis 15% of the data-range below the minimum
+    return Math.max(0, this.niceFloor(min - range * 0.15));
+  }
+
+  get costTrendYMax(): number {
     if (!this.costTrendPoints.length) return 1;
-    return Math.max(...this.costTrendPoints.map(p => p.cost));
+    const values = this.costTrendScaleValues();
+    const max = values[values.length - 1];
+    const min = values[0];
+    const range = max - min;
+
+    if (range < max * 0.005) {
+      return this.niceCeil(max * 1.08);
+    }
+
+    return this.niceCeil(max + range * 0.10);
+  }
+
+  get costTrendMaxCost(): number {
+    return this.costTrendYMax;
   }
 
   get costTrendYLabels(): string[] {
-    const max = this.costTrendMaxCost;
+    const yMin = this.costTrendYMin;
+    const yMax = this.costTrendYMax;
+    const range = yMax - yMin || 1;
     const steps = 5;
-    return Array.from({ length: steps + 1 }, (_, i) =>
-      '₹' + Math.round((max / steps) * (steps - i)).toLocaleString()
-    );
+    return Array.from({ length: steps + 1 }, (_, i) => {
+      const val = yMax - (range / steps) * i;
+      return '₹' + Math.round(val).toLocaleString();
+    });
   }
 
   get costTrendPolyline(): string {
     const pts = this.costTrendPoints;
     if (!pts.length) return '';
     const W = 560; const H = 200; const LEFT = 60; const TOP = 20;
-    const max = this.costTrendMaxCost || 1;
+    const yMin = this.costTrendYMin;
+    const range = (this.costTrendYMax - yMin) || 1;
     return pts.map((p, i) => {
       const x = LEFT + (i / Math.max(pts.length - 1, 1)) * W;
-      const y = TOP + H - (p.cost / max) * H;
+      const y = TOP + H - ((p.cost - yMin) / range) * H;
       return `${x},${y}`;
     }).join(' ');
   }
@@ -580,10 +661,11 @@ export class Home implements OnInit {
     const pts = this.costTrendPoints;
     if (!pts.length) return [];
     const W = 560; const H = 200; const LEFT = 60; const TOP = 20;
-    const max = this.costTrendMaxCost || 1;
+    const yMin = this.costTrendYMin;
+    const range = (this.costTrendYMax - yMin) || 1;
     return pts.map((p, i) => ({
-      x:    LEFT + (i / Math.max(pts.length - 1, 1)) * W,
-      y:    TOP + H - (p.cost / max) * H,
+      x: LEFT + (i / Math.max(pts.length - 1, 1)) * W,
+      y: TOP + H - ((p.cost - yMin) / range) * H,
       date: p.date,
       cost: p.cost
     }));
@@ -613,9 +695,9 @@ export class Home implements OnInit {
 
     return filtered.map((row: any, i: number) => {
       const cost = row[0] || 0;
-      const pct  = cost / total;
+      const pct = cost / total;
       const sweep = pct * 2 * Math.PI;
-      const end   = angle + sweep;
+      const end = angle + sweep;
 
       const x1 = cx + radius * Math.cos(angle);
       const y1 = cy + radius * Math.sin(angle);
@@ -648,13 +730,13 @@ export class Home implements OnInit {
 
       angle = end;
       return {
-        name:       row[1] || 'Unknown',
+        name: row[1] || 'Unknown',
         cost,
-        color:      this.PIE_COLORS[i % this.PIE_COLORS.length],
+        color: this.PIE_COLORS[i % this.PIE_COLORS.length],
         path,
         percentage: Math.round(pct * 100),
-        lx:         lx.toFixed(1),
-        ly:         ly.toFixed(1),
+        lx: lx.toFixed(1),
+        ly: ly.toFixed(1),
       };
     });
   }
@@ -726,129 +808,129 @@ export class Home implements OnInit {
     this.pieChartStyle = gradientParts.length > 0 ? `conic-gradient(${gradientParts.join(', ')})` : 'gray';
   }
 
-generateChartPoints(): void {
-  if (!this.trendData?.length) {
-    this.polylinePoints = '';
-    this.circlePoints = [];
-    this.yAxisLabels = [];
-    return;
-  }
+  generateChartPoints(): void {
+    if (!this.trendData?.length) {
+      this.polylinePoints = '';
+      this.circlePoints = [];
+      this.yAxisLabels = [];
+      return;
+    }
 
-  const actualMax = Math.max(...this.trendData.map(d => d.cost));
+    const actualMax = Math.max(...this.trendData.map(d => d.cost));
 
-  // Nice rounded maximum
-  const maxVal = this.getNiceMax(actualMax);
+    // Nice rounded maximum
+    const maxVal = this.getNiceMax(actualMax);
 
-  const chartLeft = 55;
-  const chartRight = 585;
+    const chartLeft = 55;
+    const chartRight = 585;
 
-  const chartTop = 30;
-  const chartBottom = 255;
+    const chartTop = 30;
+    const chartBottom = 255;
 
-  const chartWidth = chartRight - chartLeft;
-  const chartHeight = chartBottom - chartTop;
+    const chartWidth = chartRight - chartLeft;
+    const chartHeight = chartBottom - chartTop;
 
-  const points: string[] = [];
-  const circles: any[] = [];
+    const points: string[] = [];
+    const circles: any[] = [];
 
-  const totalPoints = this.trendData.length;
+    const totalPoints = this.trendData.length;
 
-  this.trendData.forEach((item, index) => {
+    this.trendData.forEach((item, index) => {
 
-    const cx =
-      totalPoints > 1
-        ? chartLeft + (index * chartWidth) / (totalPoints - 1)
-        : chartLeft + chartWidth / 2;
+      const cx =
+        totalPoints > 1
+          ? chartLeft + (index * chartWidth) / (totalPoints - 1)
+          : chartLeft + chartWidth / 2;
 
-    const cy =
-      chartBottom -
-      (item.cost / maxVal) * chartHeight;
+      const cy =
+        chartBottom -
+        (item.cost / maxVal) * chartHeight;
 
-    points.push(`${cx},${cy}`);
+      points.push(`${cx},${cy}`);
 
-    circles.push({
-      cx,
-      cy,
-      cost: item.cost,
-      month: item.month
+      circles.push({
+        cx,
+        cy,
+        cost: item.cost,
+        month: item.month
+      });
     });
-  });
 
-  this.polylinePoints = points.join(' ');
-  this.circlePoints = circles;
+    this.polylinePoints = points.join(' ');
+    this.circlePoints = circles;
 
-  this.generateYAxisLabels(maxVal);
-}
-
-private getNiceMax(value: number): number {
-  if (value <= 0) {
-    return 1000;
+    this.generateYAxisLabels(maxVal);
   }
 
-  const magnitude = Math.pow(
-    10,
-    Math.floor(Math.log10(value))
-  );
+  private getNiceMax(value: number): number {
+    if (value <= 0) {
+      return 1000;
+    }
 
-  const normalized = value / magnitude;
+    const magnitude = Math.pow(
+      10,
+      Math.floor(Math.log10(value))
+    );
 
-  let niceNormalized: number;
+    const normalized = value / magnitude;
 
-  if (normalized <= 1) {
-    niceNormalized = 1;
-  } else if (normalized <= 2) {
-    niceNormalized = 2;
-  } else if (normalized <= 5) {
-    niceNormalized = 5;
-  } else {
-    niceNormalized = 10;
+    let niceNormalized: number;
+
+    if (normalized <= 1) {
+      niceNormalized = 1;
+    } else if (normalized <= 2) {
+      niceNormalized = 2;
+    } else if (normalized <= 5) {
+      niceNormalized = 5;
+    } else {
+      niceNormalized = 10;
+    }
+
+    return niceNormalized * magnitude;
   }
 
-  return niceNormalized * magnitude;
-}
+  generateYAxisLabels(maxVal: number): void {
+    const intervals = 5;
 
-generateYAxisLabels(maxVal: number): void {
-  const intervals = 5;
+    this.yAxisLabels = [];
 
-  this.yAxisLabels = [];
+    for (let i = intervals; i >= 0; i--) {
+      const value = (maxVal * i) / intervals;
 
-  for (let i = intervals; i >= 0; i--) {
-    const value = (maxVal * i) / intervals;
-
-    this.yAxisLabels.push(this.formatYAxisValue(value));
-  }
-}
-
-private formatYAxisValue(value: number): string {
-
-  if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(1)}M`;
+      this.yAxisLabels.push(this.formatYAxisValue(value));
+    }
   }
 
-  if (value >= 1000) {
-    const k = value / 1000;
+  private formatYAxisValue(value: number): string {
 
-    return Number.isInteger(k)
-      ? `${k}K`
-      : `${k.toFixed(1)}K`;
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    }
+
+    if (value >= 1000) {
+      const k = value / 1000;
+
+      return Number.isInteger(k)
+        ? `${k}K`
+        : `${k.toFixed(1)}K`;
+    }
+
+    return Math.round(value).toString();
   }
 
-  return Math.round(value).toString();
-}
+  onTrendMonthChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
 
-onTrendMonthChange(event: Event): void {
-  const select = event.target as HTMLSelectElement;
+    this.selectedTrendMonth = select.value;
 
-  this.selectedTrendMonth = select.value;
+    const selectedPoint = this.trendData.find(
+      d => d.month === this.selectedTrendMonth
+    );
 
-  const selectedPoint = this.trendData.find(
-    d => d.month === this.selectedTrendMonth
-  );
-
-  if (selectedPoint) {
-    this.monthlyCostTotal = selectedPoint.cost;
+    if (selectedPoint) {
+      this.monthlyCostTotal = selectedPoint.cost;
+    }
   }
-}
 
   // --- Helpers for Modal templates ---
 
@@ -924,14 +1006,14 @@ onTrendMonthChange(event: Event): void {
     const projName = select.value;
     this.selectedBoardProject = projName;
     // Reset filters on project change
-    this.boardFilterSprint   = '';
-    this.boardFilterType     = '';
-    this.boardFilterState    = '';
+    this.boardFilterSprint = '';
+    this.boardFilterType = '';
+    this.boardFilterState = '';
     this.boardFilterAssigned = '';
-    this.collapsedSprints    = new Set();
+    this.collapsedSprints = new Set();
 
     if (!projName) {
-      this.workItems      = [];
+      this.workItems = [];
       this.workItemSprints = [];
       return;
     }
@@ -942,9 +1024,9 @@ onTrendMonthChange(event: Event): void {
 
   get filteredWorkItems(): any[] {
     return this.workItems.filter(item => {
-      if (this.boardFilterSprint   && item.sprint      !== this.boardFilterSprint)   return false;
-      if (this.boardFilterType     && item.type        !== this.boardFilterType)     return false;
-      if (this.boardFilterState    && item.state       !== this.boardFilterState)    return false;
+      if (this.boardFilterSprint && item.sprint !== this.boardFilterSprint) return false;
+      if (this.boardFilterType && item.type !== this.boardFilterType) return false;
+      if (this.boardFilterState && item.state !== this.boardFilterState) return false;
       if (this.boardFilterAssigned && (item.assignedTo || 'Unassigned') !== this.boardFilterAssigned) return false;
       return true;
     });
@@ -1003,8 +1085,8 @@ onTrendMonthChange(event: Event): void {
     this.selectedSubscriptionId = subId;
 
     if (!subId) {
-      this.totalCost    = 0;
-      this.budgets      = [];
+      this.totalCost = 0;
+      this.budgets = [];
       this.topResources = [];
       this.serviceCosts = [];
       this.costTrendPoints = [];

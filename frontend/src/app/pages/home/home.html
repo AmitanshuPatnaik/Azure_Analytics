@@ -848,14 +848,14 @@
             <label style="font-size: 13px; font-weight: 500;">From</label>
             <input type="date" class="month-dropdown"
               style="width: auto; font-size: 13px; padding: 4px 8px;"
-              [min]="costTrendMinDate" [max]="costTrendToDate" [value]="costTrendFromDate"
+              [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="costTrendFromDate"
               (change)="costTrendFromDate = $any($event.target).value; onCostTrendDateChange()">
           </div>
           <div style="display: flex; align-items: center; gap: 6px;">
             <label style="font-size: 13px; font-weight: 500;">To</label>
             <input type="date" class="month-dropdown"
               style="width: auto; font-size: 13px; padding: 4px 8px;"
-              [min]="costTrendFromDate" [max]="costTrendToDate" [value]="costTrendToDate"
+              [min]="costTrendFromDate" [max]="costTrendMaxDate" [value]="costTrendToDate"
               (change)="costTrendToDate = $any($event.target).value; onCostTrendDateChange()">
           </div>
           @if (costTrendPoints.length) {
