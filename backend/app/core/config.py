@@ -1,17 +1,12 @@
 import json
 import os
 
-<<<<<<< HEAD
-try:
-    with open("config.json", "r") as f:
-=======
 # Resolve config.json relative to this file's directory (backend/app/core/),
 # going two levels up to backend/ regardless of the working directory.
 _CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
 
 try:
     with open(_CONFIG_PATH, "r") as f:
->>>>>>> 81abce3 (Modified Backend imports)
         content = f.read().strip()
         config = json.loads(content) if content else {}
 except Exception:

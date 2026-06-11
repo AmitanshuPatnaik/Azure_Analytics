@@ -1,10 +1,7 @@
 from fastapi import APIRouter
 
-<<<<<<< HEAD
-from app.services.Azure_Devops.pipelines_service import fetch_pipelines, fetch_active_pipelines_count
-=======
 from services.Azure_Devops.pipelines_service import fetch_pipelines, fetch_active_pipelines_count
->>>>>>> 81abce3 (Modified Backend imports)
+
 
 router = APIRouter(tags=["Pipelines"])
 

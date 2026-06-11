@@ -6,17 +6,11 @@ azure_project_var = ContextVar("azure_project", default=None)
 
 def get_azure_token(project_name: str = None):
     import json
-<<<<<<< HEAD
-    import re
-    try:
-        with open("config.json", "r") as f:
-=======
     import os
     import re
     _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "config.json")
     try:
         with open(_config_path, "r") as f:
->>>>>>> 81abce3 (Modified Backend imports)
             config = json.load(f)
     except Exception:
         config = {}

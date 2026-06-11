@@ -25,11 +25,8 @@ class _DataCache:
     Singleton in-memory store for pre-fetched Azure & Azure DevOps payloads.
 
     Access the singleton via the module-level `cache` object:
-<<<<<<< HEAD
-        from app.core.data_cache import cache
-=======
         from core.data_cache import cache
->>>>>>> 81abce3 (Modified Backend imports)
+
     """
 
     _instance = None

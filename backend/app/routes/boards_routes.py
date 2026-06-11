@@ -1,10 +1,6 @@
 from fastapi import APIRouter
 
-<<<<<<< HEAD
-from app.services.Azure_Devops.boards_service import fetch_work_items
-=======
 from services.Azure_Devops.boards_service import fetch_work_items
->>>>>>> 81abce3 (Modified Backend imports)
 
 router = APIRouter(tags=["Boards"])
 

@@ -1,12 +1,7 @@
 import requests
 
-<<<<<<< HEAD
-from app.services.Azure.azure_auth import get_azure_token
-from app.core.config import azure_management_base_url
-=======
 from services.Azure.azure_auth import get_azure_token
 from core.config import azure_management_base_url
->>>>>>> 81abce3 (Modified Backend imports)
 
 
 def fetch_subscriptions(project_name: str = None):

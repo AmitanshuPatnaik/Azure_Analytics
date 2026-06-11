@@ -13,11 +13,8 @@ the frontend never receives a 500 error or an empty null payload.
 
 from fastapi import APIRouter
 
-<<<<<<< HEAD
-from app.core.data_cache import cache
-=======
 from core.data_cache import cache
->>>>>>> 81abce3 (Modified Backend imports)
+
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
