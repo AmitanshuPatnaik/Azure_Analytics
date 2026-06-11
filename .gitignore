@@ -8,3 +8,4 @@
 *.env
 
 backend/config.json
+*.angular/
