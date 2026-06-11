@@ -1,6 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
+from urllib.parse import quote
 from fastapi.responses import JSONResponse
 from datetime import datetime
 
@@ -226,70 +227,137 @@ def fetch_branches(project_name, repo_name):
         }
 
     try:
-        url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/refs?filter=heads/&api-version={API_VERSION}"
+        url = (
+            f"{base_url}/{collection}/{project_name}"
+            f"/_apis/git/repositories/{repo_name}"
+            f"/refs?filter=heads/&api-version={API_VERSION}"
+        )
 
-        response = requests.get(url=url, auth=auth, verify=False, timeout=10)
+        response = requests.get(
+            url=url,
+            auth=auth,
+            verify=False,
+            timeout=10
+        )
 
         if response.status_code != 200:
-            return handle_error_response(response, f"Repository '{repo_name}'")
+            return handle_error_response(
+                response,
+                f"Repository '{repo_name}'"
+            )
 
         branches = []
-        data = response.json()
 
-        for branch in data.get("value", []):
+        for branch in response.json().get("value", []):
+
             if not isinstance(branch, dict):
                 continue
 
             full_branch_name = branch.get("name", "")
-            branch_name = full_branch_name.replace("refs/heads/", "")
 
-            # owner comes from the creator field in the refs response
-            creator = branch.get("creator", {})
-            owner = creator.get("displayName") or creator.get("uniqueName") or None
-
-            # Fetch latest commit for lastModifiedBy / lastModifiedDate
-            latest_commit_url = (
-                f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}"
-                f"/commits?searchCriteria.itemVersion.version={branch_name}&$top=1&api-version={API_VERSION}"
+            branch_name = full_branch_name.replace(
+                "refs/heads/",
+                ""
             )
+
+            encoded_branch = quote(branch_name)
+
+            owner = None
+            created_date = None
             last_modified_by = None
             last_modified_date = None
 
-            latest_resp = requests.get(url=latest_commit_url, auth=auth, verify=False, timeout=10)
-            if latest_resp.status_code == 200:
-                commits = latest_resp.json().get("value", [])
-                if commits:
-                    lc = commits[0]
-                    last_modified_by = lc.get("author", {}).get("name")
-                    raw_date = lc.get("author", {}).get("date") or lc.get("committer", {}).get("date")
-                    if raw_date:
-                        last_modified_date = _fmt_date(raw_date)
-
-            # ── createdDate: use the Pushes API with order=asc ──────────────
-            # The Commits API ignores searchCriteria.order so it always returns
-            # the newest commit. The Pushes API DOES honour order=asc and
-            # $top=1, giving us the very first push to this branch (i.e. when
-            # it was created).
-            created_date = None
-            pushes_url = (
-                f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}"
-                f"/pushes?searchCriteria.refName=refs/heads/{branch_name}"
-                f"&searchCriteria.order=asc&$top=1&api-version={API_VERSION}"
+            latest_commit_url = (
+                f"{base_url}/{collection}/{project_name}"
+                f"/_apis/git/repositories/{repo_name}"
+                f"/commits"
+                f"?searchCriteria.itemVersion.version={encoded_branch}"
+                f"&$top=1"
+                f"&api-version={API_VERSION}"
             )
-            pushes_resp = requests.get(url=pushes_url, auth=auth, verify=False, timeout=10)
-            if pushes_resp.status_code == 200:
-                pushes = pushes_resp.json().get("value", [])
+
+            latest_response = requests.get(
+                url=latest_commit_url,
+                auth=auth,
+                verify=False,
+                timeout=10
+            )
+
+            if latest_response.status_code == 200:
+
+                commits = latest_response.json().get(
+                    "value",
+                    []
+                )
+
+                if commits:
+
+                    latest_commit = commits[0]
+
+                    last_modified_by = (
+                        latest_commit
+                        .get("author", {})
+                        .get("name")
+                    )
+
+                    raw_date = (
+                        latest_commit
+                        .get("author", {})
+                        .get("date")
+                    )
+
+                    if raw_date:
+                        last_modified_date = _fmt_date(
+                            raw_date
+                        )
+
+            pushes_url = (
+                f"{base_url}/{collection}/{project_name}"
+                f"/_apis/git/repositories/{repo_name}"
+                f"/pushes"
+                f"?searchCriteria.refName=refs/heads/{encoded_branch}"
+                f"&searchCriteria.order=asc"
+                f"&$top=1"
+                f"&api-version={API_VERSION}"
+            )
+
+            pushes_response = requests.get(
+                url=pushes_url,
+                auth=auth,
+                verify=False,
+                timeout=10
+            )
+
+            if pushes_response.status_code == 200:
+
+                pushes = pushes_response.json().get(
+                    "value",
+                    []
+                )
+
                 if pushes:
-                    raw = pushes[0].get("date")
-                    if raw:
-                        created_date = _fmt_date(raw)
+
+                    first_push = pushes[0]
+
+                    owner = (
+                        first_push
+                        .get("pushedBy", {})
+                        .get("displayName")
+                    )
+
+                    raw_date = first_push.get("date")
+
+                    if raw_date:
+                        created_date = _fmt_date(
+                            raw_date
+                        )
 
             branches.append({
                 "name": branch_name,
                 "owner": owner,
                 "createdDate": created_date,
                 "lastModifiedBy": last_modified_by,
-                "lastModifiedDate": last_modified_date,
+                "lastModifiedDate": last_modified_date
             })
 
         return {
