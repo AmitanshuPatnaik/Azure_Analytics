@@ -18,10 +18,11 @@ def fetch_work_item_ids(project_name):
         url = f"{base_url}/{collection}/{project_name}/_apis/wit/wiql?api-version={API_VERSION}"
 
         query = {
-            "query": """
+            "query": f"""
             SELECT [System.Id]
             FROM WorkItems
-            WHERE [System.WorkItemType] <> ''
+            WHERE [System.TeamProject] = '{project_name}'
+              AND [System.WorkItemType] <> ''
             ORDER BY [System.ChangedDate] DESC
             """
         }
