@@ -61,6 +61,8 @@ export class Home implements OnInit {
   // Azure state
   selectedAzureProject = '';
   azureProjects: string[] = ['AiDocFlo', 'TimeFlow', 'Integrelity'];
+  selectedHomeAzureProject = 'AiDocFlo';
+  selectedHomeSubscriptionId = '';
   selectedSubscriptionId = '';
   totalCost = 0;
   budgets: any[] = [];
@@ -148,10 +150,12 @@ export class Home implements OnInit {
     if (page === 'home') {
       this.loadProjects();
       this.loadRepositories();
-      this.loadSubscriptions();
       this.loadActivePipelinesCount();
       this.loadTrendData();
       this.loadServicesStatus();
+      if (this.selectedHomeAzureProject) {
+        this.loadHomeSubscriptions(this.selectedHomeAzureProject);
+      }
     } else if (page === 'repos') {
       this.loadRepositories();
     } else if (page === 'pipelines') {
@@ -263,6 +267,54 @@ export class Home implements OnInit {
     });
   }
 
+  loadHomeSubscriptions(project: string) {
+    this.azureApi.getSubscriptions(project).subscribe({
+      next: (res: any) => {
+        let subs = [];
+        if (res && res.subscriptions && res.subscriptions.length > 0) {
+          subs = res.subscriptions;
+        } else if (res && Array.isArray(res) && res.length > 0) {
+          subs = res;
+        }
+
+        if (subs && subs.length > 0) {
+          this.selectedHomeSubscriptionId = subs[0].subscriptionId;
+          this.loadHomeYearlyCost(this.selectedHomeSubscriptionId, project);
+        } else {
+          this.selectedHomeSubscriptionId = '';
+          this.yearlyCost = 0;
+        }
+      },
+      error: () => {
+        this.selectedHomeSubscriptionId = '';
+        this.yearlyCost = 0;
+      }
+    });
+  }
+
+  loadHomeYearlyCost(subId: string, project: string) {
+    this.isLoadingYearlyCost = true;
+    this.yearlyCostError = null;
+    this.azureApi.getYearlyCosts(subId, project).subscribe({
+      next: (res: any) => {
+        const rows = res?.rows || res?.yearly_costs || [];
+        if (rows && rows.length > 0 && rows[0].length > 0) {
+          this.yearlyCost = rows.reduce((sum: number, row: any[]) => sum + (row[0] || 0), 0);
+        } else {
+          this.yearlyCost = 0;
+        }
+        this.isLoadingYearlyCost = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.yearlyCost = 0;
+        this.yearlyCostError = err.error?.detail || err.error?.message || err.message || 'Failed to load yearly cost.';
+        this.isLoadingYearlyCost = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   loadSubscriptions() {
     this.subscriptionsError = null;
     this.azureApi.getSubscriptions(this.selectedAzureProject).subscribe({
@@ -323,7 +375,7 @@ export class Home implements OnInit {
 
   loadTrendData() {
     this.trendDataError = null;
-    this.azureApi.getCostTrend(this.selectedAzureProject).subscribe({
+    this.azureApi.getCostTrend(this.selectedHomeAzureProject).subscribe({
       next: (res: any) => {
         console.log(res)
         if (res && res.trend && res.trend.length > 0) {
@@ -1137,6 +1189,24 @@ export class Home implements OnInit {
     }
     this.loadSubscriptions();
     this.loadTrendData();
+  }
+
+  onHomeAzureProjectChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const proj = select.value;
+    this.selectedHomeAzureProject = proj;
+    this.selectedHomeSubscriptionId = '';
+    this.yearlyCost = 0;
+
+    if (!proj) {
+      this.trendData = [];
+      this.circlePoints = [];
+      this.polylinePoints = '';
+      this.yAxisLabels = [];
+      return;
+    }
+    this.loadTrendData();
+    this.loadHomeSubscriptions(proj);
   }
 
   // --- Repository details operations handlers ---

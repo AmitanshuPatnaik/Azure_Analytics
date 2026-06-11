@@ -8,7 +8,19 @@
 
     @if(dashboardService.selectedPage === 'home'){
 
-    <h1>Watcher Analytics Dashboard</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+      <h1 style="margin: 0;">Watcher Analytics Dashboard</h1>
+      <div>
+        <label for="home-azure-proj-select" style="margin-right: 10px; font-weight: 500;">Select Azure Project:</label>
+        <select id="home-azure-proj-select" class="month-dropdown" style="width: auto;" [value]="selectedHomeAzureProject"
+          (change)="onHomeAzureProjectChange($event)">
+          <option value="">Select Azure Project</option>
+          @for (proj of azureProjects; track proj) {
+          <option [value]="proj">{{ proj }}</option>
+          }
+        </select>
+      </div>
+    </div>
 
     <div class="cards">
 
@@ -41,7 +53,9 @@
 
       <div class="card">
         <h3>Yearly Cost</h3>
-        @if (yearlyCostError) {
+        @if (!selectedHomeAzureProject) {
+        <div class="error-inline">Select Azure Project</div>
+        } @else if (yearlyCostError) {
         <div class="error-inline">{{ yearlyCostError }}</div>
         } @else if (isLoadingYearlyCost) {
         <div class="error-inline">Loading...</div>
@@ -98,7 +112,11 @@
           <h2>Cloud Cost Trend</h2>
         </div>
 
-        @if (trendDataError) {
+        @if (!selectedHomeAzureProject) {
+        <div style="text-align: center; padding: 40px;">
+          <p style="color: #6b7280; font-size: 14px;">Please select an Azure project to view cost trend.</p>
+        </div>
+        } @else if (trendDataError) {
         <div class="error-block">
           Could not display cost trend: {{ trendDataError }}
         </div>
