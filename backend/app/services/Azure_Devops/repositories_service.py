@@ -292,7 +292,7 @@ def fetch_branches(project_name, repo_name):
 
                 if commits:
 
-                    latest_commit = commits[0]
+                    latest_commit = commits[-1]
 
                     last_modified_by = (
                         latest_commit
@@ -354,10 +354,10 @@ def fetch_branches(project_name, repo_name):
 
             branches.append({
                 "name": branch_name,
-                "owner": owner,
-                "createdDate": created_date,
-                "lastModifiedBy": last_modified_by,
-                "lastModifiedDate": last_modified_date
+                "owner": last_modified_by,
+                "createdDate": last_modified_date,
+                "lastModifiedBy": owner,
+                "lastModifiedDate": created_date
             })
 
         return {
