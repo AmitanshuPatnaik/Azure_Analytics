@@ -248,7 +248,7 @@ export class Home implements OnInit {
         }
         this.isLoadingProjects = false;
 
-        // Auto-select first project to load DevOps lists immediately on page open
+        // Auto-select first project to load D  evOps lists immediately on page open
         if (this.projects.length > 0) {
           const firstProjName = this.projects[0].name;
           if (!this.selectedPipelineProject) {

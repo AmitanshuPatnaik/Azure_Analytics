@@ -362,7 +362,7 @@
         <tr>
           <td><code>{{ c.commitId?.substring(0, 8) }}</code></td>
           <td>{{ c.author }}</td>
-          <td>{{ c.date | date:'short' }}</td>
+          <td>{{ c.date | date:'short':'UTC' }}</td>
           <td>{{ c.comment }}</td>
         </tr>
         } @empty {
@@ -388,7 +388,7 @@
           <td>{{ pr.pullRequestId }}</td>
           <td>{{ pr.title }}</td>
           <td>{{ pr.createdBy }}</td>
-          <td>{{ pr.creationDate | date:'short' }}</td>
+          <td>{{ pr.creationDate | date:'short':'UTC' }}</td>
           <td>{{ pr.status }}</td>
         </tr>
         } @empty {
@@ -436,7 +436,7 @@
         @for (p of repoPushes; track p.pushId || $index) {
         <tr>
           <td>{{ p.pushId }}</td>
-          <td>{{ p.date | date:'short' }}</td>
+          <td>{{ p.date | date:'short':'UTC' }}</td>
           <td>{{ p.pushedBy }}</td>
         </tr>
         } @empty {
@@ -518,6 +518,8 @@
       <tr>
         <th>Repository Name</th>
         <th>Project</th>
+        <th>Owner</th>
+        <th>Creation Date</th>
         <th>Default Branch</th>
         <th>Remote URL</th>
       </tr>
@@ -526,6 +528,8 @@
       <tr>
         <td>{{ repo.name }}</td>
         <td>{{ repo.project }}</td>
+        <td>{{ repo.owner || 'N/A' }}</td>
+        <td>{{ repo.createdDate || 'N/A' }}</td>
         <td>{{ repo.defaultBranch || 'N/A' }}</td>
         <td>
           @if (repo.remoteUrl) {
@@ -538,7 +542,7 @@
       </tr>
       } @empty {
       <tr>
-        <td colspan="4" style="text-align: center;">No repositories found.</td>
+        <td colspan="6" style="text-align: center;">No repositories found.</td>
       </tr>
       }
     </table>
