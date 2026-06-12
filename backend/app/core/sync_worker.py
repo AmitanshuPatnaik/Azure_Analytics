@@ -23,8 +23,8 @@ from services.Azure.costs import (
     fetch_top_resources,
     fetch_budgets,
     fetch_yearly_costs,
-    fetch_aggregated_monthly_costs
-    # fetch_monthly_costs
+    fetch_aggregated_monthly_costs,
+    fetch_monthly_costs
 )
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ def _sync_cost_trend() -> None:
         logger.warning("[SyncWorker] ✗ cost trend sync failed: %s", exc)
 
 
-def _sync_costs_for_subscription(sub_id: str) -> None:
+def _sync_costs_for_subscription(sub_id: str, from_date: str, to_date: str) -> None:
     """
     Fetch all cost payloads for a single subscription and commit them to cache
     under structured keys protected by a performance-safe execution delay.
@@ -110,7 +110,7 @@ def _sync_costs_for_subscription(sub_id: str) -> None:
 
     # ── Top high-spending resources ──────────────────────────────────────── #
     try:
-        result = fetch_top_resources(sub_id)
+        result = fetch_top_resources(sub_id, from_date, to_date)
         # Verify the payload structure is successful and contains valid items before committing to memory
         if isinstance(result, dict) and result.get("success") and result.get("top_resources"):
             cache.set(f"topresources:{sub_id}", result)
@@ -138,7 +138,7 @@ def _sync_costs_for_subscription(sub_id: str) -> None:
 
     # ── 🎯 HISTORICAL MONTHLY TREND MATRICES (The Graph Fix) ─────────────── #
     try:
-        result = fetch_monthly_costs(sub_id)
+        result = fetch_monthly_costs(sub_id, from_date, to_date)
         if isinstance(result, dict) and result.get("success") and result.get("rows"):
             cache.set(f"monthly:{sub_id}", result)
             logger.info("[SyncWorker] ✓ historical monthly intervals cached for sub=%s", sub_id)

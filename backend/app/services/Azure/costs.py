@@ -76,10 +76,14 @@ def fetch_total_cost(subscription_id: str):
     return {"success": True, "total_cost": total_amount, "amount": total_amount}
 
 # 2. Fetch costs broken down by Service categories (e.g., Storage, Virtual Machines)
-def fetch_service_costs(subscription_id: str):
+def fetch_service_costs(subscription_id: str, from_date: str, to_date: str):
     payload = {
         "type": "ActualCost",
-        "timeframe": "MonthToDate",
+        "timeframe": "Custom",
+        "timePeriod" : {
+            "from" : f"{from_date}T00:00:00Z",
+            "to" : f"{to_date}T23:59:59Z"
+        },
         "dataset": {
             "granularity": "None",
             "aggregation": {
@@ -92,7 +96,7 @@ def fetch_service_costs(subscription_id: str):
     }
     result = _execute_azure_query(subscription_id, payload)
     rows = result.get("properties", {}).get("rows", [])
-    return {"success": True, "services": rows, "rows": rows}
+    return {"success": True, "fromDate" : from_date, "toDate" : to_date, "services": rows, "rows": rows}
 
 # 3. Fetch costs grouped by Resource Groups
 def fetch_resource_group_costs(subscription_id: str):
@@ -250,10 +254,14 @@ def _extract_resource_name(resource_id: str) -> str:
     parts = [p for p in resource_id.strip("/").split("/") if p]
     return parts[-1] if parts else resource_id
 
-def fetch_top_resources(subscription_id: str):
+def fetch_top_resources(subscription_id: str, from_date: str, to_date: str):
     payload = {
         "type": "ActualCost",
-        "timeframe": "MonthToDate",
+        "timeframe": "Custom",
+        "timePeriod" : {
+            "from" : f"{from_date}T00:00:00Z",
+            "to" : f"{to_date}T23:59:59Z"
+        },
         "dataset": {
             "granularity": "None",
             "aggregation": {

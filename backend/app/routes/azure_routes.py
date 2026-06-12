@@ -115,34 +115,31 @@ async def get_resource_group_costs(subscription_id: str, project: str = Query(No
 
 
 @router.get("/costs/{subscription_id}/services")
-async def get_service_costs(subscription_id: str, project: str = Query(None)):
-    """
-    Costs grouped by service name — reads from cache first, falls back to live API.
-    """
+async def get_service_costs(subscription_id: str, from_date: str, to_date: str, project: str = Query(None)):
     azure_project_var.set(project)
-    cache_key = f"services:{subscription_id}:{project}" if project else f"services:{subscription_id}"
+    cache_key = f"services:{subscription_id}:{from_date}:{to_date}:{project}" if project else f"services:{subscription_id}:{from_date}:{to_date}"
     cached = cache.get(cache_key)
 
     if cached and isinstance(cached, dict) and cached.get("rows"):
         return cached
 
     # Live fallback if the cache worker hasn't populated this key yet
-    live_fallback = fetch_service_costs(subscription_id)
+    live_fallback = fetch_service_costs(subscription_id, from_date, to_date)
     if live_fallback and live_fallback.get("success") and live_fallback.get("rows"):
         cache.set(cache_key, live_fallback)
         return live_fallback
 
-    return cached if cached else {"success": True, "services": [], "rows": []}
+    return cached if cached else {"success": True, "fromDate": from_date, "toDate": to_date, "services": [], "rows": []}
 
 
 @router.get("/costs/{subscription_id}/top-resources")
-async def get_top_resources(subscription_id: str, project: str = Query(None)):
-    """
-    Top high-spending resources — corrected to use the authentic 'topresources' key
-    with a live API fallback strategy if the cache is cold.
-    """
+async def get_top_resources(subscription_id: str, from_date: str, to_date: str, project: str = Query(None)):
     azure_project_var.set(project)
-    cache_key = f"topresources:{subscription_id}:{project}" if project else f"topresources:{subscription_id}"
+    cache_key = (
+        f"topresources:{subscription_id}:{from_date}:{to_date}:{project}"
+        if project
+        else f"topresources:{subscription_id}:{from_date}:{to_date}"
+    )
     cached = cache.get(cache_key)
     
     # If cache is populated and contains valid asset records, return it instantly
@@ -150,13 +147,22 @@ async def get_top_resources(subscription_id: str, project: str = Query(None)):
         return cached
         
     # Live fallback gate if the background daemon thread has not populated this key yet
-    live_fallback = fetch_top_resources(subscription_id)
+    live_fallback = fetch_top_resources(subscription_id, from_date, to_date)
     if live_fallback and live_fallback.get("success") and live_fallback.get("top_resources"):
         cache.set(cache_key, live_fallback)
         return live_fallback
         
-    return cached if cached else {"success": True, "top_resources": [], "rows": []}
-
+    return (
+        cached
+        if cached
+        else {
+            "success": True,
+            "fromDate": from_date,
+            "toDate": to_date,
+            "top_resources": [],
+            "rows": []
+        }
+    )
 
 @router.get("/costs/{subscription_id}/budgets")
 async def get_budgets(subscription_id: str, project: str = Query(None)):
