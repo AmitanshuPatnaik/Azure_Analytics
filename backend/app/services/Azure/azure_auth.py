@@ -8,6 +8,8 @@ def get_azure_token(project_name: str = None):
     import json
     import os
     import re
+    from core.azure_throttle import token_cache
+
     _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "config.json")
     try:
         with open(_config_path, "r") as f:
@@ -57,6 +59,11 @@ def get_azure_token(project_name: str = None):
     if not t_id or not c_id or not c_secret:
         raise ValueError("Azure configuration is incomplete or missing in config.json")
 
+    # ── Token cache: avoid hammering login.microsoftonline.com ──────────── #
+    cached_token = token_cache.get(t_id, c_id)
+    if cached_token:
+        return cached_token
+
     url = f"https://login.microsoftonline.com/{t_id}/oauth2/v2.0/token"
 
     payload = {
@@ -67,7 +74,8 @@ def get_azure_token(project_name: str = None):
     }
 
     response = requests.post(url, data=payload, timeout=10)
-
     response.raise_for_status()
 
-    return response.json()["access_token"]
+    token = response.json()["access_token"]
+    token_cache.set(t_id, c_id, token)
+    return token

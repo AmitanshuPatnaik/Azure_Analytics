@@ -1,0 +1,53 @@
+<div class="tab-header"
+  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h1 style="margin: 0;">Repositories</h1>
+  <div>
+    <label for="project-filter" style="margin-right: 10px; font-weight: 500;">Filter by Project:</label>
+    <select id="project-filter" class="month-dropdown" style="width: auto;"
+      (change)="onProjectFilterChange($event)">
+      <option value="">All Projects</option>
+      @for (proj of projects; track proj.id) {
+      <option [value]="proj.name">{{ proj.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (reposError) {
+<div class="error-banner">
+  Could not load repositories: {{ reposError }}
+</div>
+} @else {
+<table>
+  <tr>
+    <th>Repository Name</th>
+    <th>Project</th>
+    <th>Owner</th>
+    <th>Creation Date</th>
+    <th>Default Branch</th>
+    <th>Remote URL</th>
+  </tr>
+
+  @for (repo of filteredRepositories; track repo.id || $index) {
+  <tr>
+    <td>{{ repo.name }}</td>
+    <td>{{ repo.project }}</td>
+    <td>{{ repo.owner || 'N/A' }}</td>
+    <td>{{ repo.createdDate || 'N/A' }}</td>
+    <td>{{ repo.defaultBranch || 'N/A' }}</td>
+    <td>
+      @if (repo.remoteUrl) {
+      <a [href]="repo.remoteUrl" target="_blank"
+        style="color: #2563eb; text-decoration: none; font-weight: 500;">View Remote</a>
+      } @else {
+      N/A
+      }
+    </td>
+  </tr>
+  } @empty {
+  <tr>
+    <td colspan="6" style="text-align: center;">No repositories found.</td>
+  </tr>
+  }
+</table>
+}

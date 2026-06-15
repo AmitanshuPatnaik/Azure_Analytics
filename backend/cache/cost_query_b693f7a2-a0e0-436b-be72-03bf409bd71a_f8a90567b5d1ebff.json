@@ -1,0 +1,36 @@
+{
+  "fetched_at": 1781526438.9765475,
+  "expires_at": 1781533638.9765475,
+  "data": {
+    "id": "subscriptions/b693f7a2-a0e0-436b-be72-03bf409bd71a/providers/Microsoft.CostManagement/query/6b938eb0-990d-48ff-8457-e73d1d1d7d4e",
+    "name": "6b938eb0-990d-48ff-8457-e73d1d1d7d4e",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ResourceGroupName",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          22.7309367990001,
+          "dnszone-aidocflo-com-rg",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

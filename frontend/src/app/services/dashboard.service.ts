@@ -21,4 +21,7 @@ export class DashboardService {
 
   sidebarVisible = false;
 
+  // Shared state for page-specific selections/coordination
+  selectedProject: any = null;
+  selectedRepoForDetails: any = null;
 }

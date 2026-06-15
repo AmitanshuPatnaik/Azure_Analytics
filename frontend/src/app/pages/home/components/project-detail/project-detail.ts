@@ -1,0 +1,193 @@
+import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { DashboardService } from '../../../../services/dashboard.service';
+import { RepositoriesApiService } from '../../../../services/api/repositories-api.service';
+
+@Component({
+  selector: 'app-project-detail',
+  imports: [CommonModule],
+  templateUrl: './project-detail.html',
+  styleUrl: '../../home.css'
+})
+export class ProjectDetailComponent implements OnInit {
+
+  selectedProjectRepos: any[] = [];
+  selectedRepoForDetails: any = null;
+  activeRepoDetailsTab = '';
+  repoCommits: any[] = [];
+  repoPRs: any[] = [];
+  repoBranches: any[] = [];
+  repoBranchesCount: number | null = null;
+  repoPushes: any[] = [];
+  
+  isLoadingRepoDetails = false;
+  reposError: string | null = null;
+  repoDetailsError: string | null = null;
+
+  @ViewChild('repoDetailsAnchor') repoDetailsAnchor!: ElementRef;
+
+  constructor(
+    public dashboardService: DashboardService,
+    private reposApi: RepositoriesApiService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  get selectedProject() {
+    return this.dashboardService.selectedProject;
+  }
+
+  ngOnInit() {
+    if (this.selectedProject) {
+      this.loadProjectRepos(this.selectedProject.name);
+    }
+  }
+
+  loadProjectRepos(projectName: string) {
+    this.reposError = null;
+    this.reposApi.getRepositoriesByProject(projectName).subscribe({
+      next: (res: any) => {
+        if (res && res.success && res.repositories) {
+          this.selectedProjectRepos = res.repositories;
+        } else if (res && res.repositories) {
+          this.selectedProjectRepos = res.repositories;
+        } else {
+          this.selectedProjectRepos = [];
+          this.reposError = 'No repositories found in this project.';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn('Failed to load project repositories', err);
+        this.selectedProjectRepos = [];
+        this.reposError = err.error?.detail || err.error?.message || err.message || 'Failed to load repositories.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  goBackToProjects() {
+    this.dashboardService.selectedProject = null;
+    this.dashboardService.selectedRepoForDetails = null;
+    this.dashboardService.selectedPage = 'projects';
+  }
+
+  viewRepoCommits(repo: any) {
+    this.selectedRepoForDetails = repo;
+    this.activeRepoDetailsTab = 'commits';
+    this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
+    this.reposApi.getCommits(this.selectedProject.name, repo.name).subscribe({
+      next: (res: any) => {
+        if (res && res.success && res.commits) {
+          this.repoCommits = res.commits;
+        } else {
+          this.repoCommits = [];
+          this.repoDetailsError = 'No commits found or failed to parse response.';
+        }
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      },
+      error: (err) => {
+        console.warn('Failed to load commits', err);
+        this.repoCommits = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch commits.';
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      }
+    });
+  }
+
+  viewRepoPRs(repo: any) {
+    this.selectedRepoForDetails = repo;
+    this.activeRepoDetailsTab = 'prs';
+    this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
+    this.reposApi.getPullRequests(this.selectedProject.name, repo.name).subscribe({
+      next: (res: any) => {
+        if (res && res.success && res.pullRequests) {
+          this.repoPRs = res.pullRequests;
+        } else {
+          this.repoPRs = [];
+          this.repoDetailsError = 'No pull requests found or failed to parse response.';
+        }
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      },
+      error: (err) => {
+        console.warn('Failed to load pull requests', err);
+        this.repoPRs = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pull requests.';
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      }
+    });
+  }
+
+  viewRepoBranches(repo: any) {
+    this.selectedRepoForDetails = repo;
+    this.activeRepoDetailsTab = 'branches';
+    this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
+    this.reposApi.getBranches(this.selectedProject.name, repo.name).subscribe({
+      next: (res: any) => {
+        if (res && res.success && res.branches) {
+          this.repoBranches = res.branches;
+          this.repoBranchesCount = res.count ?? res.branches.length;
+        } else {
+          this.repoBranches = [];
+          this.repoBranchesCount = null;
+          this.repoDetailsError = 'No branches found or failed to parse response.';
+        }
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      },
+      error: (err) => {
+        console.warn('Failed to load branches', err);
+        this.repoBranches = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch branches.';
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      }
+    });
+  }
+
+  viewRepoPushes(repo: any) {
+    this.selectedRepoForDetails = repo;
+    this.activeRepoDetailsTab = 'pushes';
+    this.isLoadingRepoDetails = true;
+    this.repoDetailsError = null;
+    this.reposApi.getPushes(this.selectedProject.name, repo.name).subscribe({
+      next: (res: any) => {
+        if (res && res.success && res.pushes) {
+          this.repoPushes = res.pushes;
+        } else {
+          this.repoPushes = [];
+          this.repoDetailsError = 'No pushes found or failed to parse response.';
+        }
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      },
+      error: (err) => {
+        console.warn('Failed to load pushes', err);
+        this.repoPushes = [];
+        this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pushes.';
+        this.isLoadingRepoDetails = false;
+        this.cdr.detectChanges();
+        this.scrollToRepoDetails();
+      }
+    });
+  }
+
+  private scrollToRepoDetails() {
+    setTimeout(() => {
+      this.repoDetailsAnchor?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+}

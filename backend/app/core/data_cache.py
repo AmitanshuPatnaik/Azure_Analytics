@@ -12,10 +12,13 @@ Design guarantees:
     Stale data is always preferred over an empty response.
   • All reads and writes are protected by a single threading.RLock so the
     module is safe for concurrent use across multiple uvicorn worker threads.
+  • get_or_fetch implements single-flight populate on cache miss so parallel
+    widget requests share one downstream Azure round-trip per cache key.
 """
 
 import threading
 import logging
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +48,8 @@ class _DataCache:
                     instance = super().__new__(cls)
                     instance._lock = threading.RLock()
                     instance._store: dict = {}
+                    instance._inflight: dict[str, threading.Event] = {}
+                    instance._inflight_lock = threading.Lock()
                     cls._instance = instance
         return cls._instance
 
@@ -74,6 +79,58 @@ class _DataCache:
         """Return True if *key* exists in the cache (value may be falsy)."""
         with self._lock:
             return key in self._store
+
+    def get_or_fetch(
+        self,
+        key: str,
+        fetch_fn: Callable[[], Any],
+        *,
+        timeout: float = 120.0,
+    ) -> Any:
+        """
+        CQRS query-side read with single-flight populate on cache miss.
+
+        If *key* is already stored, return it immediately (no downstream I/O).
+        Otherwise the first caller runs *fetch_fn* and commits the result;
+        concurrent callers block until the leader finishes.
+        """
+        if self.has(key):
+            return self.get(key)
+
+        inflight_event: Optional[threading.Event] = None
+        is_leader = False
+
+        with self._inflight_lock:
+            existing = self._inflight.get(key)
+            if existing is not None:
+                inflight_event = existing
+            else:
+                inflight_event = threading.Event()
+                self._inflight[key] = inflight_event
+                is_leader = True
+
+        if not is_leader:
+            inflight_event.wait(timeout=timeout)
+            if self.has(key):
+                return self.get(key)
+            return {}
+
+        try:
+            if self.has(key):
+                return self.get(key)
+
+            result = fetch_fn()
+            if result is not None:
+                self.set(key, result)
+                return result
+            return {}
+        except Exception as exc:
+            logger.warning("[DataCache] get_or_fetch failed key=%r: %s", key, exc)
+            return {}
+        finally:
+            with self._inflight_lock:
+                self._inflight.pop(key, None)
+            inflight_event.set()
 
     def keys(self) -> list:
         """Return a snapshot list of all keys currently in the cache."""

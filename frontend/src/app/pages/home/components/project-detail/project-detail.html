@@ -1,0 +1,215 @@
+<!-- Page Header -->
+<div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
+  <button (click)="goBackToProjects()"
+    style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: #475569; transition: background 0.15s;">
+    ← Back to Projects
+  </button>
+  <h1 style="margin: 0; font-size: 24px; color: #1e293b;">{{ selectedProject?.name }}</h1>
+</div>
+
+<!-- Project Info Cards -->
+<div
+  style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+
+  <div
+    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    <div
+      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      ID</div>
+    <div style="font-size: 13px; font-weight: 600; color: #1e293b; word-break: break-all;">{{ selectedProject?.id }}
+    </div>
+  </div>
+
+  <div
+    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    <div
+      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      State</div>
+    <div style="font-size: 14px; font-weight: 600; color: #16a34a;">{{ selectedProject?.state || 'Active' }}</div>
+  </div>
+
+  <div
+    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    <div
+      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      Visibility</div>
+    <div style="font-size: 14px; font-weight: 600; color: #2563eb;">{{ selectedProject?.visibility || 'Private' }}
+    </div>
+  </div>
+
+  <div
+    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    <div
+      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      Azure DevOps</div>
+    <a [href]="selectedProject?.url" target="_blank"
+      style="font-size: 14px; font-weight: 600; color: #2563eb; text-decoration: none;">Open in DevOps ↗</a>
+  </div>
+
+</div>
+
+@if (selectedProject?.description) {
+<div
+  style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px; margin-bottom: 32px; color: #475569; font-size: 14px;">
+  <span style="font-weight: 600; color: #1e293b;">Description: </span>{{ selectedProject?.description }}
+</div>
+}
+
+<!-- Repositories Section -->
+<h2
+  style="color: #1e293b; font-size: 18px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 16px;">
+  Repository Details &amp; Operations
+  <span style="font-size: 13px; font-weight: 500; color: #64748b; margin-left: 10px;">{{ selectedProjectRepos.length }} repo(s)</span>
+</h2>
+
+@if (reposError) {
+<div class="error-banner">{{ reposError }}</div>
+} @else if (selectedProjectRepos.length === 0) {
+<p style="color: #6b7280; font-size: 14px;">No repositories found in this project.</p>
+} @else {
+<table>
+  <tr>
+    <th>Repository Name</th>
+    <th>Default Branch</th>
+    <th>Actions</th>
+  </tr>
+  @for (repo of selectedProjectRepos; track repo.id || $index) {
+  <tr>
+    <td>{{ repo.name }}</td>
+    <td>{{ repo.defaultBranch || 'N/A' }}</td>
+    <td style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="action-small-btn" (click)="viewRepoCommits(repo)"
+        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Commits</button>
+      <button class="action-small-btn" (click)="viewRepoPRs(repo)"
+        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer;">PRs</button>
+      <button class="action-small-btn" (click)="viewRepoBranches(repo)"
+        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #9333ea; color: white; border: none; border-radius: 4px; cursor: pointer;">Branches</button>
+      <button class="action-small-btn" (click)="viewRepoPushes(repo)"
+        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #f97316; color: white; border: none; border-radius: 4px; cursor: pointer;">Pushes</button>
+    </td>
+  </tr>
+  }
+</table>
+}
+
+<!-- Repository Dynamic Operations Sub-table -->
+@if (selectedRepoForDetails) {
+<div #repoDetailsAnchor style="margin-top: 32px; border-top: 2px solid #e2e8f0; padding-top: 20px;">
+  <h3
+    style="color: #1e293b; text-transform: uppercase; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+    {{ activeRepoDetailsTab }} for {{ selectedRepoForDetails.name }}
+    @if (activeRepoDetailsTab === 'branches' && repoBranchesCount !== null) {
+    <span
+      style="font-size: 13px; font-weight: 600; background: #9333ea; color: #fff; border-radius: 20px; padding: 2px 10px; text-transform: none; letter-spacing: 0;">
+      {{ repoBranchesCount }} {{ repoBranchesCount === 1 ? 'branch' : 'branches' }}
+    </span>
+    }
+  </h3>
+
+  @if (isLoadingRepoDetails) {
+  <p style="color: #6b7280;">Loading details...</p>
+  } @else if (repoDetailsError) {
+  <div class="error-banner">{{ repoDetailsError }}</div>
+  } @else {
+
+  <!-- Commits sub-view -->
+  @if (activeRepoDetailsTab === 'commits') {
+  <table style="font-size: 13px;">
+    <tr>
+      <th>Commit ID</th>
+      <th>Author</th>
+      <th>Date</th>
+      <th>Comment</th>
+    </tr>
+    @for (c of repoCommits; track c.commitId || $index) {
+    <tr>
+      <td><code>{{ c.commitId?.substring(0, 8) }}</code></td>
+      <td>{{ c.author }}</td>
+      <td>{{ c.date | date:'short':'UTC' }}</td>
+      <td>{{ c.comment }}</td>
+    </tr>
+    } @empty {
+    <tr>
+      <td colspan="4" style="text-align: center;">No commits found.</td>
+    </tr>
+    }
+  </table>
+  }
+
+  <!-- PRs sub-view -->
+  @if (activeRepoDetailsTab === 'prs') {
+  <table style="font-size: 13px;">
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Created By</th>
+      <th>Date</th>
+      <th>Status</th>
+    </tr>
+    @for (pr of repoPRs; track pr.pullRequestId || $index) {
+    <tr>
+      <td>{{ pr.pullRequestId }}</td>
+      <td>{{ pr.title }}</td>
+      <td>{{ pr.createdBy }}</td>
+      <td>{{ pr.creationDate | date:'short':'UTC' }}</td>
+      <td>{{ pr.status }}</td>
+    </tr>
+    } @empty {
+    <tr>
+      <td colspan="5" style="text-align: center;">No pull requests found.</td>
+    </tr>
+    }
+  </table>
+  }
+
+  <!-- Branches sub-view -->
+  @if (activeRepoDetailsTab === 'branches') {
+  <table style="font-size: 13px;">
+    <tr>
+      <th>Branch Name</th>
+      <th>Owner</th>
+      <th>Created Date</th>
+      <th>Last Modified By</th>
+      <th>Last Modified Date</th>
+    </tr>
+    @for (b of repoBranches; track b.name || $index) {
+    <tr>
+      <td>{{ b.name }}</td>
+      <td>{{ b.owner || 'N/A' }}</td>
+      <td>{{ b.createdDate || 'N/A' }}</td>
+      <td>{{ b.lastModifiedBy || 'N/A' }}</td>
+      <td>{{ b.lastModifiedDate || 'N/A' }}</td>
+    </tr>
+    } @empty {
+    <tr>
+      <td colspan="5" style="text-align: center;">No branches found.</td>
+    </tr>
+    }
+  </table>
+  }
+
+  <!-- Pushes sub-view -->
+  @if (activeRepoDetailsTab === 'pushes') {
+  <table style="font-size: 13px;">
+    <tr>
+      <th>Push ID</th>
+      <th>Date</th>
+      <th>Pushed By</th>
+    </tr>
+    @for (p of repoPushes; track p.pushId || $index) {
+    <tr>
+      <td>{{ p.pushId }}</td>
+      <td>{{ p.date | date:'short':'UTC' }}</td>
+      <td>{{ p.pushedBy }}</td>
+    </tr>
+    } @empty {
+    <tr>
+      <td colspan="3" style="text-align: center;">No pushes found.</td>
+    </tr>
+    }
+  </table>
+  }
+
+  }
+</div>
+}

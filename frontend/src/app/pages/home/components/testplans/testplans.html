@@ -1,0 +1,54 @@
+<div class="tab-header"
+  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h1 style="margin: 0;">Test Plans</h1>
+  <div>
+    <label for="testplan-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+    <select id="testplan-proj" class="month-dropdown" style="width: auto;" [value]="selectedTestPlanProject"
+      (change)="onTestPlanProjectChange($event)">
+      <option value="">Select Project</option>
+      @for (proj of projects; track proj.id) {
+      <option [value]="proj.name">{{ proj.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (testPlansError) {
+<div class="error-banner">
+  Could not load test plans: {{ testPlansError }}
+</div>
+} @else if (!selectedTestPlanProject) {
+<div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+  <p style="color: #6b7280; font-size: 16px;">Please select a project to view test plans.</p>
+</div>
+} @else if (isLoadingTestPlans) {
+<div style="text-align: center; padding: 40px;">
+  <p>Loading test plans...</p>
+</div>
+} @else {
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Owner</th>
+    <th>State</th>
+    <th>Start Date</th>
+    <th>End Date</th>
+  </tr>
+
+  @for (plan of testPlans; track plan.id || $index) {
+  <tr>
+    <td>{{ plan.id }}</td>
+    <td>{{ plan.name }}</td>
+    <td>{{ plan.owner }}</td>
+    <td>{{ plan.state }}</td>
+    <td>{{ plan.startDate || 'N/A' }}</td>
+    <td>{{ plan.endDate || 'N/A' }}</td>
+  </tr>
+  } @empty {
+  <tr>
+    <td colspan="6" style="text-align: center;">No test plans found for this project.</td>
+  </tr>
+  }
+</table>
+}

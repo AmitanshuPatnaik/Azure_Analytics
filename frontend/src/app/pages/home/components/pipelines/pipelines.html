@@ -1,0 +1,51 @@
+<div class="tab-header"
+  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h1 style="margin: 0;">Pipelines</h1>
+  <div>
+    <label for="pipeline-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
+    <select id="pipeline-proj" class="month-dropdown" style="width: auto;" [value]="selectedPipelineProject"
+      (change)="onPipelineProjectChange($event)">
+      <option value="">Select Project</option>
+      @for (proj of projects; track proj.id) {
+      <option [value]="proj.name">{{ proj.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (pipelinesError) {
+<div class="error-banner">
+  Could not load pipelines: {{ pipelinesError }}
+</div>
+} @else if (!selectedPipelineProject) {
+<div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
+  <p style="color: #6b7280; font-size: 16px;">Please select a project to view its pipelines.</p>
+</div>
+} @else if (isLoadingPipelines) {
+<div style="text-align: center; padding: 40px;">
+  <p>Loading pipelines...</p>
+</div>
+} @else {
+<table>
+  <tr>
+    <th>Pipeline Name</th>
+    <th>Folder</th>
+    <th>URL</th>
+  </tr>
+
+  @for (pipeline of pipelines; track pipeline.id || $index) {
+  <tr>
+    <td>{{ pipeline.name }}</td>
+    <td>{{ pipeline.folder || '/' }}</td>
+    <td>
+      <a [href]="pipeline.url" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Open
+        Pipeline</a>
+    </td>
+  </tr>
+  } @empty {
+  <tr>
+    <td colspan="3" style="text-align: center;">No pipelines found for this project.</td>
+  </tr>
+  }
+</table>
+}

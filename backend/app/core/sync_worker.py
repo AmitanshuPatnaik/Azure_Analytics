@@ -79,24 +79,31 @@ def _sync_subscriptions() -> list:
         
     all_sub_ids = []
     all_subscriptions = []
-    
+    sub_project_map = {}
+
     for proj in projects:
         try:
             result = fetch_subscriptions(proj)
             if isinstance(result, dict) and not result.get("error"):
+                cache.set(f"subscriptions:{proj}", result)
                 subs = result.get("subscriptions", [])
                 all_subscriptions.extend(subs)
                 for s in subs:
                     sub_id = s.get("subscriptionId")
                     if sub_id:
                         all_sub_ids.append((sub_id, proj))
+                        sub_project_map[sub_id] = proj
         except Exception as exc:
             logger.warning("[SyncWorker] ✗ subscriptions sync failed for project %s: %s", proj, exc)
-            
+
     if all_subscriptions:
         cache.set("subscriptions", {"success": True, "subscriptions": all_subscriptions})
         logger.info("[SyncWorker] ✓ all subscriptions cached (%d entries)", len(all_subscriptions))
-        
+
+    if sub_project_map:
+        cache.set("sub_project_map", sub_project_map)
+        logger.info("[SyncWorker] ✓ sub_project_map cached (%d entries)", len(sub_project_map))
+
     return all_sub_ids
 
 
@@ -209,9 +216,12 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: st
     except Exception as exc:
         logger.warning("[SyncWorker] historical trend lines sync failed for sub=%s: %s", sub_id, exc)
 
-    # 🛡️ ANTI-THROTTLING RATE GATEWAY GATE
-    # Staggers execution loops by 1.5 seconds to protect backend thread pool from API limits
-    time.sleep(1.5)
+    # 🛡️ ANTI-THROTTLING RATE GATEWAY
+    # The sync worker shares the same global Azure semaphore (MAX_CONCURRENT=2)
+    # as live user requests. A longer sleep between subscriptions ensures the
+    # background sweep does not hold both semaphore slots indefinitely,
+    # leaving user "Fetch Data" clicks blocked for extended periods.
+    time.sleep(3.0)
 
 def run_sync() -> None:
     logger.info("[SyncWorker] ── Starting sync sweep ──────────────────────────")
@@ -231,7 +241,7 @@ def run_sync() -> None:
         else:
             logger.info("[SyncWorker] No active subscriptions found — skipping cost matrix sync")
 
-        now_utc = datetime.now(timezone.utc).isoformat()
+        now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         cache.set("last_sync_time", now_utc)
         cache.set("worker_status", "idle")
         logger.info("[SyncWorker] ── Sync completed successfully at %s ──", now_utc)
@@ -247,7 +257,13 @@ class SyncWorker(threading.Thread):
         self._stop_event = threading.Event()
 
     def run(self) -> None:
-        logger.info("[SyncWorker] Daemon thread active.")
+        logger.info("[SyncWorker] Daemon thread active. Waiting 15s before initial sync sweep...")
+        for _ in range(15):
+            if self._stop_event.is_set():
+                logger.info("[SyncWorker] Stop event set during initial delay. Exiting.")
+                return
+            time.sleep(1)
+
         run_sync()
 
         elapsed = 0

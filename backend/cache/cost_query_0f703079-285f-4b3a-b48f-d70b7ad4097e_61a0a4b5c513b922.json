@@ -1,0 +1,31 @@
+{
+  "fetched_at": 1781528103.4150453,
+  "expires_at": 1781535303.4150453,
+  "data": {
+    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/e3a4418a-c245-46d8-98ca-853996f17df4",
+    "name": "e3a4418a-c245-46d8-98ca-853996f17df4",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          30771.05014374947,
+          "INR"
+        ]
+      ]
+    }
+  }
+}

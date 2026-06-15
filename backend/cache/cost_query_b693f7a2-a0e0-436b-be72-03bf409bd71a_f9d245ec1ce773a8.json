@@ -1,0 +1,66 @@
+{
+  "fetched_at": 1781527952.2248008,
+  "expires_at": 1782132752.2248008,
+  "data": {
+    "id": "subscriptions/b693f7a2-a0e0-436b-be72-03bf409bd71a/providers/Microsoft.CostManagement/query/6b8231e7-20e7-4600-b485-45d03e3e8874",
+    "name": "6b8231e7-20e7-4600-b485-45d03e3e8874",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "UsageDate",
+          "type": "Number"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          1.59896734635484,
+          20260608,
+          "INR"
+        ],
+        [
+          1.60023048735484,
+          20260609,
+          "INR"
+        ],
+        [
+          1.61240257335484,
+          20260610,
+          "INR"
+        ],
+        [
+          1.60118741235484,
+          20260611,
+          "INR"
+        ],
+        [
+          1.60245055335484,
+          20260612,
+          "INR"
+        ],
+        [
+          1.60195295235484,
+          20260613,
+          "INR"
+        ],
+        [
+          1.60099602735484,
+          20260614,
+          "INR"
+        ]
+      ]
+    }
+  }
+}

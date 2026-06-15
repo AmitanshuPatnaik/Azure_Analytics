@@ -1,0 +1,15 @@
+{
+  "fetched_at": 1781526422.4783478,
+  "expires_at": 1781533622.4783478,
+  "data": {
+    "success": true,
+    "budgets": [
+      {
+        "name": "docflo_dev_alert",
+        "amount": 30000.0,
+        "timeGrain": "Monthly"
+      }
+    ],
+    "fetchedAtUtc": "2026-06-15T12:27:02Z"
+  }
+}

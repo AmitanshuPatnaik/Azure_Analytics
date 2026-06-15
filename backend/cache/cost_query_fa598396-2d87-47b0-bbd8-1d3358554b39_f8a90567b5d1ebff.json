@@ -1,0 +1,141 @@
+{
+  "fetched_at": 1781526679.5213711,
+  "expires_at": 1781533879.5213711,
+  "data": {
+    "id": "subscriptions/fa598396-2d87-47b0-bbd8-1d3358554b39/providers/Microsoft.CostManagement/query/9107733d-4452-4763-83ec-073fcbdef1a8",
+    "name": "9107733d-4452-4763-83ec-073fcbdef1a8",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ResourceGroupName",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          438.595186342501,
+          "$system",
+          "INR"
+        ],
+        [
+          291.749284404001,
+          "aitf-dev-appapi-rg",
+          "INR"
+        ],
+        [
+          0.0296976673816876,
+          "aitf-dev-appportal-rg",
+          "INR"
+        ],
+        [
+          1311.53770120221,
+          "aitf-dev-faceapi-rg",
+          "INR"
+        ],
+        [
+          715.780732524752,
+          "aitf-dev-faceworker-rg",
+          "INR"
+        ],
+        [
+          0.248030749530001,
+          "aitf-dev-notification-rg",
+          "INR"
+        ],
+        [
+          0.0181490395500001,
+          "aitf-dev-portal-rg",
+          "INR"
+        ],
+        [
+          715.779900000002,
+          "aitf-dev-scheduler-rg",
+          "INR"
+        ],
+        [
+          0.0,
+          "aitf-dev-shared-rg",
+          "INR"
+        ],
+        [
+          39.5105653190251,
+          "aitf-dev-timeflowstore-rg",
+          "INR"
+        ],
+        [
+          290.676569995767,
+          "aitf-qa-appapi-rg",
+          "INR"
+        ],
+        [
+          0.0189654807830626,
+          "aitf-qa-appportal-rg",
+          "INR"
+        ],
+        [
+          721.719445696272,
+          "aitf-qa-faceapi-rg",
+          "INR"
+        ],
+        [
+          715.779900000002,
+          "aitf-qa-faceworker-rg",
+          "INR"
+        ],
+        [
+          1.274481058851,
+          "aitf-qa-notification-rg",
+          "INR"
+        ],
+        [
+          0.0128088406411875,
+          "aitf-qa-portal-rg",
+          "INR"
+        ],
+        [
+          718.778068320017,
+          "aitf-qa-scheduler-rg",
+          "INR"
+        ],
+        [
+          0.0,
+          "aitf-qa-shared-rg",
+          "INR"
+        ],
+        [
+          3.67139584179226,
+          "aitf-qa-timeflowstore-rg",
+          "INR"
+        ],
+        [
+          715.779900000002,
+          "aitf-test-face-worker-rg",
+          "INR"
+        ],
+        [
+          0.0,
+          "aitf-test-shared-rg",
+          "INR"
+        ],
+        [
+          163.1557125,
+          "testpayment_group",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

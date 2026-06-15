@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { FrontendCacheService } from '../frontend-cache.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,13 +10,30 @@ import { Observable } from 'rxjs';
 export class PipelinesApiService {
   private baseUrl = 'http://127.0.0.1:8000/api/projects';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private cache: FrontendCacheService
+  ) {}
 
   getPipelines(projectName: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/${projectName}/pipelines`);
+    const cacheKey = `pipelines:project:${projectName}`;
+    const cachedData = this.cache.get(cacheKey);
+    if (cachedData) {
+      return of(cachedData);
+    }
+    return this.http.get<any>(`${this.baseUrl}/${projectName}/pipelines`).pipe(
+      tap(data => this.cache.set(cacheKey, data))
+    );
   }
 
   getActivePipelinesCount(): Observable<any> {
-    return this.http.get<any>(`http://127.0.0.1:8000/api/pipelines/active-count`);
+    const cacheKey = 'pipelines:activecount';
+    const cachedData = this.cache.get(cacheKey);
+    if (cachedData) {
+      return of(cachedData);
+    }
+    return this.http.get<any>(`http://127.0.0.1:8000/api/pipelines/active-count`).pipe(
+      tap(data => this.cache.set(cacheKey, data))
+    );
   }
 }

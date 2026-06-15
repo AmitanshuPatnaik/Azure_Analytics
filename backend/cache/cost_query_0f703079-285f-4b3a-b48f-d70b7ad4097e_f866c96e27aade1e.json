@@ -1,0 +1,61 @@
+{
+  "fetched_at": 1781526208.750096,
+  "expires_at": 1781533408.750096,
+  "data": {
+    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/e1d7ca4e-4423-4829-a953-1b04db80348e",
+    "name": "e1d7ca4e-4423-4829-a953-1b04db80348e",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "BillingMonth",
+          "type": "Datetime"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          5547.81227293794,
+          "2026-01-01T00:00:00",
+          "INR"
+        ],
+        [
+          5014.188736964216,
+          "2026-02-01T00:00:00",
+          "INR"
+        ],
+        [
+          5555.740210647409,
+          "2026-03-01T00:00:00",
+          "INR"
+        ],
+        [
+          5497.00454285493,
+          "2026-04-01T00:00:00",
+          "INR"
+        ],
+        [
+          6268.0739097169,
+          "2026-05-01T00:00:00",
+          "INR"
+        ],
+        [
+          2873.85717300506,
+          "2026-06-01T00:00:00",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

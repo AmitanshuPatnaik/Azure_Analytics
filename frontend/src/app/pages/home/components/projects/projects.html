@@ -1,0 +1,25 @@
+<h1>Projects</h1>
+
+@if (projectsError) {
+<div class="error-banner">
+  Could not load projects: {{ projectsError }}
+</div>
+} @else {
+<div class="cards">
+
+  @for (project of projects; track project.id || $index) {
+  <div class="card">
+    <h3>{{ project.name }}</h3>
+    <hr>
+    <p><strong>State:</strong> {{ project.state || 'Active' }}</p>
+    <p><strong>Visibility:</strong> {{ project.visibility || 'Private' }}</p>
+    <button (click)="openProject(project)">View Project</button>
+  </div>
+  } @empty {
+  <div class="card" style="grid-column: span 3; text-align: center;">
+    <p>No projects found.</p>
+  </div>
+  }
+
+</div>
+}

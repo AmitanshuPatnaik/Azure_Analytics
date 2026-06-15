@@ -1,0 +1,66 @@
+{
+  "fetched_at": 1781528023.9846375,
+  "expires_at": 1781535223.9846375,
+  "data": {
+    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/e123d6e5-9bd0-4867-944b-38362a99c459",
+    "name": "e123d6e5-9bd0-4867-944b-38362a99c459",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ResourceGroupName",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          0.0371795792715001,
+          "integre-qa-integrenotify-rg",
+          "INR"
+        ],
+        [
+          0.00796243895550002,
+          "integre-qa-integreportal-rg",
+          "INR"
+        ],
+        [
+          1446.35907574126,
+          "integre-qa-integreshared-rg",
+          "INR"
+        ],
+        [
+          0.0103807224,
+          "integre-qa-integrestore-rg",
+          "INR"
+        ],
+        [
+          721.685981770652,
+          "integre-qa-vyomaapi-rg",
+          "INR"
+        ],
+        [
+          0.125775104816813,
+          "integre-qa-vyomaportal-rg",
+          "INR"
+        ],
+        [
+          720.004115270702,
+          "integre-qa-vyomascheduler-rg",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

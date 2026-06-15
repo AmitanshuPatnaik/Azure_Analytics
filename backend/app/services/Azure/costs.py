@@ -1,55 +1,214 @@
+import logging
 import requests
 import time
+from datetime import datetime, timezone
 
 from services.Azure.azure_auth import get_azure_token
 from core.config import azure_cost_base_url
+from core.azure_cache import get_cached_azure_data, get_cache_key, determine_cost_query_ttl
+
+logger = logging.getLogger(__name__)
+
+
+# ── UTC presentation & cache-key helpers ───────────────────────────────── #
+
+def utc_now_iso() -> str:
+    """Current instant as ISO-8601 UTC with Z suffix."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def normalize_utc_date(date_str: str | None) -> str:
+    """
+    Normalize any date/datetime string to a YYYY-MM-DD UTC calendar day.
+    Used for cache keys and API timePeriod boundaries.
+    """
+    if not date_str:
+        return ""
+    raw = str(date_str).strip()
+    if not raw:
+        return ""
+
+    if "T" in raw:
+        raw = raw.split("T")[0]
+
+    if len(raw) == 10 and raw[4] == "-" and raw[7] == "-":
+        return raw
+
+    if len(raw) == 8 and raw.isdigit():
+        return f"{raw[:4]}-{raw[4:6]}-{raw[6:8]}"
+
+    try:
+        dt = datetime.fromisoformat(str(date_str).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.strftime("%Y-%m-%d")
+    except ValueError:
+        return raw[:10] if len(raw) >= 10 else raw
+
+
+def utc_day_start_iso(date_str: str | None) -> str:
+    day = normalize_utc_date(date_str)
+    return f"{day}T00:00:00Z" if day else ""
+
+
+def utc_day_end_iso(date_str: str | None) -> str:
+    day = normalize_utc_date(date_str)
+    return f"{day}T23:59:59Z" if day else ""
+
+
+def build_dated_cache_key(prefix: str, subscription_id: str, from_date: str | None, to_date: str | None) -> str:
+    """Uniform UTC cache key for date-scoped cost endpoints."""
+    if from_date and to_date:
+        utc_from = normalize_utc_date(from_date)
+        utc_to = normalize_utc_date(to_date)
+        return f"{prefix}:{subscription_id}:{utc_from}:{utc_to}"
+    return f"{prefix}:{subscription_id}"
+
+
+def _stamp_utc_metadata(payload: dict, from_date: str | None = None, to_date: str | None = None) -> dict:
+    """Attach normalized UTC date fields to every user-facing payload."""
+    if from_date:
+        utc_from = normalize_utc_date(from_date)
+        payload["fromDate"] = utc_from
+        payload["fromDateUtc"] = utc_day_start_iso(utc_from)
+    if to_date:
+        utc_to = normalize_utc_date(to_date)
+        payload["toDate"] = utc_to
+        payload["toDateUtc"] = utc_day_end_iso(utc_to)
+    payload["fetchedAtUtc"] = utc_now_iso()
+    return payload
+
+
+def _execute_azure_query_live(subscription_id: str, payload: dict):
+    """
+    Execute a POST request to the Azure Cost Management API with:
+      • Global concurrency gate (semaphore) — at most 2 threads hit Azure at once
+      • Exponential back-off + full jitter — avoids thundering-herd retries
+      • Retry-After header respect — honors Azure's own cooldown instruction
+      • 8 total attempts over up to ~120 seconds before giving up
+      • 60-second per-request timeout instead of 10s for slow Azure responses
+    """
+    import random
+    from core.azure_throttle import azure_semaphore
+
+    MAX_ATTEMPTS = 8
+    BASE_DELAY   = 2.0   # seconds
+    MAX_DELAY    = 60.0  # seconds cap per sleep
+
+    with azure_semaphore:
+        for attempt in range(MAX_ATTEMPTS):
+            try:
+                token = get_azure_token()
+                url = (
+                    f"{azure_cost_base_url}/{subscription_id}"
+                    f"/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
+                )
+                headers = {
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                }
+
+                response = requests.post(url, headers=headers, json=payload, timeout=60)
+
+                if response.status_code == 200:
+                    return response.json()
+
+                if response.status_code == 429:
+                    # Honour the Retry-After header if Azure provides it
+                    retry_after_raw = response.headers.get("Retry-After") or response.headers.get("x-ms-retry-after-ms")
+                    if retry_after_raw:
+                        try:
+                            retry_after = float(retry_after_raw)
+                            # x-ms-retry-after-ms is in milliseconds
+                            if "ms" in response.headers.get("x-ms-retry-after-ms", ""):
+                                retry_after = retry_after / 1000.0
+                        except (ValueError, TypeError):
+                            retry_after = None
+                    else:
+                        retry_after = None
+
+                    if retry_after and retry_after > 0:
+                        sleep_time = min(retry_after + random.uniform(0, 2), MAX_DELAY)
+                    else:
+                        # Full jitter: sleep = random(0, min(cap, base * 2^attempt))
+                        sleep_time = random.uniform(0, min(MAX_DELAY, BASE_DELAY * (2 ** attempt)))
+
+                    if attempt < MAX_ATTEMPTS - 1:
+                        logger.warning(
+                            "[AzureQuery] 429 rate-limited sub=%s attempt=%d/%d sleeping=%.1fs",
+                            subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,
+                        )
+                        time.sleep(sleep_time)
+                        continue
+
+                    # Exhausted retries on 429
+                    return {
+                        "success": False,
+                        "status_code": 429,
+                        "error": "Azure Cost Management rate limit exceeded after all retries.",
+                    }
+
+                # Non-retryable HTTP error (4xx except 429, 5xx transient)
+                if response.status_code >= 500 and attempt < MAX_ATTEMPTS - 1:
+                    sleep_time = random.uniform(0, min(MAX_DELAY, BASE_DELAY * (2 ** attempt)))
+                    logger.warning(
+                        "[AzureQuery] HTTP %d sub=%s attempt=%d/%d sleeping=%.1fs",
+                        response.status_code, subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,
+                    )
+                    time.sleep(sleep_time)
+                    continue
+
+                return {
+                    "success": False,
+                    "status_code": response.status_code,
+                    "rows": [],
+                    "detail": f"Azure Cost query returned HTTP {response.status_code}.",
+                }
+
+            except requests.exceptions.Timeout:
+                sleep_time = random.uniform(0, min(MAX_DELAY, BASE_DELAY * (2 ** attempt)))
+                if attempt < MAX_ATTEMPTS - 1:
+                    logger.warning(
+                        "[AzureQuery] timeout sub=%s attempt=%d/%d sleeping=%.1fs",
+                        subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,
+                    )
+                    time.sleep(sleep_time)
+                    continue
+                return {
+                    "success": False,
+                    "error": "Azure Cost Management request timed out after all retries.",
+                    "properties": {"rows": []},
+                }
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": "Azure Integration is not configured or offline",
+                    "message": str(e),
+                    "properties": {"rows": []},
+                }
+
+        return {
+            "success": False,
+            "error": "Azure Cost Management did not respond after maximum retry attempts.",
+            "properties": {"rows": []},
+        }
+
 
 def _execute_azure_query(subscription_id: str, payload: dict):
     """
-    Internal core handler that executes the POST request to Azure Cost Management API
-    with built-in exponential backoff retries for 429 rate limits.
+    Wrapper around _execute_azure_query_live that applies a persistent, multi-tiered cache.
     """
-    try:
-        token = get_azure_token()
-        url = f"{azure_cost_base_url}/{subscription_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
-        
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
+    key = get_cache_key("cost_query", subscription_id, payload)
+    ttl = determine_cost_query_ttl(payload)
+    return get_cached_azure_data(
+        key=key,
+        fetch_fn=lambda: _execute_azure_query_live(subscription_id, payload),
+        ttl=ttl
+    )
 
-        for attempt in range(3):
-            response = requests.post(url, headers=headers, json=payload, timeout=10)
-            
-            if response.status_code == 200:
-                return response.json()
-                
-            if response.status_code == 429:
-                time.sleep(5)
-                continue
-                
-            return {
-                "success": False,
-                "status_code": response.status_code,
-                "rows": [],
-                "detail": "Azure Cost query returned an unhandled status down-stream."
-            }
-
-        return {
-            "success": False,
-            "status_code": 429,
-            "error": "Azure Cost Management rate limit exceeded"
-        }
-    except Exception as e:
-        # Return fallback structures for empty/missing Azure configurations
-        return {
-            "success": False,
-            "error": "Azure Integration is not configured or offline",
-            "message": str(e),
-            "properties": {
-                "rows": []
-            }
-        }
 
 
 # 1. Fetch Month-To-Date overall billing total balance
@@ -66,24 +225,38 @@ def fetch_total_cost(subscription_id: str):
     }
     result = _execute_azure_query(subscription_id, payload)
 
-    # Safely extract the raw cost number out of Azure's return matrix
-    total_amount = 0
-    if "properties" in result and "rows" in result["properties"]:
-        rows = result["properties"]["rows"]
-        if rows and len(rows) > 0 and len(rows[0]) > 0:
-            total_amount = rows[0][0]
+    if not isinstance(result, dict) or "properties" not in result:
+        return _stamp_utc_metadata({
+            "success": False,
+            "total_cost": 0.0,
+            "amount": 0.0,
+            "error": result.get("error", "Failed to fetch total cost") if isinstance(result, dict) else "Failed to fetch total cost",
+        })
 
-    return {"success": True, "total_cost": total_amount, "amount": total_amount}
+    total_amount = 0.0
+    rows = result["properties"].get("rows", [])
+    if rows and len(rows) > 0 and len(rows[0]) > 0:
+        total_amount = float(rows[0][0])
+
+    return _stamp_utc_metadata({
+        "success": True,
+        "total_cost": total_amount,
+        "amount": total_amount,
+    })
+
 
 # 2. Fetch costs broken down by Service categories (e.g., Storage, Virtual Machines)
 def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: str = None):
-    if from_date and to_date:
+    utc_from = normalize_utc_date(from_date) if from_date else None
+    utc_to = normalize_utc_date(to_date) if to_date else None
+
+    if utc_from and utc_to:
         payload = {
             "type": "ActualCost",
             "timeframe": "Custom",
-            "timePeriod" : {
-                "from" : f"{from_date}T00:00:00Z",
-                "to" : f"{to_date}T23:59:59Z"
+            "timePeriod": {
+                "from": utc_day_start_iso(utc_from),
+                "to": utc_day_end_iso(utc_to),
             },
             "dataset": {
                 "granularity": "None",
@@ -96,6 +269,8 @@ def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: st
             }
         }
     else:
+        utc_from = None
+        utc_to = None
         payload = {
             "type": "ActualCost",
             "timeframe": "MonthToDate",
@@ -109,11 +284,23 @@ def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: st
                 ]
             }
         }
+
     result = _execute_azure_query(subscription_id, payload)
-    if not result.get("success", True) or "error" in result:
-        return {"success": False, "error": result.get("error", "Failed to fetch service costs"), "services": [], "rows": []}
+    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+        return _stamp_utc_metadata({
+            "success": False,
+            "error": result.get("error", "Failed to fetch service costs") if isinstance(result, dict) else "Failed to fetch service costs",
+            "services": [],
+            "rows": [],
+        }, utc_from, utc_to)
+
     rows = result.get("properties", {}).get("rows", [])
-    return {"success": True, "fromDate" : from_date, "toDate" : to_date, "services": rows, "rows": rows}
+    return _stamp_utc_metadata({
+        "success": True,
+        "services": rows,
+        "rows": rows,
+    }, utc_from, utc_to)
+
 
 # 3. Fetch costs grouped by Resource Groups
 def fetch_resource_group_costs(subscription_id: str):
@@ -131,10 +318,21 @@ def fetch_resource_group_costs(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
-    if not result.get("success", True) or "error" in result:
-        return {"success": False, "error": result.get("error", "Failed to fetch resource group costs"), "resource_groups": [], "rows": []}
+    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+        return _stamp_utc_metadata({
+            "success": False,
+            "error": result.get("error", "Failed to fetch resource group costs") if isinstance(result, dict) else "Failed to fetch resource group costs",
+            "resource_groups": [],
+            "rows": [],
+        })
+
     rows = result.get("properties", {}).get("rows", [])
-    return {"success": True, "resource_groups": rows, "rows": rows}
+    return _stamp_utc_metadata({
+        "success": True,
+        "resource_groups": rows,
+        "rows": rows,
+    })
+
 
 # 4. Fetch daily cost tracking points
 def fetch_daily_costs(subscription_id: str):
@@ -149,23 +347,37 @@ def fetch_daily_costs(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
+    if not isinstance(result, dict) or "properties" not in result:
+        return _stamp_utc_metadata({
+            "success": False,
+            "daily_costs": [],
+            "rows": [],
+            "error": result.get("error", "Failed to fetch daily costs") if isinstance(result, dict) else "Failed to fetch daily costs",
+        })
+
     rows = result.get("properties", {}).get("rows", [])
-    return {"success": True, "daily_costs": rows, "rows": rows}
+    return _stamp_utc_metadata({
+        "success": True,
+        "daily_costs": rows,
+        "rows": rows,
+    })
 
 
 # 4b. Fetch day-wise costs for a custom date range
 def fetch_daily_costs_by_range(subscription_id: str, from_date: str, to_date: str):
     """
     Fetch daily granularity costs between from_date and to_date (inclusive).
-    Dates should be ISO format strings e.g. '2026-01-01'.
-    Returns a list of { date: 'YYYY-MM-DD', cost: float } dicts sorted by date.
+    Dates are normalized to UTC YYYY-MM-DD before querying Azure.
     """
+    utc_from = normalize_utc_date(from_date)
+    utc_to = normalize_utc_date(to_date)
+
     payload = {
         "type": "ActualCost",
         "timeframe": "Custom",
         "timePeriod": {
-            "from": f"{from_date}T00:00:00+00:00",
-            "to":   f"{to_date}T23:59:59+00:00"
+            "from": utc_day_start_iso(utc_from),
+            "to": utc_day_end_iso(utc_to),
         },
         "dataset": {
             "granularity": "Daily",
@@ -175,24 +387,38 @@ def fetch_daily_costs_by_range(subscription_id: str, from_date: str, to_date: st
         }
     }
     result = _execute_azure_query(subscription_id, payload)
-    if not result.get("success", True) or "error" in result:
-        return {"success": False, "error": result.get("error", "Failed to fetch daily costs"), "points": [], "count": 0}
+    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+        return _stamp_utc_metadata({
+            "success": False,
+            "error": result.get("error", "Failed to fetch daily costs") if isinstance(result, dict) else "Failed to fetch daily costs",
+            "points": [],
+            "count": 0,
+        }, utc_from, utc_to)
+
     raw_rows = result.get("properties", {}).get("rows", [])
 
-    # Azure returns rows as [cost_float, date_int_YYYYMMDD, currency_str]
     points = []
     for row in raw_rows:
         if len(row) >= 2:
             cost = float(row[0])
-            raw_date = str(row[1])          # e.g. "20260101"
+            raw_date = str(row[1])
             if len(raw_date) == 8 and raw_date.isdigit():
                 label = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
             else:
-                label = raw_date
-            points.append({"date": label, "cost": round(cost, 2)})
+                label = normalize_utc_date(raw_date)
+            points.append({
+                "date": label,
+                "dateUtc": utc_day_start_iso(label),
+                "cost": round(cost, 2),
+            })
 
     points.sort(key=lambda p: p["date"])
-    return {"success": True, "points": points, "count": len(points)}
+    return _stamp_utc_metadata({
+        "success": True,
+        "points": points,
+        "count": len(points),
+    }, utc_from, utc_to)
+
 
 # 5. Fetch monthly historical cost matrices
 def fetch_monthly_costs(subscription_id: str):
@@ -207,8 +433,21 @@ def fetch_monthly_costs(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
+    if not isinstance(result, dict) or "properties" not in result:
+        return _stamp_utc_metadata({
+            "success": False,
+            "monthly_costs": [],
+            "rows": [],
+            "error": result.get("error", "Failed to fetch monthly costs") if isinstance(result, dict) else "Failed to fetch monthly costs",
+        })
+
     rows = result.get("properties", {}).get("rows", [])
-    return {"success": True, "monthly_costs": rows, "rows": rows}
+    return _stamp_utc_metadata({
+        "success": True,
+        "monthly_costs": rows,
+        "rows": rows,
+    })
+
 
 # 6. Fetch yearly summary projections
 def fetch_yearly_costs(subscription_id: str):
@@ -223,28 +462,37 @@ def fetch_yearly_costs(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
-    
-    # Safely isolate the nested rows from Azure's return structure
+
     rows = []
     if isinstance(result, dict) and "properties" in result:
         rows = result["properties"].get("rows", [])
     elif isinstance(result, dict):
         rows = result.get("rows", [])
-        
-    # 🎯 THE CRUCIAL FIX: Extract the single float value out of the array matrix
+
+    if not isinstance(result, dict) or "properties" not in result:
+        return _stamp_utc_metadata({
+            "success": False,
+            "yearly_costs": [],
+            "rows": [],
+            "yearly_cost": 0.0,
+            "amount": 0.0,
+            "total_cost": 0.0,
+            "error": result.get("error", "Failed to fetch yearly costs") if isinstance(result, dict) else "Failed to fetch yearly costs",
+        })
+
     yearly_amount = 0.0
     if rows and len(rows) > 0 and len(rows[0]) > 0:
-        yearly_amount = rows[0][0]
-        
-    # Return an enriched payload contract that satisfies any frontend key variation
-    return {
-        "success": True, 
-        "yearly_costs": rows, 
+        yearly_amount = float(rows[0][0])
+
+    return _stamp_utc_metadata({
+        "success": True,
+        "yearly_costs": rows,
         "rows": rows,
         "yearly_cost": yearly_amount,
         "amount": yearly_amount,
-        "total_cost": yearly_amount
-    }
+        "total_cost": yearly_amount,
+    })
+
 
 # 7. Fetch granular raw resource asset costs
 def fetch_resource_costs(subscription_id: str):
@@ -262,27 +510,42 @@ def fetch_resource_costs(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
+    if not isinstance(result, dict) or "properties" not in result:
+        return _stamp_utc_metadata({
+            "success": False,
+            "resources": [],
+            "rows": [],
+            "error": result.get("error", "Failed to fetch resource costs") if isinstance(result, dict) else "Failed to fetch resource costs",
+        })
+
     rows = result.get("properties", {}).get("rows", [])
-    return {"success": True, "resources": rows, "rows": rows}
+    return _stamp_utc_metadata({
+        "success": True,
+        "resources": rows,
+        "rows": rows,
+    })
+
 
 # 8. Fetch the top high-spending resource instances
 def _extract_resource_name(resource_id: str) -> str:
-    """Extract the friendly resource name from a full Azure resource ID path.
-    e.g. /subscriptions/.../providers/Microsoft.Storage/storageAccounts/myaccount → myaccount
-    Falls back to the raw value if it cannot be parsed."""
+    """Extract the friendly resource name from a full Azure resource ID path."""
     if not resource_id or not isinstance(resource_id, str):
         return resource_id or "Unknown"
     parts = [p for p in resource_id.strip("/").split("/") if p]
     return parts[-1] if parts else resource_id
 
+
 def fetch_top_resources(subscription_id: str, from_date: str = None, to_date: str = None):
-    if from_date and to_date:
+    utc_from = normalize_utc_date(from_date) if from_date else None
+    utc_to = normalize_utc_date(to_date) if to_date else None
+
+    if utc_from and utc_to:
         payload = {
             "type": "ActualCost",
             "timeframe": "Custom",
-            "timePeriod" : {
-                "from" : f"{from_date}T00:00:00Z",
-                "to" : f"{to_date}T23:59:59Z"
+            "timePeriod": {
+                "from": utc_day_start_iso(utc_from),
+                "to": utc_day_end_iso(utc_to),
             },
             "dataset": {
                 "granularity": "None",
@@ -295,6 +558,8 @@ def fetch_top_resources(subscription_id: str, from_date: str = None, to_date: st
             }
         }
     else:
+        utc_from = None
+        utc_to = None
         payload = {
             "type": "ActualCost",
             "timeframe": "MonthToDate",
@@ -308,14 +573,19 @@ def fetch_top_resources(subscription_id: str, from_date: str = None, to_date: st
                 ]
             }
         }
+
     result = _execute_azure_query(subscription_id, payload)
-    if not result.get("success", True) or "error" in result:
-        return {"success": False, "error": result.get("error", "Failed to fetch top resources"), "top_resources": [], "rows": []}
+    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+        return _stamp_utc_metadata({
+            "success": False,
+            "error": result.get("error", "Failed to fetch top resources") if isinstance(result, dict) else "Failed to fetch top resources",
+            "top_resources": [],
+            "rows": [],
+        }, utc_from, utc_to)
+
     rows = result.get("properties", {}).get("rows", [])
-    # Sort descending by the cost field (index 0 in Azure query array rows)
     sorted_rows = sorted(rows, key=lambda x: x[0], reverse=True) if rows else []
 
-    # Replace the full ResourceId path with just the resource name in each row
     cleaned_rows = []
     for row in sorted_rows[:10]:
         if len(row) >= 2:
@@ -325,41 +595,56 @@ def fetch_top_resources(subscription_id: str, from_date: str = None, to_date: st
         else:
             cleaned_rows.append(row)
 
-    return {"success": True, "top_resources": cleaned_rows, "rows": cleaned_rows}
+    return _stamp_utc_metadata({
+        "success": True,
+        "top_resources": cleaned_rows,
+        "rows": cleaned_rows,
+    }, utc_from, utc_to)
 
 
 # 9. Fetch active Cloud Spending budgets thresholds
+def _fetch_budgets_live(subscription_id: str):
+    token = get_azure_token()
+    url = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.Consumption/budgets?api-version=2023-05-01"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    response = requests.get(url, headers=headers, timeout=10)
+    response.raise_for_status()
+    data = response.json()
+    budgets = []
+    for b in data.get("value", []):
+        if not isinstance(b, dict):
+            continue
+        props = b.get("properties", {})
+        budgets.append({
+            "name": b.get("name"),
+            "amount": props.get("amount"),
+            "timeGrain": props.get("timeGrain")
+        })
+    return _stamp_utc_metadata({"success": True, "budgets": budgets})
+
+
 def fetch_budgets(subscription_id: str):
+    """
+    Fetch budgets with multi-tiered persistent cache (TTL = 2 hours).
+    """
+    key = get_cache_key("budgets", subscription_id)
     try:
-        token = get_azure_token()
-        url = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.Consumption/budgets?api-version=2023-05-01"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            budgets = []
-            for b in data.get("value", []):
-                if not isinstance(b, dict):
-                    continue
-                props = b.get("properties", {})
-                budgets.append({
-                    "name": b.get("name"),
-                    "amount": props.get("amount"),
-                    "timeGrain": props.get("timeGrain")
-                })
-            return {"success": True, "budgets": budgets}
-        return {"success": True, "budgets": []}
+        return get_cached_azure_data(
+            key=key,
+            fetch_fn=lambda: _fetch_budgets_live(subscription_id),
+            ttl=7200
+        )
     except Exception as e:
-        return {"success": True, "budgets": [], "error": str(e)}
+        return _stamp_utc_metadata({"success": True, "budgets": [], "error": str(e)})
 
 
 def fetch_aggregated_monthly_costs(project_name: str = None):
     from services.Azure.subscriptions import fetch_subscriptions
-    from core.data_cache import cache # Safeguarded local lookup import
-    
+    from core.data_cache import cache
+
     try:
         subs_data = fetch_subscriptions(project_name)
     except Exception:
@@ -371,7 +656,6 @@ def fetch_aggregated_monthly_costs(project_name: str = None):
     elif isinstance(subs_data, list):
         subs = subs_data
 
-    # Emergency safety layer used ONLY if both the cache and Azure are completely offline
     fallback_data = [
         {"month": "January", "cost": 0}, {"month": "February", "cost": 0},
         {"month": "March", "cost": 0}, {"month": "April", "cost": 0},
@@ -379,23 +663,25 @@ def fetch_aggregated_monthly_costs(project_name: str = None):
     ]
 
     if not subs:
-        return {"success": False, "trend": fallback_data, "error": "No subscriptions found"}
+        return _stamp_utc_metadata({
+            "success": False,
+            "trend": fallback_data,
+            "error": "No subscriptions found",
+        })
 
     aggregated = {}
     has_real_data = False
-    
+
     for sub in subs:
         sub_id = sub.get("subscriptionId")
         if not sub_id:
             continue
         try:
-            # 🎯 READ FROM PRE-FETCHED WORKER MEMORY (Bypasses Azure 429 Throttling)
             res = cache.get(f"monthly:{sub_id}")
-            
-            # Defensive live fallback if the background cache worker hasn't processed this sub yet
+
             if not res or not isinstance(res, dict) or not res.get("rows"):
                 res = fetch_monthly_costs(sub_id)
-            
+
             if res and res.get("success") and res.get("rows"):
                 has_real_data = True
                 for row in res["rows"]:
@@ -408,9 +694,12 @@ def fetch_aggregated_monthly_costs(project_name: str = None):
         except Exception:
             pass
 
-    # 🎯 THE TRUTH RULE: Flag as False if live data fails so the router retries
     if not has_real_data:
-        return {"success": False, "trend": fallback_data, "error": "API rate-limited or cache warming up"}
+        return _stamp_utc_metadata({
+            "success": False,
+            "trend": fallback_data,
+            "error": "API rate-limited or cache warming up",
+        })
 
     month_order = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     trend = []
@@ -419,9 +708,13 @@ def fetch_aggregated_monthly_costs(project_name: str = None):
             trend.append({"month": m, "cost": round(aggregated[m], 2)})
 
     if not trend:
-        return {"success": False, "trend": fallback_data, "error": "Trend aggregation compiled empty"}
+        return _stamp_utc_metadata({
+            "success": False,
+            "trend": fallback_data,
+            "error": "Trend aggregation compiled empty",
+        })
 
-    return {"success": True, "trend": trend}
+    return _stamp_utc_metadata({"success": True, "trend": trend})
 
 
 def _parse_month_name(month_str: str) -> str:

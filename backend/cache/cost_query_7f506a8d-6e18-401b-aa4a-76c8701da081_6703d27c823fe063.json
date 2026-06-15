@@ -1,0 +1,226 @@
+{
+  "fetched_at": 1781526426.4620738,
+  "expires_at": 1782131226.4620738,
+  "data": {
+    "id": "subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/providers/Microsoft.CostManagement/query/c35eb63d-7308-4b9f-8951-86c5ba72cfc8",
+    "name": "c35eb63d-7308-4b9f-8951-86c5ba72cfc8",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ResourceId",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          30.8688694200001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/$system/providers/microsoft.servicebus/namespaces/$system",
+          "INR"
+        ],
+        [
+          20.3365701000001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-appapi-rg/providers/microsoft.sql/servers/dflo-dev-appapi-sqlhost/databases/dflo-dev-appapi-sqldb",
+          "INR"
+        ],
+        [
+          4.21145563275001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-appapi-rg/providers/microsoft.storage/storageaccounts/dflodev8appapi",
+          "INR"
+        ],
+        [
+          50.5256400000002,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-appapi-rg/providers/microsoft.web/serverfarms/dflo-dev-appapi-appsvcplan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-appapi-rg/providers/microsoft.web/sites/dflo-dev-appapi-app",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-appapi-rg/providers/microsoft.web/sites/warepass-dev-appapi",
+          "INR"
+        ],
+        [
+          0.0015366110265,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-appportal-rg/providers/microsoft.storage/storageaccounts/dflodev8appportal",
+          "INR"
+        ],
+        [
+          8.82545133600003,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-docflostore-rg/providers/microsoft.storage/storageaccounts/dflodev8dflostore",
+          "INR"
+        ],
+        [
+          2.40099276667501,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-genai-rg/providers/microsoft.storage/storageaccounts/dflodev8genai",
+          "INR"
+        ],
+        [
+          50.5256400000002,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-genai-rg/providers/microsoft.web/serverfarms/dflo-dev-genai-appsvcplan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-genai-rg/providers/microsoft.web/sites/dflo-dev-genai-app",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-integration-runtime-rg/providers/microsoft.web/sites/dflo-dev-integration-runtime-fun",
+          "INR"
+        ],
+        [
+          0.905982312946503,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-model-train-rg/providers/microsoft.storage/storageaccounts/dflodev8modeltrain",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-model-train-rg/providers/microsoft.web/sites/dflo-dev-modeltrain-fun",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-notification-rg/providers/microsoft.web/sites/dflo-dev-notification-fun",
+          "INR"
+        ],
+        [
+          4.32104746837501,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-scheduler-rg/providers/microsoft.storage/storageaccounts/dflodev8scheduler",
+          "INR"
+        ],
+        [
+          50.5256400000002,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-scheduler-rg/providers/microsoft.web/serverfarms/dflo-dev-scheduler-fun-appsvcplan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-scheduler-rg/providers/microsoft.web/sites/dflo-dev-scheduler-fun",
+          "INR"
+        ],
+        [
+          15.942498038964,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-shared-rg/providers/microsoft.containerregistry/registries/dflodevacr",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-dev-shared-rg/providers/microsoft.servicebus/namespaces/dflo-dev-docflo-asb",
+          "INR"
+        ],
+        [
+          15.942498038964,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-qa-shared-rg/providers/microsoft.containerregistry/registries/dfloqaacr",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/dflo-qa-shared-rg/providers/microsoft.servicebus/namespaces/dflo-qa-docflo-asb",
+          "INR"
+        ],
+        [
+          9.26056451612647,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-dev-api-rg/providers/microsoft.recoveryservices/vaults/vault-mmjboi96",
+          "INR"
+        ],
+        [
+          48.1620352500002,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-dev-api-rg/providers/microsoft.sql/servers/pexiq-dev-api-sqlhost/databases/pexiq-dev-api-sqldb",
+          "INR"
+        ],
+        [
+          4.19672855700001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-dev-api-rg/providers/microsoft.storage/storageaccounts/pexiqdevapi",
+          "INR"
+        ],
+        [
+          43.6357800000001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-dev-api-rg/providers/microsoft.web/serverfarms/pexiq-dev-api-svc-plan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-dev-api-rg/providers/microsoft.web/sites/pexiq-dev-api",
+          "INR"
+        ],
+        [
+          0.001202510232,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-dev-web-rg/providers/microsoft.storage/storageaccounts/pexiqdevweb",
+          "INR"
+        ],
+        [
+          48.1620352500002,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-qa-api-rg/providers/microsoft.sql/servers/pexiq-qa-api-sqlhost/databases/pexiq-qa-api-sqldb",
+          "INR"
+        ],
+        [
+          2.38054710712501,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-qa-api-rg/providers/microsoft.storage/storageaccounts/pexiqqaapi",
+          "INR"
+        ],
+        [
+          43.6357800000001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-qa-api-rg/providers/microsoft.web/serverfarms/pexiq-qa-api-svc-plan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-qa-api-rg/providers/microsoft.web/sites/pexiq-qa-api",
+          "INR"
+        ],
+        [
+          0.00207706312800001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/pexiq-qa-web-rg/providers/microsoft.storage/storageaccounts/pexiqqaweb",
+          "INR"
+        ],
+        [
+          138.11902,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/vector-db-pinecone/providers/microsoft.saas/resources/docflo-genai-vectordb",
+          "INR"
+        ],
+        [
+          9.26056451612647,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/warepass-dev-appapi-rg/providers/microsoft.recoveryservices/vaults/vault-mpcmpht9",
+          "INR"
+        ],
+        [
+          20.3365701000001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/warepass-dev-appapi-rg/providers/microsoft.sql/servers/warepass-dev-appapi-sqlhost/databases/warepass-dev-appapi-sqldb",
+          "INR"
+        ],
+        [
+          4.46058722880001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/warepass-dev-appapi-rg/providers/microsoft.storage/storageaccounts/warepassdev8appapi",
+          "INR"
+        ],
+        [
+          50.5256400000002,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/warepass-dev-appapi-rg/providers/microsoft.web/serverfarms/warepass-dev-appapi-appsvcplan",
+          "INR"
+        ],
+        [
+          0.00172286690850001,
+          "/subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/resourcegroups/warepass-dev-appportal-rg/providers/microsoft.storage/storageaccounts/warepassdev8appportal",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

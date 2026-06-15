@@ -1,0 +1,36 @@
+{
+  "fetched_at": 1781526443.2266698,
+  "expires_at": 1781533643.2266698,
+  "data": {
+    "id": "subscriptions/b693f7a2-a0e0-436b-be72-03bf409bd71a/providers/Microsoft.CostManagement/query/08329287-ddea-4de1-9721-4156c388cdef",
+    "name": "08329287-ddea-4de1-9721-4156c388cdef",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ServiceName",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          22.7309367990001,
+          "Azure DNS",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

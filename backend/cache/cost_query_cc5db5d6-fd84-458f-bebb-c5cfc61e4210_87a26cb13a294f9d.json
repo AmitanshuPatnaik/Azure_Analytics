@@ -1,0 +1,91 @@
+{
+  "fetched_at": 1781528129.2207124,
+  "expires_at": 1782132929.2207124,
+  "data": {
+    "id": "subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/providers/Microsoft.CostManagement/query/d2d7ce66-c2d9-4719-9e2f-d30f603ee0ff",
+    "name": "d2d7ce66-c2d9-4719-9e2f-d30f603ee0ff",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ServiceName",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          1768.39740000001,
+          "Azure App Service",
+          "INR"
+        ],
+        [
+          14.1224164504839,
+          "Azure DNS",
+          "INR"
+        ],
+        [
+          8178.20626983003,
+          "Azure Front Door Service",
+          "INR"
+        ],
+        [
+          0.0,
+          "Bandwidth",
+          "INR"
+        ],
+        [
+          0.0,
+          "Functions",
+          "INR"
+        ],
+        [
+          0.00803817000000002,
+          "Key Vault",
+          "INR"
+        ],
+        [
+          1363.52288411693,
+          "Log Analytics",
+          "INR"
+        ],
+        [
+          324.119758064517,
+          "Microsoft Defender for Cloud",
+          "INR"
+        ],
+        [
+          4135.83941925002,
+          "SQL Database",
+          "INR"
+        ],
+        [
+          1145.40915868444,
+          "Sentinel",
+          "INR"
+        ],
+        [
+          216.082085940001,
+          "Service Bus",
+          "INR"
+        ],
+        [
+          384.873820148112,
+          "Storage",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

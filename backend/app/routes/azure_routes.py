@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 from core.data_cache import cache
+from core.azure_throttle import range_cache
 from services.Azure.azure_auth import azure_project_var
 from services.Azure.subscriptions import fetch_subscriptions
 from services.Azure.costs import (
@@ -14,33 +15,62 @@ from services.Azure.costs import (
     fetch_top_resources,
     fetch_budgets,
     fetch_aggregated_monthly_costs,
+    normalize_utc_date,
+    build_dated_cache_key,
 )
 
 router = APIRouter(prefix="/azure", tags=["Azure"])
 
-_sub_project_map = {}
 
 def resolve_project_for_subscription(subscription_id: str) -> str | None:
+    """Resolve Azure project context from the pre-warmed sub_project_map cache."""
     if not subscription_id:
         return None
-    if subscription_id in _sub_project_map:
-        return _sub_project_map[subscription_id]
-        
-    from services.Azure.subscriptions import fetch_subscriptions
-    projects = ["DocFlow", "TimeFlow", "Integrelity"]
-    for proj in projects:
-        try:
-            res = fetch_subscriptions(proj)
-            if res.get("success"):
-                for sub in res.get("subscriptions", []):
-                    sub_val = sub.get("subscriptionId")
-                    if sub_val:
-                        _sub_project_map[sub_val] = proj
-                        if sub_val.lower() == subscription_id.lower():
-                            return proj
-        except Exception:
-            pass
+
+    sub_map = cache.get("sub_project_map")
+    if not isinstance(sub_map, dict) or not sub_map:
+        return None
+
+    if subscription_id in sub_map:
+        return sub_map[subscription_id]
+
+    sub_lower = subscription_id.lower()
+    for sub_id, proj in sub_map.items():
+        if isinstance(sub_id, str) and sub_id.lower() == sub_lower:
+            return proj
+
     return None
+
+
+def _set_project_context(subscription_id: str, project: str | None) -> str | None:
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
+    azure_project_var.set(project)
+    return project
+
+
+def _cache_query(cache_key: str, fetch_fn, cold_default: dict):
+    """
+    CQRS query-side read: serve from memory instantly; on miss, single-flight
+    populate via get_or_fetch so parallel widgets share one Azure round-trip.
+    Only successful payloads are committed to the cache.
+    On a live fetch, always return the actual result (even on failure) so
+    the frontend can display a real error rather than an empty cold default.
+    """
+    if cache.has(cache_key):
+        return cache.get(cache_key)
+
+    # Cache miss: fetch live from Azure
+    live_result = fetch_fn()
+    if isinstance(live_result, dict) and live_result.get("success"):
+        # Only cache successes so we never persist stale empty results
+        cache.set(cache_key, live_result)
+        return live_result
+    if isinstance(live_result, dict) and live_result:
+        # Return the real error payload so the frontend shows it
+        return live_result
+    return cold_default
+
 
 @router.get("/projects")
 def get_azure_projects():
@@ -52,7 +82,7 @@ def get_azure_projects():
             config = json.load(f)
     except Exception:
         config = {}
-    
+
     projects = []
     for key in config.keys():
         if key.endswith("_TENANT_ID"):
@@ -66,7 +96,7 @@ def get_azure_projects():
                 projects.append(name)
     return {"success": True, "projects": projects}
 
-# ── Backup Baselines (Used only if both Cache AND Live Azure APIs crash) ─── #
+
 _COLD_TREND_FALLBACK = {
     "success": True,
     "trend": [
@@ -76,206 +106,216 @@ _COLD_TREND_FALLBACK = {
     ]
 }
 _COLD_COST_RESPONSE = {"success": True, "total_cost": 0.0, "amount": 0.0}
+_COLD_SUBSCRIPTIONS = {
+    "success": False,
+    "subscriptions": [],
+    "message": "Data is warming up. The background sync is in progress — please retry in a few seconds.",
+}
+
 
 @router.get("/costs/trend")
 def get_cost_trend(project: str = Query(None)):
     azure_project_var.set(project)
     cache_key = f"costs:trend:{project}" if project else "costs:trend"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-        
-    # Active Fallback if cache is cold on load
-    live_fallback = fetch_aggregated_monthly_costs()
-    if live_fallback and live_fallback.get("success"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
-    return _COLD_TREND_FALLBACK
+    return _cache_query(
+        cache_key,
+        lambda: fetch_aggregated_monthly_costs(project),
+        _COLD_TREND_FALLBACK,
+    )
 
 
 @router.get("/subscriptions")
 def get_subscriptions(project: str = Query(None)):
     azure_project_var.set(project)
-    return fetch_subscriptions(project)
+    cache_key = f"subscriptions:{project}" if project else "subscriptions"
+    return _cache_query(
+        cache_key,
+        lambda: fetch_subscriptions(project),
+        _COLD_SUBSCRIPTIONS,
+    )
 
-
-# ── Cached Subscription Wildcard Endpoints ──────────────────────────────── #
 
 @router.get("/costs/{subscription_id}")
 def get_costs(subscription_id: str, project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
+    _set_project_context(subscription_id, project)
     cache_key = f"costs:{subscription_id}"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-        
-    live_fallback = fetch_total_cost(subscription_id)
-    if live_fallback and live_fallback.get("success"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
-    return _COLD_COST_RESPONSE
+    return _cache_query(
+        cache_key,
+        lambda: fetch_total_cost(subscription_id),
+        _COLD_COST_RESPONSE,
+    )
 
 
 @router.get("/costs/{subscription_id}/total")
 def get_total_cost(subscription_id: str, project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
+    _set_project_context(subscription_id, project)
     cache_key = f"total:{subscription_id}"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-        
-    live_fallback = fetch_total_cost(subscription_id)
-    if live_fallback and live_fallback.get("success"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
-    return _COLD_COST_RESPONSE
+    return _cache_query(
+        cache_key,
+        lambda: fetch_total_cost(subscription_id),
+        _COLD_COST_RESPONSE,
+    )
 
 
 @router.get("/costs/{subscription_id}/resourcegroups")
 def get_resource_group_costs(subscription_id: str, project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
+    _set_project_context(subscription_id, project)
     cache_key = f"resourcegroups:{subscription_id}"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-    
-    live_fallback = fetch_resource_group_costs(subscription_id)
-    if live_fallback and live_fallback.get("success"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
-    return {"success": True, "resource_groups": [], "rows": []}
+    return _cache_query(
+        cache_key,
+        lambda: fetch_resource_group_costs(subscription_id),
+        {"success": True, "resource_groups": [], "rows": []},
+    )
 
 
 @router.get("/costs/{subscription_id}/services")
-def get_service_costs(subscription_id: str, from_date: str = Query(None), to_date: str = Query(None), project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
-    
-    if from_date or to_date:
-        cache_key = f"services:{subscription_id}:{from_date}:{to_date}"
-    else:
-        cache_key = f"services:{subscription_id}"
-        
-    cached = cache.get(cache_key)
+def get_service_costs(
+    subscription_id: str,
+    from_date: str = Query(None),
+    to_date: str = Query(None),
+    project: str = Query(None),
+):
+    _set_project_context(subscription_id, project)
 
-    if cached and isinstance(cached, dict) and cached.get("success") and cached.get("rows"):
-        return cached
+    utc_from = normalize_utc_date(from_date) if from_date else None
+    utc_to = normalize_utc_date(to_date) if to_date else None
 
-    # Live fallback if the cache worker hasn't populated this key yet
-    live_fallback = fetch_service_costs(subscription_id, from_date, to_date)
-    if live_fallback and live_fallback.get("success") and live_fallback.get("rows"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
+    if utc_from and utc_to:
+        # Check 5-minute TTL cache first — avoids redundant Azure quota hits
+        ttl_key = f"svc:{subscription_id}:{utc_from}:{utc_to}"
+        cached = range_cache.get(ttl_key)
+        if cached is not None:
+            return cached
 
-    return cached if cached else live_fallback
+        result = fetch_service_costs(subscription_id, utc_from, utc_to)
+        if isinstance(result, dict) and result.get("success"):
+            range_cache.set(ttl_key, result)
+        if isinstance(result, dict) and result:
+            return result
+        return {"success": False, "services": [], "rows": [], "error": "No service cost data for this date range."}
+
+    # No date range: serve from persistent cache (MTD fallback)
+    cache_key = f"services:{subscription_id}"
+    return _cache_query(
+        cache_key,
+        lambda: fetch_service_costs(subscription_id, None, None),
+        {"success": True, "services": [], "rows": []},
+    )
 
 
 @router.get("/costs/{subscription_id}/top-resources")
-def get_top_resources(subscription_id: str, from_date: str = Query(None), to_date: str = Query(None), project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
-    
-    if from_date or to_date:
-        cache_key = f"topresources:{subscription_id}:{from_date}:{to_date}"
-    else:
-        cache_key = f"topresources:{subscription_id}"
-        
-    cached = cache.get(cache_key)
-    
-    # If cache is populated and contains valid asset records, return it instantly
-    if cached and isinstance(cached, dict) and cached.get("success") and cached.get("top_resources"):
-        return cached
-        
-    # Live fallback gate if the background daemon thread has not populated this key yet
-    live_fallback = fetch_top_resources(subscription_id, from_date, to_date)
-    if live_fallback and live_fallback.get("success") and live_fallback.get("top_resources"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
-        
-    return cached if cached else live_fallback
+def get_top_resources(
+    subscription_id: str,
+    from_date: str = Query(None),
+    to_date: str = Query(None),
+    project: str = Query(None),
+):
+    _set_project_context(subscription_id, project)
+
+    utc_from = normalize_utc_date(from_date) if from_date else None
+    utc_to = normalize_utc_date(to_date) if to_date else None
+
+    if utc_from and utc_to:
+        # Check 5-minute TTL cache first — avoids redundant Azure quota hits
+        ttl_key = f"topres:{subscription_id}:{utc_from}:{utc_to}"
+        cached = range_cache.get(ttl_key)
+        if cached is not None:
+            return cached
+
+        result = fetch_top_resources(subscription_id, utc_from, utc_to)
+        if isinstance(result, dict) and result.get("success"):
+            range_cache.set(ttl_key, result)
+        if isinstance(result, dict) and result:
+            return result
+        return {"success": False, "top_resources": [], "rows": [], "error": "No resource data for this date range."}
+
+    # No date range: serve from persistent cache (MTD fallback)
+    cache_key = f"topresources:{subscription_id}"
+    return _cache_query(
+        cache_key,
+        lambda: fetch_top_resources(subscription_id, None, None),
+        {"success": True, "top_resources": [], "rows": []},
+    )
+
 
 @router.get("/costs/{subscription_id}/budgets")
 def get_budgets(subscription_id: str, project: str = Query(None)):
-    """
-    Active budget thresholds — reads from cache first, falls back to live API.
-    """
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
+    _set_project_context(subscription_id, project)
     cache_key = f"budgets:{subscription_id}"
-    cached = cache.get(cache_key)
-
-    if cached and isinstance(cached, dict) and cached.get("budgets") is not None:
-        return cached
-
-    # Live fallback if the cache worker hasn't populated this key yet
-    live_fallback = fetch_budgets(subscription_id)
-    if live_fallback and live_fallback.get("success"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
-
-    return cached if cached else {"success": True, "budgets": []}
+    return _cache_query(
+        cache_key,
+        lambda: fetch_budgets(subscription_id),
+        {"success": True, "budgets": []},
+    )
 
 
 @router.get("/costs/{subscription_id}/yearly")
 def get_yearly_costs(subscription_id: str, project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
+    _set_project_context(subscription_id, project)
     cache_key = f"yearly:{subscription_id}"
-    cached = cache.get(cache_key)
-    if cached and isinstance(cached, dict) and cached.get("success") and cached.get("yearly_cost", 0) > 0:
-        return cached
-        
-    live_fallback = fetch_yearly_costs(subscription_id)
-    if live_fallback and live_fallback.get("success"):
-        cache.set(cache_key, live_fallback)
-        return live_fallback
-    return cached if cached else {"success": True, "yearly_costs": [], "rows": [], "yearly_cost": 0.0}
+    return _cache_query(
+        cache_key,
+        lambda: fetch_yearly_costs(subscription_id),
+        {"success": True, "yearly_costs": [], "rows": [], "yearly_cost": 0.0},
+    )
 
-
-# ── Analytical Live Operations ──────────────────────────────────────────── #
 
 @router.get("/costs/{subscription_id}/daily")
 def get_daily_costs(subscription_id: str, project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
-    return fetch_daily_costs(subscription_id)
+    _set_project_context(subscription_id, project)
+    cache_key = f"daily:{subscription_id}"
+    return _cache_query(
+        cache_key,
+        lambda: fetch_daily_costs(subscription_id),
+        {"success": True, "daily_costs": [], "rows": []},
+    )
 
 
 @router.get("/costs/{subscription_id}/daily-range")
 def get_daily_costs_by_range(
     subscription_id: str,
     from_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
-    to_date:   str = Query(..., description="End date in YYYY-MM-DD format"),
-    project:   str = Query(None),
+    to_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    project: str = Query(None),
 ):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
-    return fetch_daily_costs_by_range(subscription_id, from_date, to_date)
+    _set_project_context(subscription_id, project)
+
+    utc_from = normalize_utc_date(from_date)
+    utc_to = normalize_utc_date(to_date)
+
+    # Check 5-minute TTL cache first — same date range from any machine/tab
+    # returns instantly without burning Azure quota.
+    ttl_key = f"dailyrange:{subscription_id}:{utc_from}:{utc_to}"
+    cached = range_cache.get(ttl_key)
+    if cached is not None:
+        return cached
+
+    result = fetch_daily_costs_by_range(subscription_id, utc_from, utc_to)
+    if isinstance(result, dict) and result.get("success"):
+        range_cache.set(ttl_key, result)
+    if isinstance(result, dict) and result:
+        return result
+    return {"success": False, "points": [], "count": 0, "error": "No data returned from Azure for this date range."}
+
 
 
 @router.get("/costs/{subscription_id}/monthly")
 def get_monthly_costs(subscription_id: str, project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
-    return fetch_monthly_costs(subscription_id)
+    _set_project_context(subscription_id, project)
+    cache_key = f"monthly:{subscription_id}"
+    return _cache_query(
+        cache_key,
+        lambda: fetch_monthly_costs(subscription_id),
+        {"success": True, "monthly_costs": [], "rows": []},
+    )
 
 
 @router.get("/costs/{subscription_id}/resources")
 def get_resource_costs(subscription_id: str, project: str = Query(None)):
-    if not project:
-        project = resolve_project_for_subscription(subscription_id)
-    azure_project_var.set(project)
-    return fetch_resource_costs(subscription_id)
+    _set_project_context(subscription_id, project)
+    cache_key = f"resources:{subscription_id}"
+    return _cache_query(
+        cache_key,
+        lambda: fetch_resource_costs(subscription_id),
+        {"success": True, "resources": [], "rows": []},
+    )

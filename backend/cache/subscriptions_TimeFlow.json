@@ -1,0 +1,19 @@
+{
+  "fetched_at": 1781526188.9995449,
+  "expires_at": 1781533388.9995449,
+  "data": {
+    "success": true,
+    "subscriptions": [
+      {
+        "subscriptionId": "ac0cbc0a-9269-4e57-9a5b-9104adf4e39d",
+        "displayName": "Production",
+        "state": "Enabled"
+      },
+      {
+        "subscriptionId": "fa598396-2d87-47b0-bbd8-1d3358554b39",
+        "displayName": "Dev/Test",
+        "state": "Enabled"
+      }
+    ]
+  }
+}

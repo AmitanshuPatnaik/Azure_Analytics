@@ -1,0 +1,226 @@
+{
+  "fetched_at": 1781526415.9694445,
+  "expires_at": 1782131215.9694445,
+  "data": {
+    "id": "subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/providers/Microsoft.CostManagement/query/e9f8e73d-f437-40a5-a182-835e7aaa02c7",
+    "name": "e9f8e73d-f437-40a5-a182-835e7aaa02c7",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ResourceId",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          401.295302460001,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/$system/providers/microsoft.servicebus/namespaces/$system",
+          "INR"
+        ],
+        [
+          0.01492803,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/certificates-integrelity-com-rg/providers/microsoft.keyvault/vaults/integre8certificates8kv",
+          "INR"
+        ],
+        [
+          481.088970133651,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/certificates-integrelity-com-rg/providers/microsoft.storage/storageaccounts/stbbjqerk47hx3afunc",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/certificates-integrelity-com-rg/providers/microsoft.web/sites/func-integre-cert-bbjq",
+          "INR"
+        ],
+        [
+          26.394921542613,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/dnszone-integrelity-com-rg/providers/microsoft.network/dnszones/integrelity.com",
+          "INR"
+        ],
+        [
+          3.45686162988601,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integrenotify-rg/providers/microsoft.storage/storageaccounts/integreprod8integrenotif",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integrenotify-rg/providers/microsoft.web/sites/integre-prod-integrenotify-fun",
+          "INR"
+        ],
+        [
+          0.269750420748001,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integreportal-rg/providers/microsoft.storage/storageaccounts/integreprod8integreporta",
+          "INR"
+        ],
+        [
+          3600.40917184689,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integresentinel-rg/providers/microsoft.operationalinsights/workspaces/integre-prod-integreshared-law",
+          "INR"
+        ],
+        [
+          13730.5084624089,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integreshared-rg/providers/microsoft.cdn/profiles/integre-prod-fdcdn",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integreshared-rg/providers/microsoft.servicebus/namespaces/integre-prod-vyoma-asb",
+          "INR"
+        ],
+        [
+          794.604108870003,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integreshared-rg/providers/microsoft.sql/servers/integre-prod-integrelity-mssqlhost/databases/integre-prod-integrenotify-mssqldb",
+          "INR"
+        ],
+        [
+          3973.84158600002,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integreshared-rg/providers/microsoft.sql/servers/integre-prod-integrelity-mssqlhost/databases/integre-prod-vyomaapi-mssqldb",
+          "INR"
+        ],
+        [
+          794.604108870003,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integreshared-rg/providers/microsoft.sql/servers/integre-prod-integrelity-mssqlhost/databases/integre-prod-vyomascheduler-mssqldb",
+          "INR"
+        ],
+        [
+          31.4417239589251,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-integrestore-rg/providers/microsoft.storage/storageaccounts/integreprod8intgstore",
+          "INR"
+        ],
+        [
+          34.2904666794481,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-vyomaapi-rg/providers/microsoft.storage/storageaccounts/integreprod8vyomaapi",
+          "INR"
+        ],
+        [
+          1313.66664,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-vyomaapi-rg/providers/microsoft.web/serverfarms/integre-prod-vyomaapi-appsvcplan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-vyomaapi-rg/providers/microsoft.web/sites/integre-prod-vyomaapi-app",
+          "INR"
+        ],
+        [
+          0.364861435702501,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-vyomaportal-rg/providers/microsoft.storage/storageaccounts/integreprod8vyomaportal",
+          "INR"
+        ],
+        [
+          56.4881219732252,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-vyomascheduler-rg/providers/microsoft.storage/storageaccounts/integreprod8vyomaschedul",
+          "INR"
+        ],
+        [
+          656.833320000002,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-vyomascheduler-rg/providers/microsoft.web/serverfarms/integre-prod-vyomascheduler-fun-appsvcplan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-prod-vyomascheduler-rg/providers/microsoft.web/sites/integre-prod-vyomascheduler-fun",
+          "INR"
+        ],
+        [
+          0.221688709515001,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integrenotify-rg/providers/microsoft.storage/storageaccounts/integreuat8integrenotify",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integrenotify-rg/providers/microsoft.web/sites/integre-uat-integrenotify-fun",
+          "INR"
+        ],
+        [
+          0.0874701602145003,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integreportal-rg/providers/microsoft.storage/storageaccounts/integreuat8integreportal",
+          "INR"
+        ],
+        [
+          1480.04125793228,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integreshared-rg/providers/microsoft.cdn/profiles/integre-uat-fdcdn",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integreshared-rg/providers/microsoft.servicebus/namespaces/integre-uat-vyoma-asb",
+          "INR"
+        ],
+        [
+          601.936693548389,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integreshared-rg/providers/microsoft.sql/servers/integre-uat-integrelity-mssqlhost",
+          "INR"
+        ],
+        [
+          264.375411300001,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integreshared-rg/providers/microsoft.sql/servers/integre-uat-integrelity-mssqlhost/databases/integre-uat-integrenotify-mssqldb",
+          "INR"
+        ],
+        [
+          1589.04400941001,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integreshared-rg/providers/microsoft.sql/servers/integre-uat-integrelity-mssqlhost/databases/integre-uat-vyomaapi-mssqldb",
+          "INR"
+        ],
+        [
+          264.375411300001,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integreshared-rg/providers/microsoft.sql/servers/integre-uat-integrelity-mssqlhost/databases/integre-uat-vyomascheduler-mssqldb",
+          "INR"
+        ],
+        [
+          0.1540572696,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-integrestore-rg/providers/microsoft.storage/storageaccounts/integreuat8intgstore",
+          "INR"
+        ],
+        [
+          6.90749804160002,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-vyomaapi-rg/providers/microsoft.storage/storageaccounts/integreuat8vyomaapi",
+          "INR"
+        ],
+        [
+          656.833320000002,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-vyomaapi-rg/providers/microsoft.web/serverfarms/integre-uat-vyomaapi-appsvcplan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-vyomaapi-rg/providers/microsoft.web/sites/integre-uat-vyomaapi-app",
+          "INR"
+        ],
+        [
+          2.36551865741551,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-vyomaportal-rg/providers/microsoft.storage/storageaccounts/integreuat8vyomaportal",
+          "INR"
+        ],
+        [
+          0.161222724,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-vyomascheduler-rg/providers/microsoft.storage/storageaccounts/integreuat8vyomaschedule",
+          "INR"
+        ],
+        [
+          656.833320000002,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-vyomascheduler-rg/providers/microsoft.web/serverfarms/integre-uat-vyomascheduler-fun-appsvcplan",
+          "INR"
+        ],
+        [
+          0.0,
+          "/subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/resourcegroups/integre-uat-vyomascheduler-rg/providers/microsoft.web/sites/integre-uat-vyomascheduler-fun",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

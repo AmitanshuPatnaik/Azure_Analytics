@@ -1,0 +1,61 @@
+{
+  "fetched_at": 1781526682.4603572,
+  "expires_at": 1781533882.4603572,
+  "data": {
+    "id": "subscriptions/fa598396-2d87-47b0-bbd8-1d3358554b39/providers/Microsoft.CostManagement/query/a5822ac9-aa6a-428b-9d7b-b5a8cedbd138",
+    "name": "a5822ac9-aa6a-428b-9d7b-b5a8cedbd138",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ServiceName",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          5541.86178397568,
+          "Azure App Service",
+          "INR"
+        ],
+        [
+          0.0,
+          "Bandwidth",
+          "INR"
+        ],
+        [
+          575.355462412502,
+          "SQL Database",
+          "INR"
+        ],
+        [
+          438.595186342501,
+          "Service Bus",
+          "INR"
+        ],
+        [
+          125.148349752406,
+          "Storage",
+          "INR"
+        ],
+        [
+          163.1557125,
+          "Virtual Network",
+          "INR"
+        ]
+      ]
+    }
+  }
+}

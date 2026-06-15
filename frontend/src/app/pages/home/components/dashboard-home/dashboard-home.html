@@ -1,0 +1,226 @@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+  <h1 style="margin: 0;">Watcher Analytics Dashboard</h1>
+  <div>
+    <label for="home-azure-proj-select" style="margin-right: 10px; font-weight: 500;">Select Azure Project:</label>
+    <select id="home-azure-proj-select" class="month-dropdown" style="width: auto;"
+      [value]="selectedHomeAzureProject" (change)="onHomeAzureProjectChange($event)">
+      <option value="">Select Azure Project</option>
+      @for (proj of azureProjects; track proj) {
+      <option [value]="proj">{{ proj }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+<div class="cards">
+
+  <div class="card">
+    <h3>Total Repositories</h3>
+    @if (reposError) {
+    <div class="error-inline">{{ reposError }}</div>
+    } @else {
+    <h2>{{ repositories.length }}</h2>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Total Projects</h3>
+    @if (projectsError) {
+    <div class="error-inline">{{ projectsError }}</div>
+    } @else {
+    <h2>{{ projects.length }}</h2>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Active Pipelines</h3>
+    @if (activePipelinesError) {
+    <div class="error-inline">{{ activePipelinesError }}</div>
+    } @else {
+    <h2>{{ activePipelinesCount }}</h2>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Yearly Cost</h3>
+    @if (!selectedHomeAzureProject) {
+    <div class="error-inline">Select Azure Project</div>
+    } @else if (yearlyCostError) {
+    <div class="error-inline">{{ yearlyCostError }}</div>
+    } @else if (isLoadingYearlyCost) {
+    <div class="error-inline">Loading...</div>
+    } @else {
+    <h2>₹{{ yearlyCost | number:'1.2-2' }}</h2>
+    }
+  </div>
+
+</div>
+
+<div class="dashboard-row">
+
+  <!-- PIE CHART CARD -->
+  <div class="chart-card">
+
+    <div class="chart-header">
+      <h2>Project Repository Distribution</h2>
+
+      <button class="details-btn" (click)="openProjectDistributionDetailsModal()"
+        [disabled]="projectsError || reposError">
+        View Details
+      </button>
+
+    </div>
+
+    @if (projectsError || reposError) {
+    <div class="error-block">
+      Could not display distribution: {{ projectsError || reposError }}
+    </div>
+    } @else {
+    <div class="pie-wrapper">
+
+      <div class="project-pie-chart" [style.background]="pieChartStyle"></div>
+
+      <div class="pie-legend">
+        @for (item of projectDistribution; track item.name) {
+        <div>
+          <span class="dot" [style.backgroundColor]="item.color"></span>
+          {{ item.name }} ({{ item.count }})
+        </div>
+        }
+      </div>
+
+    </div>
+    }
+
+  </div>
+
+  <!-- COST TREND CARD -->
+  <div class="chart-card">
+
+    <div class="chart-header">
+      <h2>Cloud Cost Trend</h2>
+    </div>
+
+    @if (!selectedHomeAzureProject) {
+    <div style="text-align: center; padding: 40px;">
+      <p style="color: #6b7280; font-size: 14px;">Please select an Azure project to view cost trend.</p>
+    </div>
+    } @else if (trendDataError) {
+    <div class="error-block">
+      Could not display cost trend: {{ trendDataError }}
+    </div>
+    } @else {
+    <div class="graph-container">
+      <svg viewBox="0 0 620 280" width="100%" height="280">
+
+        <!-- Y Axis Grid + Labels -->
+        @for (lbl of yAxisLabels; track $index) {
+
+        <line x1="55" [attr.y1]="30 + ($index * 45)" x2="585" [attr.y2]="30 + ($index * 45)" stroke="#e2e8f0"
+          stroke-width="1">
+        </line>
+
+        <text x="45" [attr.y]="34 + ($index * 45)" text-anchor="end" fill="#64748b" font-size="12">
+          {{ lbl }}
+        </text>
+
+        }
+
+        <!-- Trend Line -->
+        <polyline *ngIf="polylinePoints" [attr.points]="polylinePoints" fill="none" stroke="#2563eb"
+          stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        </polyline>
+
+        <!-- Data Points -->
+        @for (c of circlePoints; track c.month) {
+
+        <circle [attr.cx]="c.cx" [attr.cy]="c.cy" r="6" fill="#2563eb" stroke="#fff" stroke-width="2">
+
+          <title>
+            {{ c.month }} :
+            ₹{{ c.cost | number:'1.0-0' }}
+          </title>
+
+        </circle>
+
+        <!-- X Axis Labels -->
+        <text [attr.x]="c.cx" y="275" text-anchor="middle" fill="#64748b" font-size="12" font-weight="500">
+
+          {{ c.month?.substring(0,3) }}
+
+        </text>
+        }
+
+      </svg>
+    </div>
+    }
+
+  </div>
+
+</div>
+
+<div class="section">
+
+  <h2>DevOps Services Summary</h2>
+
+  @if (servicesStatusError) {
+  <div class="error-block">
+    Could not load services status: {{ servicesStatusError }}
+  </div>
+  } @else {
+  <table>
+
+    <tr>
+      <th>Service</th>
+      <th>Status</th>
+    </tr>
+
+    @for (srv of servicesStatus; track srv.service) {
+    <tr>
+      <td>{{ srv.service }}</td>
+      <td>{{ srv.status }}</td>
+    </tr>
+    }
+
+  </table>
+  }
+
+</div>
+
+<!-- PROJECT REPOSITORY DISTRIBUTION DETAILS MODAL -->
+@if(showProjectDistributionDetails){
+
+<div class="modal-overlay">
+
+  <div class="modal-card" style="max-height: 85vh; overflow-y: auto; width: 800px; max-width: 95%;">
+
+    <div class="modal-header">
+      <h2>Project Repository Distribution Details</h2>
+
+      <button class="close-btn" (click)="closeProjectDistributionDetailsModal()">✕</button>
+    </div>
+
+    <table style="margin-top: 10px;">
+      <tr>
+        <th>Project Name</th>
+        <th>Description</th>
+        <th>State</th>
+        <th>Visibility</th>
+        <th>Repositories Count</th>
+      </tr>
+      @for (item of projectDistribution; track item.name) {
+      <tr>
+        <td style="font-weight: 600; color: #1e293b;">{{ item.name }}</td>
+        <td>{{ getProjectDescription(item.name) }}</td>
+        <td>{{ getProjectState(item.name) }}</td>
+        <td>{{ getProjectVisibility(item.name) }}</td>
+        <td style="font-weight: bold; color: #2563eb; text-align: center;">{{ item.count }}</td>
+      </tr>
+      }
+    </table>
+
+  </div>
+
+</div>
+
+}
