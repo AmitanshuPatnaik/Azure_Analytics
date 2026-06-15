@@ -165,11 +165,10 @@ export class Home implements OnInit {
       if (this.azureProjects.length === 0) {
         this.loadAzureProjects('home');
       } else {
-        if (!this.selectedHomeAzureProject) {
-          this.selectedHomeAzureProject = this.azureProjects[0];
+        if (this.selectedHomeAzureProject) {
+          this.loadTrendData();
+          this.loadHomeSubscriptions(this.selectedHomeAzureProject);
         }
-        this.loadTrendData();
-        this.loadHomeSubscriptions(this.selectedHomeAzureProject);
       }
     } else if (page === 'repos') {
       this.loadRepositories();
@@ -192,10 +191,9 @@ export class Home implements OnInit {
       } else if (this.azureProjects.length === 0) {
         this.loadAzureProjects('azure');
       } else {
-        if (!this.selectedAzureProject) {
-          this.selectedAzureProject = this.azureProjects[0];
+        if (this.selectedAzureProject) {
+          this.loadSubscriptions();
         }
-        this.loadSubscriptions();
       }
     }
   }
@@ -209,16 +207,14 @@ export class Home implements OnInit {
           this.azureProjects = res.projects;
           if (this.azureProjects.length > 0) {
             if (onPage === 'home') {
-              if (!this.selectedHomeAzureProject) {
-                this.selectedHomeAzureProject = this.azureProjects[0];
+              if (this.selectedHomeAzureProject) {
+                this.loadTrendData();
+                this.loadHomeSubscriptions(this.selectedHomeAzureProject);
               }
-              this.loadTrendData();
-              this.loadHomeSubscriptions(this.selectedHomeAzureProject);
             } else if (onPage === 'azure') {
-              if (!this.selectedAzureProject) {
-                this.selectedAzureProject = this.azureProjects[0];
+              if (this.selectedAzureProject) {
+                this.loadSubscriptions();
               }
-              this.loadSubscriptions();
             }
           }
         }
@@ -366,9 +362,8 @@ export class Home implements OnInit {
 
         if (subs && subs.length > 0) {
           this.subscriptions = subs;
-          // Auto-select first subscription to load Azure costs immediately on page open
-          if (!this.selectedSubscriptionId) {
-            this.selectedSubscriptionId = subs[0].subscriptionId;
+          // Load metrics only if a subscription is selected
+          if (this.selectedSubscriptionId) {
             this.loadSubscriptionMetrics(this.selectedSubscriptionId);
             this.loadYearlyCost(this.selectedSubscriptionId);
             this.loadDailyCostRange();
