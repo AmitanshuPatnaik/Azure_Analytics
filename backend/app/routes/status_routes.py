@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from services.Azure_Devops.projects_service import fetch_projects
 from services.Azure_Devops.pipelines_service import fetch_pipelines
 from services.Azure.azure_auth import get_azure_token
+from core.data_cache import cache
 
 import requests
 
@@ -92,3 +93,8 @@ async def get_services_status():
         {"service": "CI/CD Pipelines", "status": pipelines_status},
         *azure_services,
     ]
+
+@router.get("/api/debug/cache")
+def check_cache_health():
+    # This runs your thread-safe dictionary scanner
+    return cache.stats()

@@ -817,7 +817,7 @@
     <div class="tab-header"
       style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h1 style="margin: 0;">Azure Resources & Cost Analytics</h1>
-      <div style="display: flex; align-items: center; gap: 15px;">
+      <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
         <div>
           <label for="azure-proj-select" style="margin-right: 10px; font-weight: 500;">Select Azure Project:</label>
           <select id="azure-proj-select" class="month-dropdown" style="width: auto;" [value]="selectedAzureProject"
@@ -837,6 +837,23 @@
             <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
             }
           </select>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-left: 10px;">
+          <span style="font-weight: 500; font-size: 14px;"> Date Range:</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: 13px; font-weight: 500;">From</label>
+            <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 4px 8px;"
+              [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="costTrendFromDate"
+              [disabled]="!selectedSubscriptionId"
+              (change)="costTrendFromDate = $any($event.target).value; onCostTrendDateChange()">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: 13px; font-weight: 500;">To</label>
+            <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 4px 8px;"
+              [min]="costTrendFromDate" [max]="costTrendMaxDate" [value]="costTrendToDate"
+              [disabled]="!selectedSubscriptionId"
+              (change)="costTrendToDate = $any($event.target).value; onCostTrendDateChange()">
+          </div>
         </div>
       </div>
     </div>
@@ -865,7 +882,7 @@
     <div class="cards">
 
       <div class="card">
-        <h3>MTD Total Cost</h3>
+        <h3>MTD Total Cost (Current Month)</h3>
         <h2>₹{{ totalCost | number:'1.2-2' }}</h2>
       </div>
 
@@ -885,25 +902,9 @@
       <div class="chart-header"
         style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <h2 style="margin: 0;">Daily Cost Trend</h2>
-        <!-- Date filter -->
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <span style="font-size: 13px; font-weight: 600; color: #64748b;">🗓 Date Range:</span>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 13px; font-weight: 500;">From</label>
-            <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 4px 8px;"
-              [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="costTrendFromDate"
-              (change)="costTrendFromDate = $any($event.target).value; onCostTrendDateChange()">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 13px; font-weight: 500;">To</label>
-            <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 4px 8px;"
-              [min]="costTrendFromDate" [max]="costTrendMaxDate" [value]="costTrendToDate"
-              (change)="costTrendToDate = $any($event.target).value; onCostTrendDateChange()">
-          </div>
-          @if (costTrendPoints.length) {
-          <span style="font-size: 12px; color: #6b7280;">{{ costTrendPoints.length }} day(s)</span>
-          }
-        </div>
+        @if (costTrendPoints.length) {
+        <span style="font-size: 12px; color: #6b7280;">{{ costTrendPoints.length }} day(s)</span>
+        }
       </div>
 
       @if (costTrendError) {
@@ -917,31 +918,46 @@
         <p style="color: #6b7280; font-size: 14px;">No cost data found for the selected date range.</p>
       </div>
       } @else {
-      <div class="graph-container">
-        <svg viewBox="0 0 660 260" width="100%" height="260">
+      <div style="display: flex; justify-content: space-evenly; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div class="graph-container" style="flex: 0 1 660px; min-width: 320px;">
+          <svg viewBox="0 0 660 260" width="100%" height="260">
 
-          @for (lbl of costTrendYLabels; track $index) {
-          <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)" stroke="#e2e8f0"
-            stroke-width="1"></line>
-          <text x="55" [attr.y]="24 + ($index * 40)" text-anchor="end" fill="#64748b" font-size="11">{{ lbl }}</text>
-          }
-
-          @if (costTrendPolyline) {
-          <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'" fill="rgba(37,99,235,0.08)"></polygon>
-          <polyline [attr.points]="costTrendPolyline" fill="none" stroke="#2563eb" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round"></polyline>
-          }
-
-          @for (c of costTrendCircles; track c.date) {
-          <circle [attr.cx]="c.x" [attr.cy]="c.y" r="5" fill="#2563eb" stroke="#fff" stroke-width="2">
-            <title>{{ c.date }}: ₹{{ c.cost | number:'1.2-2' }}</title>
-          </circle>
-          @if (costTrendPoints.length <= 14) { <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b"
-            font-size="10">{{ c.date.slice(5) }}</text>
-            }
+            @for (lbl of costTrendYLabels; track $index) {
+            <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)" stroke="#e2e8f0"
+              stroke-width="1"></line>
+            <text x="55" [attr.y]="24 + ($index * 40)" text-anchor="end" fill="#64748b" font-size="11">{{ lbl }}</text>
             }
 
-        </svg>
+            @if (costTrendPolyline) {
+            <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'" fill="rgba(37,99,235,0.08)"></polygon>
+            <polyline [attr.points]="costTrendPolyline" fill="none" stroke="#2563eb" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"></polyline>
+            }
+
+            @for (c of costTrendCircles; track c.date) {
+            <circle [attr.cx]="c.x" [attr.cy]="c.y" r="5" fill="#2563eb" stroke="#fff" stroke-width="2">
+              <title>{{ c.date }}: ₹{{ c.cost | number:'1.2-2' }}</title>
+            </circle>
+            @if (costTrendPoints.length <= 14) { <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b"
+              font-size="10">{{ c.date.slice(5) }}</text>
+              }
+              }
+
+          </svg>
+        </div>
+
+        <!-- Range Total Cost Card -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; min-width: 220px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 10px; margin-bottom: 10px; height: 100px; padding-top: 65px;">
+          <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em;">
+            Range Total Cost
+          </div>
+          <div style="font-size: 32px; font-weight: 700; color: #2563eb;">
+            ₹{{ costTrendRangeTotal | number:'1.2-2' }}
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">
+            Cumulative for selected range
+          </div>
+        </div>
       </div>
       }
     </div>

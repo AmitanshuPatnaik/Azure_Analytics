@@ -48,16 +48,16 @@ export class AzureApiService {
     return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/resourcegroups`, project));
   }
 
-  getServiceCosts(subscriptionId: string, project?: string): Observable<any> {
-    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/services`, project));
+  getServiceCosts(subscriptionId: string, fromDate: string, toDate: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/services?from_date=${fromDate}&to_date=${toDate}`, project));
   }
 
   getResourceCosts(subscriptionId: string, project?: string): Observable<any> {
     return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/resources`, project));
   }
 
-  getTopResources(subscriptionId: string, project?: string): Observable<any> {
-    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/top-resources`, project));
+  getTopResources(subscriptionId: string, fromDate: string, toDate: string, project?: string): Observable<any> {
+    return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/top-resources?from_date=${fromDate}&to_date=${toDate}`, project));
   }
 
   getBudgets(subscriptionId: string, project?: string): Observable<any> {

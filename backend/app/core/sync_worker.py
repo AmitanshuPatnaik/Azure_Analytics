@@ -53,29 +53,93 @@ def _sync_repos() -> None:
 
 
 def _sync_subscriptions() -> list:
+    import json
+    import os
+    _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
     try:
-        result = fetch_subscriptions()
-        if isinstance(result, dict) and not result.get("error"):
-            cache.set("subscriptions", result)
-            subs = result.get("subscriptions", [])
-            logger.info("[SyncWorker] ✓ subscriptions cached (%d entries)", len(subs))
-            return [s.get("subscriptionId") for s in subs if isinstance(s, dict) and s.get("subscriptionId")]
-    except Exception as exc:
-        logger.warning("[SyncWorker] ✗ subscriptions sync failed: %s", exc)
-    return []
+        with open(_config_path, "r") as f:
+            config = json.load(f)
+    except Exception:
+        config = {}
+    
+    projects = []
+    for key in config.keys():
+        if key.endswith("_TENANT_ID"):
+            prefix = key[:-10]
+            if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
+                if prefix == "DOC_FLOW":
+                    name = "DocFlow"
+                else:
+                    words = prefix.lower().split("_")
+                    name = "".join(word.capitalize() for word in words)
+                projects.append(name)
+                
+    if not projects:
+        projects = [None]
+        
+    all_sub_ids = []
+    all_subscriptions = []
+    
+    for proj in projects:
+        try:
+            result = fetch_subscriptions(proj)
+            if isinstance(result, dict) and not result.get("error"):
+                subs = result.get("subscriptions", [])
+                all_subscriptions.extend(subs)
+                for s in subs:
+                    sub_id = s.get("subscriptionId")
+                    if sub_id:
+                        all_sub_ids.append((sub_id, proj))
+        except Exception as exc:
+            logger.warning("[SyncWorker] ✗ subscriptions sync failed for project %s: %s", proj, exc)
+            
+    if all_subscriptions:
+        cache.set("subscriptions", {"success": True, "subscriptions": all_subscriptions})
+        logger.info("[SyncWorker] ✓ all subscriptions cached (%d entries)", len(all_subscriptions))
+        
+    return all_sub_ids
 
 
 def _sync_cost_trend() -> None:
+    import json
+    import os
+    _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
     try:
-        result = fetch_aggregated_monthly_costs()
-        if isinstance(result, dict) and result.get("success"):
-            cache.set("costs:trend", result)
-            logger.info("[SyncWorker] ✓ cost trend analytics timeline cached successfully")
-    except Exception as exc:
-        logger.warning("[SyncWorker] ✗ cost trend sync failed: %s", exc)
+        with open(_config_path, "r") as f:
+            config = json.load(f)
+    except Exception:
+        config = {}
+    
+    projects = []
+    for key in config.keys():
+        if key.endswith("_TENANT_ID"):
+            prefix = key[:-10]
+            if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
+                if prefix == "DOC_FLOW":
+                    name = "DocFlow"
+                else:
+                    words = prefix.lower().split("_")
+                    name = "".join(word.capitalize() for word in words)
+                projects.append(name)
+                
+    if not projects:
+        projects = [None]
+        
+    for proj in projects:
+        try:
+            from services.Azure.azure_auth import azure_project_var
+            azure_project_var.set(proj)
+            result = fetch_aggregated_monthly_costs(proj)
+            if isinstance(result, dict) and result.get("success"):
+                cache.set(f"costs:trend:{proj}", result)
+                if proj == projects[0]:
+                    cache.set("costs:trend", result)
+                logger.info("[SyncWorker] ✓ cost trend analytics timeline cached successfully for project %s", proj)
+        except Exception as exc:
+            logger.warning("[SyncWorker] ✗ cost trend sync failed for project %s: %s", proj, exc)
 
 
-def _sync_costs_for_subscription(sub_id: str, from_date: str, to_date: str) -> None:
+def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: str = None) -> None:
     """
     Fetch all cost payloads for a single subscription and commit them to cache
     under structured keys protected by a performance-safe execution delay.
@@ -101,7 +165,7 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str, to_date: str) -> N
 
     # ── Service allocation breakdown ─────────────────────────────────────── #
     try:
-        result = fetch_service_costs(sub_id)
+        result = fetch_service_costs(sub_id, from_date, to_date)
         if isinstance(result, dict) and result.get("success"):
             cache.set(f"services:{sub_id}", result)
             logger.info("[SyncWorker] services cached for sub=%s", sub_id)
@@ -138,7 +202,7 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str, to_date: str) -> N
 
     # ── 🎯 HISTORICAL MONTHLY TREND MATRICES (The Graph Fix) ─────────────── #
     try:
-        result = fetch_monthly_costs(sub_id, from_date, to_date)
+        result = fetch_monthly_costs(sub_id)
         if isinstance(result, dict) and result.get("success") and result.get("rows"):
             cache.set(f"monthly:{sub_id}", result)
             logger.info("[SyncWorker] ✓ historical monthly intervals cached for sub=%s", sub_id)
@@ -159,7 +223,9 @@ def run_sync() -> None:
         sub_ids = _sync_subscriptions()
 
         if sub_ids:
-            for sub_id in sub_ids:
+            for sub_id, proj in sub_ids:
+                from services.Azure.azure_auth import azure_project_var
+                azure_project_var.set(proj)
                 _sync_costs_for_subscription(sub_id)
             _sync_cost_trend()
         else:

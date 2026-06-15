@@ -76,25 +76,42 @@ def fetch_total_cost(subscription_id: str):
     return {"success": True, "total_cost": total_amount, "amount": total_amount}
 
 # 2. Fetch costs broken down by Service categories (e.g., Storage, Virtual Machines)
-def fetch_service_costs(subscription_id: str, from_date: str, to_date: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "Custom",
-        "timePeriod" : {
-            "from" : f"{from_date}T00:00:00Z",
-            "to" : f"{to_date}T23:59:59Z"
-        },
-        "dataset": {
-            "granularity": "None",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
+def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: str = None):
+    if from_date and to_date:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "Custom",
+            "timePeriod" : {
+                "from" : f"{from_date}T00:00:00Z",
+                "to" : f"{to_date}T23:59:59Z"
             },
-            "grouping": [
-                {"type": "Dimension", "name": "ServiceName"}
-            ]
+            "dataset": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                },
+                "grouping": [
+                    {"type": "Dimension", "name": "ServiceName"}
+                ]
+            }
         }
-    }
+    else:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "MonthToDate",
+            "dataset": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                },
+                "grouping": [
+                    {"type": "Dimension", "name": "ServiceName"}
+                ]
+            }
+        }
     result = _execute_azure_query(subscription_id, payload)
+    if not result.get("success", True) or "error" in result:
+        return {"success": False, "error": result.get("error", "Failed to fetch service costs"), "services": [], "rows": []}
     rows = result.get("properties", {}).get("rows", [])
     return {"success": True, "fromDate" : from_date, "toDate" : to_date, "services": rows, "rows": rows}
 
@@ -114,6 +131,8 @@ def fetch_resource_group_costs(subscription_id: str):
         }
     }
     result = _execute_azure_query(subscription_id, payload)
+    if not result.get("success", True) or "error" in result:
+        return {"success": False, "error": result.get("error", "Failed to fetch resource group costs"), "resource_groups": [], "rows": []}
     rows = result.get("properties", {}).get("rows", [])
     return {"success": True, "resource_groups": rows, "rows": rows}
 
@@ -156,6 +175,8 @@ def fetch_daily_costs_by_range(subscription_id: str, from_date: str, to_date: st
         }
     }
     result = _execute_azure_query(subscription_id, payload)
+    if not result.get("success", True) or "error" in result:
+        return {"success": False, "error": result.get("error", "Failed to fetch daily costs"), "points": [], "count": 0}
     raw_rows = result.get("properties", {}).get("rows", [])
 
     # Azure returns rows as [cost_float, date_int_YYYYMMDD, currency_str]
@@ -254,25 +275,42 @@ def _extract_resource_name(resource_id: str) -> str:
     parts = [p for p in resource_id.strip("/").split("/") if p]
     return parts[-1] if parts else resource_id
 
-def fetch_top_resources(subscription_id: str, from_date: str, to_date: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "Custom",
-        "timePeriod" : {
-            "from" : f"{from_date}T00:00:00Z",
-            "to" : f"{to_date}T23:59:59Z"
-        },
-        "dataset": {
-            "granularity": "None",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
+def fetch_top_resources(subscription_id: str, from_date: str = None, to_date: str = None):
+    if from_date and to_date:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "Custom",
+            "timePeriod" : {
+                "from" : f"{from_date}T00:00:00Z",
+                "to" : f"{to_date}T23:59:59Z"
             },
-            "grouping": [
-                {"type": "Dimension", "name": "ResourceId"}
-            ]
+            "dataset": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                },
+                "grouping": [
+                    {"type": "Dimension", "name": "ResourceId"}
+                ]
+            }
         }
-    }
+    else:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "MonthToDate",
+            "dataset": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                },
+                "grouping": [
+                    {"type": "Dimension", "name": "ResourceId"}
+                ]
+            }
+        }
     result = _execute_azure_query(subscription_id, payload)
+    if not result.get("success", True) or "error" in result:
+        return {"success": False, "error": result.get("error", "Failed to fetch top resources"), "top_resources": [], "rows": []}
     rows = result.get("properties", {}).get("rows", [])
     # Sort descending by the cost field (index 0 in Azure query array rows)
     sorted_rows = sorted(rows, key=lambda x: x[0], reverse=True) if rows else []
@@ -318,12 +356,12 @@ def fetch_budgets(subscription_id: str):
         return {"success": True, "budgets": [], "error": str(e)}
 
 
-def fetch_aggregated_monthly_costs():
+def fetch_aggregated_monthly_costs(project_name: str = None):
     from services.Azure.subscriptions import fetch_subscriptions
     from core.data_cache import cache # Safeguarded local lookup import
     
     try:
-        subs_data = fetch_subscriptions()
+        subs_data = fetch_subscriptions(project_name)
     except Exception:
         subs_data = []
 

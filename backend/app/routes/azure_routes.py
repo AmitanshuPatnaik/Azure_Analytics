@@ -18,8 +18,32 @@ from services.Azure.costs import (
 
 router = APIRouter(prefix="/azure", tags=["Azure"])
 
+_sub_project_map = {}
+
+def resolve_project_for_subscription(subscription_id: str) -> str | None:
+    if not subscription_id:
+        return None
+    if subscription_id in _sub_project_map:
+        return _sub_project_map[subscription_id]
+        
+    from services.Azure.subscriptions import fetch_subscriptions
+    projects = ["DocFlow", "TimeFlow", "Integrelity"]
+    for proj in projects:
+        try:
+            res = fetch_subscriptions(proj)
+            if res.get("success"):
+                for sub in res.get("subscriptions", []):
+                    sub_val = sub.get("subscriptionId")
+                    if sub_val:
+                        _sub_project_map[sub_val] = proj
+                        if sub_val.lower() == subscription_id.lower():
+                            return proj
+        except Exception:
+            pass
+    return None
+
 @router.get("/projects")
-async def get_azure_projects():
+def get_azure_projects():
     import json
     import os
     _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
@@ -54,7 +78,7 @@ _COLD_TREND_FALLBACK = {
 _COLD_COST_RESPONSE = {"success": True, "total_cost": 0.0, "amount": 0.0}
 
 @router.get("/costs/trend")
-async def get_cost_trend(project: str = Query(None)):
+def get_cost_trend(project: str = Query(None)):
     azure_project_var.set(project)
     cache_key = f"costs:trend:{project}" if project else "costs:trend"
     cached = cache.get(cache_key)
@@ -70,7 +94,7 @@ async def get_cost_trend(project: str = Query(None)):
 
 
 @router.get("/subscriptions")
-async def get_subscriptions(project: str = Query(None)):
+def get_subscriptions(project: str = Query(None)):
     azure_project_var.set(project)
     return fetch_subscriptions(project)
 
@@ -78,9 +102,11 @@ async def get_subscriptions(project: str = Query(None)):
 # ── Cached Subscription Wildcard Endpoints ──────────────────────────────── #
 
 @router.get("/costs/{subscription_id}")
-async def get_costs(subscription_id: str, project: str = Query(None)):
+def get_costs(subscription_id: str, project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
-    cache_key = f"costs:{subscription_id}:{project}" if project else f"costs:{subscription_id}"
+    cache_key = f"costs:{subscription_id}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -93,9 +119,11 @@ async def get_costs(subscription_id: str, project: str = Query(None)):
 
 
 @router.get("/costs/{subscription_id}/total")
-async def get_total_cost(subscription_id: str, project: str = Query(None)):
+def get_total_cost(subscription_id: str, project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
-    cache_key = f"total:{subscription_id}:{project}" if project else f"total:{subscription_id}"
+    cache_key = f"total:{subscription_id}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -108,19 +136,36 @@ async def get_total_cost(subscription_id: str, project: str = Query(None)):
 
 
 @router.get("/costs/{subscription_id}/resourcegroups")
-async def get_resource_group_costs(subscription_id: str, project: str = Query(None)):
+def get_resource_group_costs(subscription_id: str, project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
-    cache_key = f"resourcegroups:{subscription_id}:{project}" if project else f"resourcegroups:{subscription_id}"
-    return cache.get(cache_key, {"success": True, "resource_groups": [], "rows": []})
+    cache_key = f"resourcegroups:{subscription_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    
+    live_fallback = fetch_resource_group_costs(subscription_id)
+    if live_fallback and live_fallback.get("success"):
+        cache.set(cache_key, live_fallback)
+        return live_fallback
+    return {"success": True, "resource_groups": [], "rows": []}
 
 
 @router.get("/costs/{subscription_id}/services")
-async def get_service_costs(subscription_id: str, from_date: str, to_date: str, project: str = Query(None)):
+def get_service_costs(subscription_id: str, from_date: str = Query(None), to_date: str = Query(None), project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
-    cache_key = f"services:{subscription_id}:{from_date}:{to_date}:{project}" if project else f"services:{subscription_id}:{from_date}:{to_date}"
+    
+    if from_date or to_date:
+        cache_key = f"services:{subscription_id}:{from_date}:{to_date}"
+    else:
+        cache_key = f"services:{subscription_id}"
+        
     cached = cache.get(cache_key)
 
-    if cached and isinstance(cached, dict) and cached.get("rows"):
+    if cached and isinstance(cached, dict) and cached.get("success") and cached.get("rows"):
         return cached
 
     # Live fallback if the cache worker hasn't populated this key yet
@@ -129,21 +174,24 @@ async def get_service_costs(subscription_id: str, from_date: str, to_date: str, 
         cache.set(cache_key, live_fallback)
         return live_fallback
 
-    return cached if cached else {"success": True, "fromDate": from_date, "toDate": to_date, "services": [], "rows": []}
+    return cached if cached else live_fallback
 
 
 @router.get("/costs/{subscription_id}/top-resources")
-async def get_top_resources(subscription_id: str, from_date: str, to_date: str, project: str = Query(None)):
+def get_top_resources(subscription_id: str, from_date: str = Query(None), to_date: str = Query(None), project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
-    cache_key = (
-        f"topresources:{subscription_id}:{from_date}:{to_date}:{project}"
-        if project
-        else f"topresources:{subscription_id}:{from_date}:{to_date}"
-    )
+    
+    if from_date or to_date:
+        cache_key = f"topresources:{subscription_id}:{from_date}:{to_date}"
+    else:
+        cache_key = f"topresources:{subscription_id}"
+        
     cached = cache.get(cache_key)
     
     # If cache is populated and contains valid asset records, return it instantly
-    if cached and isinstance(cached, dict) and cached.get("top_resources"):
+    if cached and isinstance(cached, dict) and cached.get("success") and cached.get("top_resources"):
         return cached
         
     # Live fallback gate if the background daemon thread has not populated this key yet
@@ -152,25 +200,17 @@ async def get_top_resources(subscription_id: str, from_date: str, to_date: str, 
         cache.set(cache_key, live_fallback)
         return live_fallback
         
-    return (
-        cached
-        if cached
-        else {
-            "success": True,
-            "fromDate": from_date,
-            "toDate": to_date,
-            "top_resources": [],
-            "rows": []
-        }
-    )
+    return cached if cached else live_fallback
 
 @router.get("/costs/{subscription_id}/budgets")
-async def get_budgets(subscription_id: str, project: str = Query(None)):
+def get_budgets(subscription_id: str, project: str = Query(None)):
     """
     Active budget thresholds — reads from cache first, falls back to live API.
     """
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
-    cache_key = f"budgets:{subscription_id}:{project}" if project else f"budgets:{subscription_id}"
+    cache_key = f"budgets:{subscription_id}"
     cached = cache.get(cache_key)
 
     if cached and isinstance(cached, dict) and cached.get("budgets") is not None:
@@ -186,9 +226,11 @@ async def get_budgets(subscription_id: str, project: str = Query(None)):
 
 
 @router.get("/costs/{subscription_id}/yearly")
-async def get_yearly_costs(subscription_id: str, project: str = Query(None)):
+def get_yearly_costs(subscription_id: str, project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
-    cache_key = f"yearly:{subscription_id}:{project}" if project else f"yearly:{subscription_id}"
+    cache_key = f"yearly:{subscription_id}"
     cached = cache.get(cache_key)
     if cached and isinstance(cached, dict) and cached.get("success") and cached.get("yearly_cost", 0) > 0:
         return cached
@@ -203,29 +245,37 @@ async def get_yearly_costs(subscription_id: str, project: str = Query(None)):
 # ── Analytical Live Operations ──────────────────────────────────────────── #
 
 @router.get("/costs/{subscription_id}/daily")
-async def get_daily_costs(subscription_id: str, project: str = Query(None)):
+def get_daily_costs(subscription_id: str, project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
     return fetch_daily_costs(subscription_id)
 
 
 @router.get("/costs/{subscription_id}/daily-range")
-async def get_daily_costs_by_range(
+def get_daily_costs_by_range(
     subscription_id: str,
     from_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
     to_date:   str = Query(..., description="End date in YYYY-MM-DD format"),
     project:   str = Query(None),
 ):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
     return fetch_daily_costs_by_range(subscription_id, from_date, to_date)
 
 
 @router.get("/costs/{subscription_id}/monthly")
-async def get_monthly_costs(subscription_id: str, project: str = Query(None)):
+def get_monthly_costs(subscription_id: str, project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
     return fetch_monthly_costs(subscription_id)
 
 
 @router.get("/costs/{subscription_id}/resources")
-async def get_resource_costs(subscription_id: str, project: str = Query(None)):
+def get_resource_costs(subscription_id: str, project: str = Query(None)):
+    if not project:
+        project = resolve_project_for_subscription(subscription_id)
     azure_project_var.set(project)
     return fetch_resource_costs(subscription_id)

@@ -139,6 +139,16 @@ export class Home implements OnInit {
   ) { }
 
   ngOnInit() {
+    // Initialise daily-trend date defaults
+    if (!this.costTrendFromDate) {
+      const now = new Date();
+      // "To" defaults to yesterday — today is incomplete (costs still accumulating)
+      const yesterday = new Date(now.getTime() - 86_400_000);
+      this.costTrendToDate = yesterday.toISOString().slice(0, 10);
+      this.costTrendFromDate = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+      this.costTrendMinDate = `${now.getFullYear()}-01-01`;
+    }
+
     this.dashboardService.selectedPage$.subscribe({
       next: (page) => {
         this.onPageActive(page);
@@ -176,15 +186,6 @@ export class Home implements OnInit {
         this.loadTestPlans(this.selectedTestPlanProject);
       }
     } else if (page === 'azure') {
-      // Initialise daily-trend date defaults on first visit
-      if (!this.costTrendFromDate) {
-        const now = new Date();
-        // "To" defaults to yesterday — today is incomplete (costs still accumulating)
-        const yesterday = new Date(now.getTime() - 86_400_000);
-        this.costTrendToDate = yesterday.toISOString().slice(0, 10);
-        this.costTrendFromDate = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
-        this.costTrendMinDate = `${now.getFullYear()}-01-01`;
-      }
       if (this.selectedSubscriptionId) {
         this.loadSubscriptionMetrics(this.selectedSubscriptionId);
         this.loadDailyCostRange();
@@ -565,8 +566,8 @@ export class Home implements OnInit {
 
     const totalCost$ = this.azureApi.getTotalCost(subId, this.selectedAzureProject);
     const budgets$ = this.azureApi.getBudgets(subId, this.selectedAzureProject);
-    const topResources$ = this.azureApi.getTopResources(subId, this.selectedAzureProject);
-    const serviceCosts$ = this.azureApi.getServiceCosts(subId, this.selectedAzureProject);
+    const topResources$ = this.azureApi.getTopResources(subId, this.costTrendFromDate, this.costTrendToDate, this.selectedAzureProject);
+    const serviceCosts$ = this.azureApi.getServiceCosts(subId, this.costTrendFromDate, this.costTrendToDate, this.selectedAzureProject);
 
     forkJoin({
       total: totalCost$,
@@ -657,6 +658,13 @@ export class Home implements OnInit {
     });
   }
 
+  get costTrendRangeTotal(): number {
+    if (!this.costTrendPoints || this.costTrendPoints.length === 0) {
+      return 0;
+    }
+    return this.costTrendPoints.reduce((sum, p) => sum + (p.cost || 0), 0);
+  }
+
   onCostTrendDateChange() {
     // Clamp toDate to yesterday if user somehow sets it beyond
     const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
@@ -665,6 +673,7 @@ export class Home implements OnInit {
     }
     if (this.costTrendFromDate && this.costTrendToDate && this.selectedSubscriptionId) {
       this.loadDailyCostRange();
+      this.loadSubscriptionMetrics(this.selectedSubscriptionId);
     }
   }
 
