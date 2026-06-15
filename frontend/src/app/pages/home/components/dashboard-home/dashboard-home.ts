@@ -78,14 +78,7 @@ export class DashboardHomeComponent implements OnInit {
       next: (res: any) => {
         if (res && res.projects) {
           this.azureProjects = res.projects;
-          if (this.azureProjects.length > 0) {
-            // Auto-select first Azure project if none is selected
-            if (!this.selectedHomeAzureProject) {
-              this.selectedHomeAzureProject = this.azureProjects[0];
-              this.loadTrendData();
-              this.loadHomeSubscriptions(this.selectedHomeAzureProject);
-            }
-          }
+          this.cdr.detectChanges();
         }
       },
       error: (err) => {

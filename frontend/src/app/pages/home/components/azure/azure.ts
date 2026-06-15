@@ -116,6 +116,7 @@ export class AzureComponent implements OnInit {
             this.selectedAzureProject = this.azureProjects[0];
             this.loadSubscriptions();
           }
+          this.cdr.detectChanges();
         }
       },
       error: (err) => {
@@ -136,10 +137,7 @@ export class AzureComponent implements OnInit {
         }
 
         this.subscriptions = subs || [];
-        if (this.subscriptions.length > 0 && !this.selectedSubscriptionId) {
-          this.selectedSubscriptionId = this.subscriptions[0].subscriptionId;
-          this.loadAzureSubscriptionData(this.selectedSubscriptionId);
-        } else if (this.subscriptions.length === 0) {
+        if (this.subscriptions.length === 0) {
           this.subscriptionsError = 'No Azure subscriptions found.';
         }
         this.cdr.detectChanges();
@@ -314,6 +312,7 @@ export class AzureComponent implements OnInit {
     this.costTrendToDate = clamped.to;
     this.pendingFromDate = clamped.from;
     this.pendingToDate = clamped.to;
+    this.loadSubscriptionMetrics(this.selectedSubscriptionId);
     this.loadAzureRangeMetrics(this.selectedSubscriptionId);
   }
 
@@ -331,17 +330,13 @@ export class AzureComponent implements OnInit {
     const subId = select.value;
     this.selectedSubscriptionId = subId;
 
-    if (!subId) {
-      this.totalCost = 0;
-      this.budgets = [];
-      this.topResources = [];
-      this.serviceCosts = [];
-      this.costTrendPoints = [];
-      this.costTrendRangeLabelUtc = '';
-      this.azureRangeLoadSeq++;
-      return;
-    }
-    this.loadAzureSubscriptionData(subId);
+    this.totalCost = 0;
+    this.budgets = [];
+    this.topResources = [];
+    this.serviceCosts = [];
+    this.costTrendPoints = [];
+    this.costTrendRangeLabelUtc = '';
+    this.azureRangeLoadSeq++;
   }
 
   onAzureProjectChange(event: Event) {

@@ -116,38 +116,14 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
                     return response.json()
 
                 if response.status_code == 429:
-                    # Honour the Retry-After header if Azure provides it
-                    retry_after_raw = response.headers.get("Retry-After") or response.headers.get("x-ms-retry-after-ms")
-                    if retry_after_raw:
-                        try:
-                            retry_after = float(retry_after_raw)
-                            # x-ms-retry-after-ms is in milliseconds
-                            if "ms" in response.headers.get("x-ms-retry-after-ms", ""):
-                                retry_after = retry_after / 1000.0
-                        except (ValueError, TypeError):
-                            retry_after = None
-                    else:
-                        retry_after = None
-
-                    if retry_after and retry_after > 0:
-                        sleep_time = min(retry_after + random.uniform(0, 2), MAX_DELAY)
-                    else:
-                        # Full jitter: sleep = random(0, min(cap, base * 2^attempt))
-                        sleep_time = random.uniform(0, min(MAX_DELAY, BASE_DELAY * (2 ** attempt)))
-
-                    if attempt < MAX_ATTEMPTS - 1:
-                        logger.warning(
-                            "[AzureQuery] 429 rate-limited sub=%s attempt=%d/%d sleeping=%.1fs",
-                            subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,
-                        )
-                        time.sleep(sleep_time)
-                        continue
-
-                    # Exhausted retries on 429
+                    logger.warning(
+                        "[AzureQuery] 429 rate-limited sub=%s. Aborting retry loop to protect request timer.",
+                        subscription_id
+                    )
                     return {
                         "success": False,
                         "status_code": 429,
-                        "error": "Azure Cost Management rate limit exceeded after all retries.",
+                        "error": "Azure Cost Management rate limit exceeded. Cached fallback data will be served if available.",
                     }
 
                 # Non-retryable HTTP error (4xx except 429, 5xx transient)
