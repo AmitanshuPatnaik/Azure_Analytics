@@ -69,8 +69,8 @@ def fetch_total_cost(subscription_id: str):
     # Safely extract the raw cost number out of Azure's return matrix
     total_amount = 0
     if "properties" in result and "rows" in result["properties"]:
-        rows = result["properties"]["rows"]
-        if rows and len(rows) > 0 and len(rows[0]) > 0:
+        rows = result.get("properties", {}).get("rows", [])
+        if rows:
             total_amount = rows[0][0]
 
     return {"success": True, "total_cost": total_amount, "amount": total_amount}
