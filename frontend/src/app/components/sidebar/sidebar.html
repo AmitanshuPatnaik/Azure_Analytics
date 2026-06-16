@@ -37,11 +37,13 @@
   </div>
 
   <!-- Single toggle button — fixed, shifts left when sidebar collapses -->
+  @if (dashboardService.selectedPage !== 'home') {
   <button class="collapse-btn"
     (click)="dashboardService.sidebarVisible = !dashboardService.sidebarVisible"
     [title]="dashboardService.sidebarVisible ? 'Collapse sidebar' : 'Expand sidebar'"
     [style.left]="dashboardService.sidebarVisible ? '228px' : '8px'">
     {{ dashboardService.sidebarVisible ? '◀' : '▶' }}
   </button>
+  }
 
 </div>

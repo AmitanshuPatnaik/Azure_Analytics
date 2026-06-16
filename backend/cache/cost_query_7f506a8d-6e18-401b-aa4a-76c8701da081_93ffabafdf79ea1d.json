@@ -1,0 +1,91 @@
+{
+  "fetched_at": 1781589301.3244927,
+  "expires_at": 1782194101.3244927,
+  "data": {
+    "id": "subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/providers/Microsoft.CostManagement/query/29327c79-844d-4921-834e-6482a38ce754",
+    "name": "29327c79-844d-4921-834e-6482a38ce754",
+    "type": "Microsoft.CostManagement/query",
+    "location": null,
+    "sku": null,
+    "eTag": null,
+    "properties": {
+      "nextLink": null,
+      "columns": [
+        {
+          "name": "Cost",
+          "type": "Number"
+        },
+        {
+          "name": "ServiceName",
+          "type": "String"
+        },
+        {
+          "name": "Currency",
+          "type": "String"
+        }
+      ],
+      "rows": [
+        [
+          9724.51336271143,
+          "Azure App Service",
+          "INR"
+        ],
+        [
+          7.03829381230396,
+          "Azure DNS",
+          "INR"
+        ],
+        [
+          522.576199596628,
+          "Backup",
+          "INR"
+        ],
+        [
+          0.00614475450000001,
+          "Bandwidth",
+          "INR"
+        ],
+        [
+          982.472049237698,
+          "Container Registry",
+          "INR"
+        ],
+        [
+          8.80109343708746,
+          "Foundry Models",
+          "INR"
+        ],
+        [
+          0.0,
+          "Log Analytics",
+          "INR"
+        ],
+        [
+          10717.7734118435,
+          "SQL Database",
+          "INR"
+        ],
+        [
+          4064.17284,
+          "SaaS",
+          "INR"
+        ],
+        [
+          920.531750849999,
+          "Service Bus",
+          "INR"
+        ],
+        [
+          1157.7058165129,
+          "Storage",
+          "INR"
+        ],
+        [
+          211.789199999999,
+          "Virtual Network",
+          "INR"
+        ]
+      ]
+    }
+  }
+}
