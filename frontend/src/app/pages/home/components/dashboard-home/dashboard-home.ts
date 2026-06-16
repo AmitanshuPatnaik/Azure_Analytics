@@ -525,4 +525,10 @@ export class DashboardHomeComponent implements OnInit {
   closeProjectDistributionDetailsModal() {
     this.showProjectDistributionDetails = false;
   }
+
+  getSelectedProjectRepoCount(): number {
+    if (!this.selectedHomeAzureProject) return 0;
+    const item = this.projectDistribution.find(p => p.name === this.selectedHomeAzureProject);
+    return item ? item.count : 0;
+  }
 }
