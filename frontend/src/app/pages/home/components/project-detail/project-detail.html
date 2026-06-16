@@ -71,21 +71,27 @@
   <tr>
     <th>Repository Name</th>
     <th>Default Branch</th>
-    <th>Actions</th>
+    <th style="text-align: center;">Actions</th>
   </tr>
   @for (repo of selectedProjectRepos; track repo.id || $index) {
   <tr>
     <td>{{ repo.name }}</td>
     <td>{{ repo.defaultBranch || 'N/A' }}</td>
-    <td style="display: flex; gap: 8px; flex-wrap: wrap;">
-      <button class="action-small-btn" (click)="viewRepoCommits(repo)"
-        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Commits</button>
-      <button class="action-small-btn" (click)="viewRepoPRs(repo)"
-        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer;">PRs</button>
-      <button class="action-small-btn" (click)="viewRepoBranches(repo)"
-        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #9333ea; color: white; border: none; border-radius: 4px; cursor: pointer;">Branches</button>
-      <button class="action-small-btn" (click)="viewRepoPushes(repo)"
-        style="padding: 6px 10px; font-size: 12px; margin: 0; width: auto; background: #f97316; color: white; border: none; border-radius: 4px; cursor: pointer;">Pushes</button>
+    <td>
+      <div style="display: flex; gap: 8px; width: 100%;">
+        <button class="action-small-btn commits-btn"
+          [class.active]="selectedRepoForDetails?.id === repo.id && activeRepoDetailsTab === 'commits'"
+          (click)="viewRepoCommits(repo)">Commits</button>
+        <button class="action-small-btn prs-btn"
+          [class.active]="selectedRepoForDetails?.id === repo.id && activeRepoDetailsTab === 'prs'"
+          (click)="viewRepoPRs(repo)">PRs</button>
+        <button class="action-small-btn branches-btn"
+          [class.active]="selectedRepoForDetails?.id === repo.id && activeRepoDetailsTab === 'branches'"
+          (click)="viewRepoBranches(repo)">Branches</button>
+        <button class="action-small-btn pushes-btn"
+          [class.active]="selectedRepoForDetails?.id === repo.id && activeRepoDetailsTab === 'pushes'"
+          (click)="viewRepoPushes(repo)">Pushes</button>
+      </div>
     </td>
   </tr>
   }
