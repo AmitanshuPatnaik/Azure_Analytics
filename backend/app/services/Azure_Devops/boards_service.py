@@ -1,6 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
+from datetime import datetime, timezone, timedelta
 
 from core.config import base_url, collection, pat
 from services.Azure_Devops.projects_service import fetch_projects
@@ -211,3 +212,136 @@ def fetch_work_items(project_name):
             "value": [],
             "sprints": []
         }
+
+
+def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 25):
+    """
+    Returns work items whose state changed within the last `days` days,
+    enriched with the previous state inferred from the update history.
+    """
+    if not base_url or not collection or not pat:
+        return {
+            "success": False,
+            "message": "Azure DevOps is not configured. Please check config.json.",
+            "count": 0,
+            "changes": []
+        }
+
+    try:
+        since_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+
+        # ── Step 1: WIQL – IDs of items with recent state changes ──────────────
+        wiql_url = (
+            f"{base_url}/{collection}/{project_name}/_apis/wit/wiql"
+            f"?api-version={API_VERSION}"
+        )
+        query = {
+            "query": f"""
+            SELECT [System.Id]
+            FROM WorkItems
+            WHERE [System.TeamProject] = '{project_name}'
+              AND [Microsoft.VSTS.Common.StateChangeDate] >= '{since_date}'
+            ORDER BY [Microsoft.VSTS.Common.StateChangeDate] DESC
+            """
+        }
+        wiql_resp = requests.post(
+            url=wiql_url, json=query, auth=auth, verify=False, timeout=10
+        )
+        if wiql_resp.status_code != 200:
+            return {
+                "success": False,
+                "message": f"WIQL query failed ({wiql_resp.status_code}): {wiql_resp.text[:200]}",
+                "count": 0,
+                "changes": []
+            }
+
+        ids = [
+            item["id"]
+            for item in wiql_resp.json().get("workItems", [])
+            if isinstance(item, dict) and "id" in item
+        ][:limit]
+
+        if not ids:
+            return {"success": True, "count": 0, "changes": []}
+
+        # ── Step 2: Bulk fetch fields ───────────────────────────────────────────
+        ids_str = ",".join(map(str, ids))
+        fields_param = (
+            "System.Id,System.Title,System.WorkItemType,System.State,"
+            "System.AssignedTo,Microsoft.VSTS.Common.StateChangeDate"
+        )
+        bulk_url = (
+            f"{base_url}/{collection}/_apis/wit/workitems"
+            f"?ids={ids_str}&fields={fields_param}&api-version={API_VERSION}"
+        )
+        bulk_resp = requests.get(
+            bulk_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=10
+        )
+        if bulk_resp.status_code != 200:
+            return {
+                "success": False,
+                "message": f"Bulk field fetch failed ({bulk_resp.status_code})",
+                "count": 0,
+                "changes": []
+            }
+
+        items_by_id = {}
+        for item in bulk_resp.json().get("value", []):
+            if not isinstance(item, dict):
+                continue
+            fields = item.get("fields", {})
+            assigned_raw = fields.get("System.AssignedTo")
+            items_by_id[item["id"]] = {
+                "id": item["id"],
+                "title": fields.get("System.Title", ""),
+                "type": fields.get("System.WorkItemType", ""),
+                "new_state": fields.get("System.State", ""),
+                "prev_state": None,
+                "changed_at": fields.get("Microsoft.VSTS.Common.StateChangeDate"),
+                "assigned_to": (
+                    assigned_raw.get("displayName")
+                    if isinstance(assigned_raw, dict)
+                    else None
+                ),
+            }
+
+        # ── Step 3: Fetch update history to extract previous state ──────────────
+        for wid in ids:
+            try:
+                upd_url = (
+                    f"{base_url}/{collection}/_apis/wit/workitems/{wid}/updates"
+                    f"?api-version={API_VERSION}"
+                )
+                upd_resp = requests.get(
+                    upd_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=8
+                )
+                if upd_resp.status_code != 200:
+                    continue
+
+                updates = upd_resp.json().get("value", [])
+                # Walk updates newest-first to find the last state transition
+                for upd in reversed(updates):
+                    fields_changed = upd.get("fields", {})
+                    state_change = fields_changed.get("System.State")
+                    if state_change and "oldValue" in state_change:
+                        items_by_id[wid]["prev_state"] = state_change["oldValue"]
+                        break
+            except Exception:
+                pass  # History fetch is best-effort; silently skip on error
+
+        # ── Step 4: Build ordered result list ──────────────────────────────────
+        changes = sorted(
+            items_by_id.values(),
+            key=lambda x: x["changed_at"] or "",
+            reverse=True,
+        )
+
+        return {"success": True, "count": len(changes), "changes": changes}
+
+    except Exception as exc:
+        return {
+            "success": False,
+            "message": f"Failed to fetch recent state changes: {str(exc)}",
+            "count": 0,
+            "changes": []
+        }

@@ -9,6 +9,7 @@ import { FrontendCacheService } from '../frontend-cache.service';
 })
 export class BoardsApiService {
   private baseUrl = 'http://127.0.0.1:8000/api/projects';
+  private boardsUrl = 'http://127.0.0.1:8000/api/boards';
 
   constructor(
     private http: HttpClient,
@@ -23,6 +24,19 @@ export class BoardsApiService {
     }
     return this.http.get<any>(`${this.baseUrl}/${projectName}/workitems`).pipe(
       tap(data => this.cache.set(cacheKey, data))
+    );
+  }
+
+  getRecentChanges(projectName: string, days = 30, limit = 25): Observable<any> {
+    const cacheKey = `boards:recent-changes:${projectName}:${days}:${limit}`;
+    const cachedData = this.cache.get(cacheKey);
+    if (cachedData) {
+      return of(cachedData);
+    }
+    return this.http.get<any>(
+      `${this.boardsUrl}/${projectName}/recent-changes?days=${days}&limit=${limit}`
+    ).pipe(
+      tap(data => this.cache.set(cacheKey, data, 3 * 60 * 1000)) // 3-min TTL for activity feed
     );
   }
 }

@@ -18,6 +18,11 @@ export class BoardsComponent implements OnInit {
   isLoadingWorkItems = false;
   workItemsError: string | null = null;
 
+  // Recent state-change activity feed
+  recentChanges: any[] = [];
+  isLoadingChanges = false;
+  changesError: string | null = null;
+
   selectedBoardProject = '';
   boardFilterSprint = '';
   boardFilterType = '';
@@ -99,11 +104,35 @@ export class BoardsComponent implements OnInit {
     });
   }
 
+  loadRecentChanges(projName: string) {
+    this.isLoadingChanges = true;
+    this.changesError = null;
+    this.boardsApi.getRecentChanges(projName).subscribe({
+      next: (res: any) => {
+        if (res && res.success) {
+          this.recentChanges = res.changes || [];
+        } else {
+          this.recentChanges = [];
+          this.changesError = res?.message || 'Could not load recent changes.';
+        }
+        this.isLoadingChanges = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn(`Could not load recent changes for project ${projName}`, err);
+        this.recentChanges = [];
+        this.changesError = err.error?.detail || err.message || 'Failed to load recent changes.';
+        this.isLoadingChanges = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   onBoardProjectChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     const projName = select.value;
     this.selectedBoardProject = projName;
-    
+
     // Reset filters on project change
     this.boardFilterSprint = '';
     this.boardFilterType = '';
@@ -114,9 +143,11 @@ export class BoardsComponent implements OnInit {
     if (!projName) {
       this.workItems = [];
       this.workItemSprints = [];
+      this.recentChanges = [];
       return;
     }
     this.loadWorkItems(projName);
+    this.loadRecentChanges(projName);
   }
 
   get filteredWorkItems(): any[] {
@@ -162,5 +193,30 @@ export class BoardsComponent implements OnInit {
 
   isSprintCollapsed(sprint: string): boolean {
     return this.collapsedSprints.has(sprint);
+  }
+
+  /** Format an ISO timestamp to a human-friendly local date-time string. */
+  formatChangedAt(iso: string | null): string {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    } catch {
+      return iso;
+    }
+  }
+
+  /** State → badge colour map. */
+  stateColor(state: string | null): { bg: string; fg: string } {
+    if (!state) return { bg: '#f1f5f9', fg: '#475569' };
+    const s = state.toLowerCase();
+    if (s === 'done' || s === 'closed' || s === 'resolved') return { bg: '#dcfce7', fg: '#15803d' };
+    if (s === 'active' || s === 'in progress' || s === 'committed') return { bg: '#dbeafe', fg: '#1d4ed8' };
+    if (s === 'new' || s === 'proposed') return { bg: '#fef9c3', fg: '#854d0e' };
+    if (s === 'removed' || s === 'cancelled') return { bg: '#fee2e2', fg: '#b91c1c' };
+    return { bg: '#f1f5f9', fg: '#475569' };
   }
 }
