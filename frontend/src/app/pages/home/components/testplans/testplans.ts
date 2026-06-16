@@ -15,7 +15,6 @@ export class TestplansComponent implements OnInit {
 
   projects: any[] = [];
   testPlans: any[] = [];
-  selectedTestPlanProject = '';
   isLoadingTestPlans = false;
   testPlansError: string | null = null;
   testPlanSearch = '';
@@ -39,6 +38,9 @@ export class TestplansComponent implements OnInit {
 
   ngOnInit() {
     this.loadProjects();
+    if (this.dashboardService.selectedProject) {
+      this.loadTestPlans(this.dashboardService.selectedProject.name);
+    }
   }
 
   loadProjects() {
@@ -83,15 +85,14 @@ export class TestplansComponent implements OnInit {
     });
   }
 
-  onTestPlanProjectChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const projName = select.value;
-    this.selectedTestPlanProject = projName;
+  selectProject(project: any) {
+    this.dashboardService.selectedProject = project;
+    this.loadTestPlans(project.name);
+  }
 
-    if (!projName) {
-      this.testPlans = [];
-      return;
-    }
-    this.loadTestPlans(projName);
+  changeProject() {
+    this.dashboardService.selectedProject = null;
+    this.testPlans = [];
+    this.testPlansError = null;
   }
 }

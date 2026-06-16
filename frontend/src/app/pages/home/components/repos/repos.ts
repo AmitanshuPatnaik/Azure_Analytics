@@ -14,7 +14,6 @@ export class ReposComponent implements OnInit {
 
   projects: any[] = [];
   repositories: any[] = [];
-  selectedProjectFilter = '';
   reposError: string | null = null;
 
   constructor(
@@ -68,15 +67,19 @@ export class ReposComponent implements OnInit {
     });
   }
 
-  onProjectFilterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.selectedProjectFilter = select.value;
+  selectProject(project: any) {
+    this.dashboardService.selectedProject = project;
+  }
+
+  changeProject() {
+    this.dashboardService.selectedProject = null;
+    this.reposError = null;
   }
 
   get filteredRepositories() {
-    if (!this.selectedProjectFilter) {
-      return this.repositories;
+    if (!this.dashboardService.selectedProject) {
+      return [];
     }
-    return this.repositories.filter(r => r.project === this.selectedProjectFilter);
+    return this.repositories.filter(r => r.project === this.dashboardService.selectedProject.name);
   }
 }

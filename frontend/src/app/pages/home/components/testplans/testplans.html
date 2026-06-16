@@ -1,72 +1,84 @@
-<!-- Header + UTC badge + project selector -->
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-  <h1 class="page-title-centered" style="margin:0; font-size:22px;">Test Plans</h1>
-  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-    <span class="utc-badge">All timings are in UTC</span>
-    <div>
-      <label for="testplan-proj" style="margin-right:8px; font-size:13px; color:#64748b;">Select Project:</label>
-      <select id="testplan-proj" class="month-dropdown" style="width:auto; font-size:13px;"
-        [value]="selectedTestPlanProject" (change)="onTestPlanProjectChange($event)">
-        <option value="">Select Project</option>
-        @for (proj of projects; track proj.id) {
-        <option [value]="proj.name">{{ proj.name }}</option>
-        }
-      </select>
-    </div>
-  </div>
-</div>
-
-@if (testPlansError) {
-<div class="error-banner">Could not load test plans: {{ testPlansError }}</div>
-} @else if (!selectedTestPlanProject) {
-<div class="material-card" style="text-align:center; padding:40px;">
-  <p style="color:#6b7280; font-size:15px;">Please select a project to view test plans.</p>
-</div>
-} @else if (isLoadingTestPlans) {
-<div class="material-card">
-  @for (_ of [1,2,3,4,5]; track $index) {
-  <div class="skeleton skeleton-row"></div>
-  }
-</div>
-} @else {
-<div class="material-card" style="padding:0; overflow:hidden;">
-  <!-- Search filter (C) -->
-  <div style="padding:14px 18px; border-bottom:1px solid #f1f5f9;">
-    <input class="filter-search" type="text" [(ngModel)]="testPlanSearch"
-      placeholder="Search by name, owner, or state…" style="margin:0;" />
+@if (!dashboardService.selectedProject) {
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <h1 style="margin:0; font-size:22px;">Test Plans</h1>
   </div>
 
-  <table style="margin-top:0; border-radius:0;">
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Owner</th>
-      <th>State</th>
-      <th>Start Date</th>
-      <th>End Date</th>
-    </tr>
-    @for (plan of filteredTestPlans; track plan.id || $index) {
-    <tr>
-      <td><span class="badge-cyan">{{ plan.id }}</span></td>
-      <td>{{ plan.name }}</td>
-      <td style="color:#64748b; font-size:13px;">{{ plan.owner }}</td>
-      <td>
-        <span [class]="plan.state === 'Active' || plan.state === 'InProgress'
-                       ? 'badge-green' : plan.state === 'Inactive' || plan.state === 'Closed'
-                       ? 'badge-red' : 'badge-amber'">
-          {{ plan.state }}
-        </span>
-      </td>
-      <td style="font-size:13px; color:#64748b;">{{ plan.startDate || 'N/A' }}</td>
-      <td style="font-size:13px; color:#64748b;">{{ plan.endDate || 'N/A' }}</td>
-    </tr>
+  <div class="cards">
+    @for (project of projects; track project.id || $index) {
+      <div class="card">
+        <h3>{{ project.name }}</h3>
+        <hr>
+        <p><strong>State:</strong> {{ project.state || 'Active' }}</p>
+        <p><strong>Visibility:</strong> {{ project.visibility || 'Private' }}</p>
+        <button (click)="selectProject(project)">View Test Plans</button>
+      </div>
     } @empty {
-    <tr>
-      <td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">
-        No test plans found for this project.
-      </td>
-    </tr>
+      <div class="card" style="grid-column: span 3; text-align: center;">
+        <p>No projects found.</p>
+      </div>
     }
-  </table>
-</div>
+  </div>
+} @else {
+  <!-- Header + UTC badge + project selector -->
+  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button (click)="changeProject()"
+        style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: #475569; transition: background 0.15s;">
+        ← Back to Test Plans
+      </button>
+      <h1 style="margin: 0; font-size: 24px; color: #1e293b;">{{ dashboardService.selectedProject.name }}</h1>
+    </div>
+    <span class="utc-badge">All timings are in UTC</span>
+  </div>
+
+  @if (testPlansError) {
+    <div class="error-banner">Could not load test plans: {{ testPlansError }}</div>
+  } @else if (isLoadingTestPlans) {
+    <div class="material-card">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else {
+    <div class="material-card" style="padding:0; overflow:hidden;">
+      <!-- Search filter (C) -->
+      <div style="padding:14px 18px; border-bottom:1px solid #f1f5f9;">
+        <input class="filter-search" type="text" [(ngModel)]="testPlanSearch"
+          placeholder="Search by name, owner, or state…" style="margin:0;" />
+      </div>
+
+      <table style="margin-top:0; border-radius:0;">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Owner</th>
+          <th>State</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+        </tr>
+        @for (plan of filteredTestPlans; track plan.id || $index) {
+          <tr>
+            <td><span class="badge-cyan">{{ plan.id }}</span></td>
+            <td>{{ plan.name }}</td>
+            <td style="color:#64748b; font-size:13px;">{{ plan.owner }}</td>
+            <td>
+              <span [class]="plan.state === 'Active' || plan.state === 'InProgress'
+                             ? 'badge-green' : plan.state === 'Inactive' || plan.state === 'Closed'
+                             ? 'badge-red' : 'badge-amber'">
+                {{ plan.state }}
+              </span>
+            </td>
+            <td style="font-size:13px; color:#64748b;">{{ plan.startDate || 'N/A' }}</td>
+            <td style="font-size:13px; color:#64748b;">{{ plan.endDate || 'N/A' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">
+              No test plans found for this project.
+            </td>
+          </tr>
+        }
+      </table>
+    </div>
+  }
 }

@@ -15,7 +15,6 @@ export class PipelinesComponent implements OnInit {
 
   projects: any[] = [];
   pipelines: any[] = [];
-  selectedPipelineProject = '';
   isLoadingPipelines = false;
   pipelinesError: string | null = null;
   pipelineSearch = '';
@@ -38,6 +37,9 @@ export class PipelinesComponent implements OnInit {
 
   ngOnInit() {
     this.loadProjects();
+    if (this.dashboardService.selectedProject) {
+      this.loadPipelines(this.dashboardService.selectedProject.name);
+    }
   }
 
   loadProjects() {
@@ -82,15 +84,14 @@ export class PipelinesComponent implements OnInit {
     });
   }
 
-  onPipelineProjectChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const projName = select.value;
-    this.selectedPipelineProject = projName;
+  selectProject(project: any) {
+    this.dashboardService.selectedProject = project;
+    this.loadPipelines(project.name);
+  }
 
-    if (!projName) {
-      this.pipelines = [];
-      return;
-    }
-    this.loadPipelines(projName);
+  changeProject() {
+    this.dashboardService.selectedProject = null;
+    this.pipelines = [];
+    this.pipelinesError = null;
   }
 }

@@ -1,35 +1,40 @@
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- Header row: title + project selector                                   -->
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="tab-header"
-  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-  <h1 style="margin: 0;">Boards</h1>
-  <div>
-    <label for="board-proj" style="margin-right: 10px;">Select Project:</label>
-    <select id="board-proj" class="month-dropdown" style="width: auto;" [value]="selectedBoardProject"
-      (change)="onBoardProjectChange($event)">
-      <option value="">Select Project</option>
-      @for (proj of projects; track proj.id) {
-      <option [value]="proj.name">{{ proj.name }}</option>
-      }
-    </select>
+@if (!dashboardService.selectedProject) {
+  <div class="tab-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h1 style="margin: 0;">Boards</h1>
   </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- State: nothing selected yet                                            -->
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-@if (!selectedBoardProject) {
-<div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
-  <p style="color: #6b7280; font-size: 16px;">Please select a project to view work items.</p>
-</div>
-} @else if (workItemsError) {
-<div class="error-banner">Could not load work items: {{ workItemsError }}</div>
-} @else if (isLoadingWorkItems) {
-<div style="text-align: center; padding: 40px;">
-  <p>Loading work items…</p>
-</div>
+  <div class="cards">
+    @for (project of projects; track project.id || $index) {
+      <div class="card">
+        <h3>{{ project.name }}</h3>
+        <hr>
+        <p><strong>State:</strong> {{ project.state || 'Active' }}</p>
+        <p><strong>Visibility:</strong> {{ project.visibility || 'Private' }}</p>
+        <button (click)="selectProject(project)">View Boards</button>
+      </div>
+    } @empty {
+      <div class="card" style="grid-column: span 3; text-align: center;">
+        <p>No projects found.</p>
+      </div>
+    }
+  </div>
 } @else {
+  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
+    <button (click)="changeProject()"
+      style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: #475569; transition: background 0.15s;">
+      ← Back to Boards
+    </button>
+    <h1 style="margin: 0; font-size: 24px; color: #1e293b;">{{ dashboardService.selectedProject.name }}</h1>
+  </div>
+
+  @if (workItemsError) {
+    <div class="error-banner">Could not load work items: {{ workItemsError }}</div>
+  } @else if (isLoadingWorkItems) {
+    <div style="text-align: center; padding: 40px;">
+      <p>Loading work items…</p>
+    </div>
+  } @else {
 
 
 <!-- Two-column layout: [Sprint Board] | [Recent State Changes]            -->
@@ -270,4 +275,5 @@
 </div>
 <!-- end two-column grid -->
 
+}
 }

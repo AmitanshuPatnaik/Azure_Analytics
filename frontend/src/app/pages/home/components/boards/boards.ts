@@ -24,7 +24,6 @@ export class BoardsComponent implements OnInit {
   isLoadingChanges = false;
   changesError: string | null = null;
 
-  selectedBoardProject = '';
   boardFilterSprint = '';
   boardFilterType = '';
   boardFilterState = '';
@@ -40,6 +39,10 @@ export class BoardsComponent implements OnInit {
 
   ngOnInit() {
     this.loadProjects();
+    if (this.dashboardService.selectedProject) {
+      this.loadWorkItems(this.dashboardService.selectedProject.name);
+      this.loadRecentChanges(this.dashboardService.selectedProject.name);
+    }
   }
 
   loadProjects() {
@@ -129,26 +132,19 @@ export class BoardsComponent implements OnInit {
     });
   }
 
-  onBoardProjectChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const projName = select.value;
-    this.selectedBoardProject = projName;
+  selectProject(project: any) {
+    this.dashboardService.selectedProject = project;
+    this.loadWorkItems(project.name);
+    this.loadRecentChanges(project.name);
+  }
 
-    // Reset filters on project change
-    this.boardFilterSprint = '';
-    this.boardFilterType = '';
-    this.boardFilterState = '';
-    this.boardFilterAssigned = '';
-    this.collapsedSprints = new Set();
-
-    if (!projName) {
-      this.workItems = [];
-      this.workItemSprints = [];
-      this.recentChanges = [];
-      return;
-    }
-    this.loadWorkItems(projName);
-    this.loadRecentChanges(projName);
+  changeProject() {
+    this.dashboardService.selectedProject = null;
+    this.workItems = [];
+    this.workItemSprints = [];
+    this.recentChanges = [];
+    this.workItemsError = null;
+    this.changesError = null;
   }
 
   get filteredWorkItems(): any[] {
