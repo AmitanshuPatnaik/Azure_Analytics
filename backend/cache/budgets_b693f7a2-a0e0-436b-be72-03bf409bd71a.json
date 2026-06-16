@@ -1,6 +1,6 @@
 {
-  "fetched_at": 1781526447.8706555,
-  "expires_at": 1781533647.8706555,
+  "fetched_at": 1781587922.5117254,
+  "expires_at": 1781595122.5117254,
   "data": {
     "success": true,
     "budgets": [
@@ -10,6 +10,6 @@
         "timeGrain": "Monthly"
       }
     ],
-    "fetchedAtUtc": "2026-06-15T12:27:27Z"
+    "fetchedAtUtc": "2026-06-16T05:32:02Z"
   }
 }

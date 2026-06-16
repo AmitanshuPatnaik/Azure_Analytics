@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781528030.9164875,
-  "expires_at": 1781535230.9164875,
+  "fetched_at": 1781588024.4157357,
+  "expires_at": 1781595224.4157357,
   "data": {
-    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/608aed50-fc33-4c1a-83ef-b00952f504a4",
-    "name": "608aed50-fc33-4c1a-83ef-b00952f504a4",
+    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/4e421445-6e7e-45b2-bfd9-22e71272ab2a",
+    "name": "4e421445-6e7e-45b2-bfd9-22e71272ab2a",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,7 +26,7 @@
       ],
       "rows": [
         [
-          0.0371795792715001,
+          0.0386100003307501,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-integrenotify-rg/providers/microsoft.storage/storageaccounts/integreqa8integrenotify",
           "INR"
         ],
@@ -36,7 +36,7 @@
           "INR"
         ],
         [
-          0.00796243895550002,
+          0.00840479667525002,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-integreportal-rg/providers/microsoft.storage/storageaccounts/integreqa8integreportal",
           "INR"
         ],
@@ -46,32 +46,32 @@
           "INR"
         ],
         [
-          288.948766837501,
+          304.201194412501,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-integreshared-rg/providers/microsoft.sql/servers/integre-qa-integrelity-mssqlhost/databases/integre-qa-integrenotify-mssqldb",
           "INR"
         ],
         [
-          868.461542066253,
+          914.304086808754,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-integreshared-rg/providers/microsoft.sql/servers/integre-qa-integrelity-mssqlhost/databases/integre-qa-vyomaapi-mssqldb",
           "INR"
         ],
         [
-          288.948766837501,
+          304.201194412501,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-integreshared-rg/providers/microsoft.sql/servers/integre-qa-integrelity-mssqlhost/databases/integre-qa-vyomascheduler-mssqldb",
           "INR"
         ],
         [
-          0.0103807224,
+          0.010794114,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-integrestore-rg/providers/microsoft.storage/storageaccounts/integreqa8intgstore",
           "INR"
         ],
         [
-          1.69561177065,
+          1.78459431255001,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-vyomaapi-rg/providers/microsoft.storage/storageaccounts/integreqa8vyomaapi",
           "INR"
         ],
         [
-          719.990370000002,
+          757.884600000002,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-vyomaapi-rg/providers/microsoft.web/serverfarms/integre-qa-vyomaapi-appsvcplan",
           "INR"
         ],
@@ -81,17 +81,17 @@
           "INR"
         ],
         [
-          0.125775104816813,
+          0.1320088563675,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-vyomaportal-rg/providers/microsoft.storage/storageaccounts/integreqa8vyomaportal",
           "INR"
         ],
         [
-          0.0137452707,
+          0.014468706,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-vyomascheduler-rg/providers/microsoft.storage/storageaccounts/integreqa8vyomascheduler",
           "INR"
         ],
         [
-          719.990370000002,
+          757.884600000002,
           "/subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/resourcegroups/integre-qa-vyomascheduler-rg/providers/microsoft.web/serverfarms/integre-qa-vyomascheduler-fun-appsvcplan",
           "INR"
         ],

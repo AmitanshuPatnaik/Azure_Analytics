@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781527966.9599118,
-  "expires_at": 1781535166.9599118,
+  "fetched_at": 1781587998.2381175,
+  "expires_at": 1781595198.2381175,
   "data": {
-    "id": "subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/providers/Microsoft.CostManagement/query/961e3a18-206a-46ab-9251-b2fdb34cd505",
-    "name": "961e3a18-206a-46ab-9251-b2fdb34cd505",
+    "id": "subscriptions/cc5db5d6-fd84-458f-bebb-c5cfc61e4210/providers/Microsoft.CostManagement/query/945a3e83-bcdd-49f7-9b8a-0e567809a8bf",
+    "name": "945a3e83-bcdd-49f7-9b8a-0e567809a8bf",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,92 +26,92 @@
       ],
       "rows": [
         [
-          441.167592127501,
+          464.319244192501,
           "$system",
           "INR"
         ],
         [
-          539.198726876552,
+          576.065690233652,
           "certificates-integrelity-com-rg",
           "INR"
         ],
         [
-          28.824452045613,
+          30.4605999411291,
           "dnszone-integrelity-com-rg",
           "INR"
         ],
         [
-          3.93137475687226,
+          4.07020731622989,
           "integre-prod-integrenotify-rg",
           "INR"
         ],
         [
-          0.309399555505501,
+          0.327296225225251,
           "integre-prod-integreportal-rg",
           "INR"
         ],
         [
-          3761.30455037543,
+          4142.33851465359,
           "integre-prod-integresentinel-rg",
           "INR"
         ],
         [
-          21158.269096309,
+          22278.3317464298,
           "integre-prod-integreshared-rg",
           "INR"
         ],
         [
-          34.5023835005251,
+          36.3962538634501,
           "integre-prod-integrestore-rg",
           "INR"
         ],
         [
-          1477.57363370507,
+          1556.48953419079,
           "integre-prod-vyomaapi-rg",
           "INR"
         ],
         [
-          0.391399956343126,
+          0.419100136087501,
           "integre-prod-vyomaportal-rg",
           "INR"
         ],
         [
-          781.915091028078,
+          823.061880395328,
           "integre-prod-vyomascheduler-rg",
           "INR"
         ],
         [
-          0.243004931583751,
+          0.255794664825001,
           "integre-uat-integrenotify-rg",
           "INR"
         ],
         [
-          0.104854353535125,
+          0.1140355082475,
           "integre-uat-integreportal-rg",
           "INR"
         ],
         [
-          4599.10073609866,
+          4847.82055846539,
           "integre-uat-integreshared-rg",
           "INR"
         ],
         [
-          0.169364241900001,
+          0.177758388000001,
           "integre-uat-integrestore-rg",
           "INR"
         ],
         [
-          727.584189962402,
+          765.876929464802,
           "integre-uat-vyomaapi-rg",
           "INR"
         ],
         [
-          3.69610255918239,
+          4.99333129224808,
           "integre-uat-vyomaportal-rg",
           "INR"
         ],
         [
-          720.167611648502,
+          758.070626220002,
           "integre-uat-vyomascheduler-rg",
           "INR"
         ]

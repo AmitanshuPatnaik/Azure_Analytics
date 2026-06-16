@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781587883.4127636,
-  "expires_at": 1781595083.4127636,
+  "fetched_at": 1781588059.181247,
+  "expires_at": 1782192859.181247,
   "data": {
-    "id": "subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/providers/Microsoft.CostManagement/query/e8e551a3-2f00-48a9-83ef-6d46789006e9",
-    "name": "e8e551a3-2f00-48a9-83ef-6d46789006e9",
+    "id": "subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/providers/Microsoft.CostManagement/query/31451dd8-6e42-4856-a1b2-7fcc5ca989ff",
+    "name": "31451dd8-6e42-4856-a1b2-7fcc5ca989ff",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,28 +26,38 @@
       ],
       "rows": [
         [
-          4340.61180000001,
+          39373.6473550021,
           "Azure App Service",
           "INR"
         ],
         [
-          277.816935483794,
+          100.5666142168096,
+          "Azure DNS",
+          "INR"
+        ],
+        [
+          803.164597572279,
           "Backup",
           "INR"
         ],
         [
-          0.00466979400000001,
+          0.01084527499999999,
           "Bandwidth",
           "INR"
         ],
         [
-          478.274941168922,
+          2231.83895524443,
           "Container Registry",
           "INR"
         ],
         [
-          0.00564585750000002,
+          426.71268323545144,
           "Foundry Models",
+          "INR"
+        ],
+        [
+          0.0,
+          "Functions",
           "INR"
         ],
         [
@@ -56,23 +66,28 @@
           "INR"
         ],
         [
-          2399.80295802751,
+          15517.5624511909,
           "SQL Database",
           "INR"
         ],
         [
-          2062.68764,
+          5931.67432,
           "SaaS",
           "INR"
         ],
         [
-          464.319244192501,
+          1855.841187098521,
           "Service Bus",
           "INR"
         ],
         [
-          421.508124387404,
+          6822.91062042902,
           "Storage",
+          "INR"
+        ],
+        [
+          2876.269746167109,
+          "Virtual Network",
           "INR"
         ]
       ]

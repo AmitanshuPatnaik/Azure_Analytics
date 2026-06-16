@@ -39,12 +39,6 @@ export class TestplansComponent implements OnInit {
           projs = res.projects;
         }
         this.projects = projs || [];
-        
-        // Auto-select first project if none is selected
-        if (this.projects.length > 0 && !this.selectedTestPlanProject) {
-          this.selectedTestPlanProject = this.projects[0].name;
-          this.loadTestPlans(this.selectedTestPlanProject);
-        }
         this.cdr.detectChanges();
       },
       error: (err) => {

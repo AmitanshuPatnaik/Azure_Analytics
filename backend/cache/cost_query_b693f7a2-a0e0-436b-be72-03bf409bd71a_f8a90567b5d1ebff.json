@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781526438.9765475,
-  "expires_at": 1781533638.9765475,
+  "fetched_at": 1781587904.2315083,
+  "expires_at": 1781595104.2315083,
   "data": {
-    "id": "subscriptions/b693f7a2-a0e0-436b-be72-03bf409bd71a/providers/Microsoft.CostManagement/query/6b938eb0-990d-48ff-8457-e73d1d1d7d4e",
-    "name": "6b938eb0-990d-48ff-8457-e73d1d1d7d4e",
+    "id": "subscriptions/b693f7a2-a0e0-436b-be72-03bf409bd71a/providers/Microsoft.CostManagement/query/947f89d0-ccde-4d9f-8637-28719307c2c7",
+    "name": "947f89d0-ccde-4d9f-8637-28719307c2c7",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,7 +26,7 @@
       ],
       "rows": [
         [
-          22.7309367990001,
+          24.0585803061291,
           "dnszone-aidocflo-com-rg",
           "INR"
         ]

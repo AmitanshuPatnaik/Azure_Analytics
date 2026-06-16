@@ -46,12 +46,6 @@ export class BoardsComponent implements OnInit {
           projs = res.projects;
         }
         this.projects = projs || [];
-        
-        // Auto-select first project if none is selected
-        if (this.projects.length > 0 && !this.selectedBoardProject) {
-          this.selectedBoardProject = this.projects[0].name;
-          this.loadWorkItems(this.selectedBoardProject);
-        }
         this.cdr.detectChanges();
       },
       error: (err) => {

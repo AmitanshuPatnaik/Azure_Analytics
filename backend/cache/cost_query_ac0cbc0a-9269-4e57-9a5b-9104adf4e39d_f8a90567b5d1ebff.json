@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781526601.5871744,
-  "expires_at": 1781533801.5871744,
+  "fetched_at": 1781587953.3962758,
+  "expires_at": 1781595153.3962758,
   "data": {
-    "id": "subscriptions/ac0cbc0a-9269-4e57-9a5b-9104adf4e39d/providers/Microsoft.CostManagement/query/057c3b9c-614b-45c9-bc64-d2e1b5553611",
-    "name": "057c3b9c-614b-45c9-bc64-d2e1b5553611",
+    "id": "subscriptions/ac0cbc0a-9269-4e57-9a5b-9104adf4e39d/providers/Microsoft.CostManagement/query/a3a0ce16-bc51-4c77-bb69-c3b81221b812",
+    "name": "a3a0ce16-bc51-4c77-bb69-c3b81221b812",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,122 +26,122 @@
       ],
       "rows": [
         [
-          438.595186342501,
+          464.319244192501,
           "$system",
           "INR"
         ],
         [
-          4103.33872600448,
+          4342.35843918371,
           "aitf-prod-appapi-rg",
           "INR"
         ],
         [
-          1.92487278558263,
+          2.01290299572263,
           "aitf-prod-appportal-rg",
           "INR"
         ],
         [
-          4187.52713876919,
+          4436.04210780353,
           "aitf-prod-faceapi-rg",
           "INR"
         ],
         [
-          1492.97927611118,
+          1580.79093893505,
           "aitf-prod-faceworker-rg",
           "INR"
         ],
         [
-          6.13554849766374,
+          13.486994524825,
           "aitf-prod-integresentinel-rg",
           "INR"
         ],
         [
-          5.13055764581627,
+          5.53605791595752,
           "aitf-prod-notification-rg",
           "INR"
         ],
         [
-          0.509892847556064,
+          0.566862468352314,
           "aitf-prod-portal-rg",
           "INR"
         ],
         [
-          1512.03195410117,
+          1601.40486034936,
           "aitf-prod-scheduler-rg",
           "INR"
         ],
         [
-          14546.3211344512,
+          15398.8113979176,
           "aitf-prod-shared-rg",
           "INR"
         ],
         [
-          75.5481912614845,
+          86.0888730435303,
           "aitf-prod-timeflowstore-rg",
           "INR"
         ],
         [
-          1071.09654566243,
+          1133.96395743113,
           "aitf-uat-appapi-rg",
           "INR"
         ],
         [
-          2.73881373629738,
+          2.85010947257738,
           "aitf-uat-appportal-rg",
           "INR"
         ],
         [
-          1591.80624927795,
+          1686.19348290837,
           "aitf-uat-faceapi-rg",
           "INR"
         ],
         [
-          777.061616231252,
+          822.760253807628,
           "aitf-uat-faceworker-rg",
           "INR"
         ],
         [
-          4.63836476774004,
+          7.83746980975982,
           "aitf-uat-integresentinel-rg",
           "INR"
         ],
         [
-          5.93683388804308,
+          6.19871043324433,
           "aitf-uat-notification-rg",
           "INR"
         ],
         [
-          0.0488198422411876,
+          0.0563234260899377,
           "aitf-uat-portal-rg",
           "INR"
         ],
         [
-          802.184516514187,
+          849.834561291577,
           "aitf-uat-scheduler-rg",
           "INR"
         ],
         [
-          1563.30826808198,
+          1656.56167360294,
           "aitf-uat-shared-rg",
           "INR"
         ],
         [
-          294.703741155556,
+          351.778653175096,
           "aitf-uat-timeflowstore-rg",
           "INR"
         ],
         [
-          4.92287827332579,
+          7.10383417920542,
           "defaultresourcegroup-uaenorth",
           "INR"
         ],
         [
-          29.2725526530001,
+          30.9617224251291,
           "dnszone-aitimeflow-com-rg",
           "INR"
         ],
         [
-          21.9328613490001,
+          23.2190508651291,
           "dnszone-transfora-com-rg",
           "INR"
         ]

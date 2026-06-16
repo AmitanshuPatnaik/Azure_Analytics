@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781587883.4127636,
-  "expires_at": 1781595083.4127636,
+  "fetched_at": 1781587978.8026628,
+  "expires_at": 1782192778.8026628,
   "data": {
-    "id": "subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/providers/Microsoft.CostManagement/query/e8e551a3-2f00-48a9-83ef-6d46789006e9",
-    "name": "e8e551a3-2f00-48a9-83ef-6d46789006e9",
+    "id": "subscriptions/7f506a8d-6e18-401b-aa4a-76c8701da081/providers/Microsoft.CostManagement/query/dfaeb6cd-9d63-4f3b-92fe-7b14238d2648",
+    "name": "dfaeb6cd-9d63-4f3b-92fe-7b14238d2648",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,22 +26,22 @@
       ],
       "rows": [
         [
-          4340.61180000001,
+          6739.9331317994,
           "Azure App Service",
           "INR"
         ],
         [
-          277.816935483794,
+          424.214999999881,
           "Backup",
           "INR"
         ],
         [
-          0.00466979400000001,
+          0.00614475450000001,
           "Bandwidth",
           "INR"
         ],
         [
-          478.274941168922,
+          730.306105402104,
           "Container Registry",
           "INR"
         ],
@@ -56,22 +56,22 @@
           "INR"
         ],
         [
-          2399.80295802751,
+          9656.62718618199,
           "SQL Database",
           "INR"
         ],
         [
-          2062.68764,
+          3130.4221,
           "SaaS",
           "INR"
         ],
         [
-          464.319244192501,
+          707.03235306,
           "Service Bus",
           "INR"
         ],
         [
-          421.508124387404,
+          604.257525973197,
           "Storage",
           "INR"
         ]

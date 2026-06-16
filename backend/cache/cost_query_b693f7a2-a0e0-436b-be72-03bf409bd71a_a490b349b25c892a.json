@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781526443.2266698,
-  "expires_at": 1781533643.2266698,
+  "fetched_at": 1781587908.1236777,
+  "expires_at": 1781595108.1236777,
   "data": {
-    "id": "subscriptions/b693f7a2-a0e0-436b-be72-03bf409bd71a/providers/Microsoft.CostManagement/query/08329287-ddea-4de1-9721-4156c388cdef",
-    "name": "08329287-ddea-4de1-9721-4156c388cdef",
+    "id": "subscriptions/b693f7a2-a0e0-436b-be72-03bf409bd71a/providers/Microsoft.CostManagement/query/fcacda81-d044-4f32-b6d1-e4ee2a6c9b47",
+    "name": "fcacda81-d044-4f32-b6d1-e4ee2a6c9b47",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,7 +26,7 @@
       ],
       "rows": [
         [
-          22.7309367990001,
+          24.0585803061291,
           "Azure DNS",
           "INR"
         ]

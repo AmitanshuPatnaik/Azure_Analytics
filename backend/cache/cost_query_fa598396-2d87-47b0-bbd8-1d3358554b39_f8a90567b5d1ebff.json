@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781526679.5213711,
-  "expires_at": 1781533879.5213711,
+  "fetched_at": 1781587969.3256311,
+  "expires_at": 1781595169.3256311,
   "data": {
-    "id": "subscriptions/fa598396-2d87-47b0-bbd8-1d3358554b39/providers/Microsoft.CostManagement/query/9107733d-4452-4763-83ec-073fcbdef1a8",
-    "name": "9107733d-4452-4763-83ec-073fcbdef1a8",
+    "id": "subscriptions/fa598396-2d87-47b0-bbd8-1d3358554b39/providers/Microsoft.CostManagement/query/6645a93f-c6f4-4189-bdde-66319b5b9658",
+    "name": "6645a93f-c6f4-4189-bdde-66319b5b9658",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,42 +26,42 @@
       ],
       "rows": [
         [
-          438.595186342501,
+          464.319244192501,
           "$system",
           "INR"
         ],
         [
-          291.749284404001,
+          309.032680029751,
           "aitf-dev-appapi-rg",
           "INR"
         ],
         [
-          0.0296976673816876,
+          0.0313804678404376,
           "aitf-dev-appportal-rg",
           "INR"
         ],
         [
-          1311.53770120221,
+          1400.76588479279,
           "aitf-dev-faceapi-rg",
           "INR"
         ],
         [
-          715.780732524752,
+          757.885432524752,
           "aitf-dev-faceworker-rg",
           "INR"
         ],
         [
-          0.248030749530001,
+          0.262620793620001,
           "aitf-dev-notification-rg",
           "INR"
         ],
         [
-          0.0181490395500001,
+          0.0182409043500001,
           "aitf-dev-portal-rg",
           "INR"
         ],
         [
-          715.779900000002,
+          757.884600000002,
           "aitf-dev-scheduler-rg",
           "INR"
         ],
@@ -71,42 +71,42 @@
           "INR"
         ],
         [
-          39.5105653190251,
+          43.0042956232501,
           "aitf-dev-timeflowstore-rg",
           "INR"
         ],
         [
-          290.676569995767,
+          306.86908987007,
           "aitf-qa-appapi-rg",
           "INR"
         ],
         [
-          0.0189654807830626,
+          0.0200131701193126,
           "aitf-qa-appportal-rg",
           "INR"
         ],
         [
-          721.719445696272,
+          764.159863119867,
           "aitf-qa-faceapi-rg",
           "INR"
         ],
         [
-          715.779900000002,
+          757.884600000002,
           "aitf-qa-faceworker-rg",
           "INR"
         ],
         [
-          1.274481058851,
+          1.349230681071,
           "aitf-qa-notification-rg",
           "INR"
         ],
         [
-          0.0128088406411875,
+          0.0135603616899375,
           "aitf-qa-portal-rg",
           "INR"
         ],
         [
-          718.778068320017,
+          761.05865263739,
           "aitf-qa-scheduler-rg",
           "INR"
         ],
@@ -116,12 +116,12 @@
           "INR"
         ],
         [
-          3.67139584179226,
+          3.93508934833726,
           "aitf-qa-timeflowstore-rg",
           "INR"
         ],
         [
-          715.779900000002,
+          757.884600000002,
           "aitf-test-face-worker-rg",
           "INR"
         ],
@@ -131,7 +131,7 @@
           "INR"
         ],
         [
-          163.1557125,
+          172.7249625,
           "testpayment_group",
           "INR"
         ]

@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781528023.9846375,
-  "expires_at": 1781535223.9846375,
+  "fetched_at": 1781588017.4359114,
+  "expires_at": 1781595217.4359114,
   "data": {
-    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/e123d6e5-9bd0-4867-944b-38362a99c459",
-    "name": "e123d6e5-9bd0-4867-944b-38362a99c459",
+    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/6bb35b9d-a23d-454f-b78a-709fc38b90bb",
+    "name": "6bb35b9d-a23d-454f-b78a-709fc38b90bb",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,37 +26,37 @@
       ],
       "rows": [
         [
-          0.0371795792715001,
+          0.0386100003307501,
           "integre-qa-integrenotify-rg",
           "INR"
         ],
         [
-          0.00796243895550002,
+          0.00840479667525002,
           "integre-qa-integreportal-rg",
           "INR"
         ],
         [
-          1446.35907574126,
+          1522.70647563376,
           "integre-qa-integreshared-rg",
           "INR"
         ],
         [
-          0.0103807224,
+          0.010794114,
           "integre-qa-integrestore-rg",
           "INR"
         ],
         [
-          721.685981770652,
+          759.669194312552,
           "integre-qa-vyomaapi-rg",
           "INR"
         ],
         [
-          0.125775104816813,
+          0.1320088563675,
           "integre-qa-vyomaportal-rg",
           "INR"
         ],
         [
-          720.004115270702,
+          757.899068706002,
           "integre-qa-vyomascheduler-rg",
           "INR"
         ]

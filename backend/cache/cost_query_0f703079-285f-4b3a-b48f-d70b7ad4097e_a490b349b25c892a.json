@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781528028.3800256,
-  "expires_at": 1781535228.3800256,
+  "fetched_at": 1781588020.5304537,
+  "expires_at": 1781595220.5304537,
   "data": {
-    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/92b107e0-d9db-4b43-a47e-90655c2ef101",
-    "name": "92b107e0-d9db-4b43-a47e-90655c2ef101",
+    "id": "subscriptions/0f703079-285f-4b3a-b48f-d70b7ad4097e/providers/Microsoft.CostManagement/query/10929be2-c8c7-4883-b08e-10164cd81cd8",
+    "name": "10929be2-c8c7-4883-b08e-10164cd81cd8",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -26,12 +26,12 @@
       ],
       "rows": [
         [
-          1439.98074,
+          1515.7692,
           "Azure App Service",
           "INR"
         ],
         [
-          1446.35907574126,
+          1522.70647563376,
           "SQL Database",
           "INR"
         ],
@@ -41,7 +41,7 @@
           "INR"
         ],
         [
-          1.89065488679382,
+          1.98888078592351,
           "Storage",
           "INR"
         ]

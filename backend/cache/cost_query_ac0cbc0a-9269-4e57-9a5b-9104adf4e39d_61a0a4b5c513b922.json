@@ -1,9 +1,9 @@
 {
-  "fetched_at": 1781526663.267222,
-  "expires_at": 1781533863.267222,
+  "fetched_at": 1781587919.6759698,
+  "expires_at": 1781595119.6759698,
   "data": {
-    "id": "subscriptions/ac0cbc0a-9269-4e57-9a5b-9104adf4e39d/providers/Microsoft.CostManagement/query/2730f888-79a2-4959-8deb-345c6290a09a",
-    "name": "2730f888-79a2-4959-8deb-345c6290a09a",
+    "id": "subscriptions/ac0cbc0a-9269-4e57-9a5b-9104adf4e39d/providers/Microsoft.CostManagement/query/94e87ef6-4652-415e-846b-45aee9df9a01",
+    "name": "94e87ef6-4652-415e-846b-45aee9df9a01",
     "type": "Microsoft.CostManagement/query",
     "location": null,
     "sku": null,
@@ -22,7 +22,7 @@
       ],
       "rows": [
         [
-          430371.2990905326,
+          432342.3430324398,
           "INR"
         ]
       ]

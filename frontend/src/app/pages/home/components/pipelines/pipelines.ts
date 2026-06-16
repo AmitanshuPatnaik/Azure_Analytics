@@ -39,12 +39,6 @@ export class PipelinesComponent implements OnInit {
           projs = res.projects;
         }
         this.projects = projs || [];
-        
-        // Auto-select first project if none is selected
-        if (this.projects.length > 0 && !this.selectedPipelineProject) {
-          this.selectedPipelineProject = this.projects[0].name;
-          this.loadPipelines(this.selectedPipelineProject);
-        }
         this.cdr.detectChanges();
       },
       error: (err) => {
