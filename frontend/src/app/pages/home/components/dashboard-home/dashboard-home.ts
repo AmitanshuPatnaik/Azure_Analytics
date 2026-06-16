@@ -334,88 +334,72 @@ export class DashboardHomeComponent implements OnInit {
     }
 
     const colors = ['#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#3b82f6'];
+    const greyColor = '#d1d5db'; // grey for non-selected sectors
     const dist: any[] = [];
     const gradientParts: string[] = [];
 
-    if (this.selectedHomeAzureProject) {
-      // Show distribution of repositories within the selected project
-      const projectRepos = this.repositories.filter(r => r.project === this.selectedHomeAzureProject);
-      const totalRepos = projectRepos.length;
-      let accumulatedDegrees = 0;
+    // Always show global distribution across all projects
+    const counts: { [key: string]: number } = {};
+    this.projects.forEach(p => {
+      counts[p.name] = 0;
+    });
 
-      projectRepos.forEach((repo, index) => {
-        const color = colors[index % colors.length];
-        const degrees = totalRepos > 0 ? Math.round(360 / totalRepos) : 0;
-        
-        dist.push({
-          name: repo.name,
-          count: 1,
-          color: color
-        });
+    this.repositories.forEach(r => {
+      if (counts[r.project] !== undefined) {
+        counts[r.project]++;
+      } else {
+        counts[r.project] = 1;
+      }
+    });
 
+    const totalRepos = this.repositories.length;
+    let accumulatedDegrees = 0;
+
+    this.projects.forEach((proj, index) => {
+      const count = counts[proj.name] || 0;
+      const percentage = totalRepos > 0 ? (count / totalRepos) : 0;
+      const degrees = Math.round(percentage * 360);
+
+      // If a project is selected, grey out all non-selected sectors
+      const isSelected = !this.selectedHomeAzureProject || proj.name === this.selectedHomeAzureProject;
+      const originalColor = colors[index % colors.length];
+      const color = isSelected ? originalColor : greyColor;
+
+      dist.push({
+        name: proj.name,
+        count: count,
+        color: color,
+        isSelected: isSelected
+      });
+
+      if (count > 0) {
         const nextDegrees = accumulatedDegrees + degrees;
         gradientParts.push(`${color} ${accumulatedDegrees}deg ${nextDegrees}deg`);
         accumulatedDegrees = nextDegrees;
-      });
-
-      if (gradientParts.length > 0 && accumulatedDegrees > 0) {
-        const lastIndex = gradientParts.length - 1;
-        const part = gradientParts[lastIndex];
-        const match = part.match(/^(.+?)\s+(\d+)deg\s+(\d+)deg$/);
-        if (match) {
-          gradientParts[lastIndex] = `${match[1]} ${match[2]}deg 360deg`;
-        }
       }
+    });
 
-    } else {
-      // Global distribution of repositories across all projects
-      const counts: { [key: string]: number } = {};
-      this.projects.forEach(p => {
-        counts[p.name] = 0;
-      });
-
-      this.repositories.forEach(r => {
-        if (counts[r.project] !== undefined) {
-          counts[r.project]++;
-        } else {
-          counts[r.project] = 1;
-        }
-      });
-
-      const totalRepos = this.repositories.length;
-      let accumulatedDegrees = 0;
-
-      this.projects.forEach((proj, index) => {
-        const count = counts[proj.name] || 0;
-        const percentage = totalRepos > 0 ? (count / totalRepos) : 0;
-        const degrees = Math.round(percentage * 360);
-        const color = colors[index % colors.length];
-
-        dist.push({
-          name: proj.name,
-          count: count,
-          color: color
-        });
-
-        if (count > 0) {
-          const nextDegrees = accumulatedDegrees + degrees;
-          gradientParts.push(`${color} ${accumulatedDegrees}deg ${nextDegrees}deg`);
-          accumulatedDegrees = nextDegrees;
-        }
-      });
-
-      if (gradientParts.length > 0 && accumulatedDegrees > 0) {
-        const lastIndex = gradientParts.length - 1;
-        const part = gradientParts[lastIndex];
-        const match = part.match(/^(.+?)\s+(\d+)deg\s+(\d+)deg$/);
-        if (match) {
-          gradientParts[lastIndex] = `${match[1]} ${match[2]}deg 360deg`;
-        }
+    if (gradientParts.length > 0 && accumulatedDegrees > 0) {
+      const lastIndex = gradientParts.length - 1;
+      const part = gradientParts[lastIndex];
+      const match = part.match(/^(.+?)\s+(\d+)deg\s+(\d+)deg$/);
+      if (match) {
+        gradientParts[lastIndex] = `${match[1]} ${match[2]}deg 360deg`;
       }
     }
 
     this.projectDistribution = dist;
     this.pieChartStyle = gradientParts.length > 0 ? `conic-gradient(${gradientParts.join(', ')})` : 'gray';
+  }
+
+  // Returns the subset of trends to display based on the selected project
+  get visibleTrends(): any[] {
+    if (!this.selectedHomeAzureProject) {
+      return this.projectTrends;
+    }
+    const filtered = this.projectTrends.filter(t => t.projectName === this.selectedHomeAzureProject);
+    // If the selected project is not among the tracked trend projects, show all
+    return filtered.length > 0 ? filtered : this.projectTrends;
   }
 
   generateMultiLineChartPoints(): void {

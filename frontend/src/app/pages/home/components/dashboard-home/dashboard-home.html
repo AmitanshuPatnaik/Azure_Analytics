@@ -130,7 +130,8 @@
           [(ngModel)]="pieSearchQuery" style="margin-bottom:10px;" />
 
         @for (item of filteredProjectDistribution; track item.name) {
-        <div>
+        <div [style.opacity]="selectedHomeAzureProject && !item.isSelected ? '0.35' : '1'"
+             [style.font-weight]="item.isSelected && selectedHomeAzureProject ? '700' : 'normal'">
           <span class="dot" [style.backgroundColor]="item.color"></span>
           {{ item.name }} ({{ item.count }})
         </div>
@@ -148,9 +149,18 @@
 
     <!-- Chart legend -->
     <div style="display:flex; justify-content:center; gap:20px; font-size:12px; margin-bottom:12px;">
-      <div><span style="display:inline-block; width:12px; height:12px; background:#2563eb; margin-right:6px; border-radius:2px;"></span>AiDocFlo</div>
-      <div><span style="display:inline-block; width:12px; height:12px; background:#16a34a; margin-right:6px; border-radius:2px;"></span>TimeFlow</div>
-      <div><span style="display:inline-block; width:12px; height:12px; background:#f59e0b; margin-right:6px; border-radius:2px;"></span>Integrelity</div>
+      <div [style.opacity]="selectedHomeAzureProject && selectedHomeAzureProject !== 'AiDocFlo' ? '0.35' : '1'"
+           [style.font-weight]="selectedHomeAzureProject === 'AiDocFlo' ? '700' : 'normal'">
+        <span style="display:inline-block; width:12px; height:12px; background:#2563eb; margin-right:6px; border-radius:2px;"></span>AiDocFlo
+      </div>
+      <div [style.opacity]="selectedHomeAzureProject && selectedHomeAzureProject !== 'TimeFlow' ? '0.35' : '1'"
+           [style.font-weight]="selectedHomeAzureProject === 'TimeFlow' ? '700' : 'normal'">
+        <span style="display:inline-block; width:12px; height:12px; background:#16a34a; margin-right:6px; border-radius:2px;"></span>TimeFlow
+      </div>
+      <div [style.opacity]="selectedHomeAzureProject && selectedHomeAzureProject !== 'Integrelity' ? '0.35' : '1'"
+           [style.font-weight]="selectedHomeAzureProject === 'Integrelity' ? '700' : 'normal'">
+        <span style="display:inline-block; width:12px; height:12px; background:#f59e0b; margin-right:6px; border-radius:2px;"></span>Integrelity
+      </div>
     </div>
 
     @if (isLoadingMultiTrend) {
@@ -165,7 +175,7 @@
       <svg viewBox="0 0 620 280" width="100%" height="280">
 
         <!-- Area fills (faint overlapping fills) -->
-        @for (trend of projectTrends; track trend.projectName) {
+        @for (trend of visibleTrends; track trend.projectName) {
           @if (trend.polylinePoints) {
             <polygon [attr.points]="trend.polylinePoints + ' 585,255 55,255'"
                      [attr.fill]="trend.projectName === 'AiDocFlo' ? 'rgba(37,99,235,0.03)' : trend.projectName === 'TimeFlow' ? 'rgba(22,163,74,0.03)' : 'rgba(245,158,11,0.03)'"></polygon>
@@ -184,7 +194,7 @@
         }
 
         <!-- Multi-line trends -->
-        @for (trend of projectTrends; track trend.projectName) {
+        @for (trend of visibleTrends; track trend.projectName) {
           <!-- Polyline -->
           <polyline *ngIf="trend.polylinePoints" [attr.points]="trend.polylinePoints"
                     fill="none" [attr.stroke]="trend.color" stroke-width="3"
@@ -199,8 +209,8 @@
           }
         }
 
-        <!-- X-axis month labels (using the first trend's timeline) -->
-        @for (c of projectTrends[0]?.circlePoints; track c.month) {
+        <!-- X-axis month labels (using the first visible trend's timeline) -->
+        @for (c of visibleTrends[0]?.circlePoints; track c.month) {
         <text [attr.x]="c.cx" y="275" text-anchor="middle"
               fill="#64748b" font-size="11">
           {{ c.month?.substring(0,3) }}
