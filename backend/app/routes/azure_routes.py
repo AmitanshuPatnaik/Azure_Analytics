@@ -135,6 +135,61 @@ def get_subscriptions(project: str = Query(None)):
     )
 
 
+@router.get("/costs/combined-yearly")
+def get_combined_yearly_costs():
+    """
+    Calculate the cumulative yearly costs across all available projects.
+    """
+    import json
+    import os
+    _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
+    try:
+        with open(_config_path, "r") as f:
+            config = json.load(f)
+    except Exception:
+        config = {}
+
+    projects = []
+    for key in config.keys():
+        if key.endswith("_TENANT_ID"):
+            prefix = key[:-10]
+            if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
+                if prefix == "DOC_FLOW":
+                    name = "AiDocFlo"
+                else:
+                    words = prefix.lower().split("_")
+                    name = "".join(word.capitalize() for word in words)
+                projects.append(name)
+
+    total_combined = 0.0
+    for proj in projects:
+        try:
+            subs_res = fetch_subscriptions(proj)
+            subs = []
+            if isinstance(subs_res, dict) and "subscriptions" in subs_res:
+                subs = subs_res["subscriptions"]
+            elif isinstance(subs_res, list):
+                subs = subs_res
+                
+            for sub in subs:
+                sub_id = sub.get("subscriptionId")
+                if not sub_id:
+                    continue
+                azure_project_var.set(proj)
+                yearly_res = _cache_query(
+                    f"yearly:{sub_id}",
+                    lambda s=sub_id: fetch_yearly_costs(s),
+                    {"success": True, "yearly_cost": 0.0}
+                )
+                if isinstance(yearly_res, dict):
+                    total_combined += yearly_res.get("yearly_cost", 0.0)
+        except Exception:
+            pass
+
+    return {"success": True, "yearly_cost": total_combined}
+
+
+
 @router.get("/costs/{subscription_id}")
 def get_costs(subscription_id: str, project: str = Query(None)):
     _set_project_context(subscription_id, project)

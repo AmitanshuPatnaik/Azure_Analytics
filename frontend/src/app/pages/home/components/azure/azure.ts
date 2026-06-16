@@ -139,6 +139,12 @@ export class AzureComponent implements OnInit {
         this.subscriptions = subs || [];
         if (this.subscriptions.length === 0) {
           this.subscriptionsError = 'No Azure subscriptions found.';
+        } else {
+          // D – Pre-cache: automatically load first subscription on init
+          if (!this.selectedSubscriptionId) {
+            this.selectedSubscriptionId = this.subscriptions[0].subscriptionId;
+            this.loadAzureSubscriptionData(this.selectedSubscriptionId);
+          }
         }
         this.cdr.detectChanges();
       },
@@ -302,6 +308,7 @@ export class AzureComponent implements OnInit {
   }
 
   applyDateFilter() {
+    // C – Bug Fix: always fire even when dates match previous values
     if (!this.selectedSubscriptionId) return;
     const clamped = clampUtcDateRange(
       this.pendingFromDate,
@@ -312,8 +319,13 @@ export class AzureComponent implements OnInit {
     this.costTrendToDate = clamped.to;
     this.pendingFromDate = clamped.from;
     this.pendingToDate = clamped.to;
+    // Always reload — no short-circuit equality check
     this.loadSubscriptionMetrics(this.selectedSubscriptionId);
     this.loadAzureRangeMetrics(this.selectedSubscriptionId);
+  }
+
+  get isReadyToSubmit(): boolean {
+    return !!(this.selectedSubscriptionId && this.pendingFromDate && this.pendingToDate);
   }
 
   get costTrendMaxDate(): string {

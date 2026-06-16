@@ -1,54 +1,72 @@
-<div class="tab-header"
-  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-  <h1 style="margin: 0;">Test Plans</h1>
-  <div>
-    <label for="testplan-proj" style="margin-right: 10px; font-weight: 500;">Select Project:</label>
-    <select id="testplan-proj" class="month-dropdown" style="width: auto;" [value]="selectedTestPlanProject"
-      (change)="onTestPlanProjectChange($event)">
-      <option value="">Select Project</option>
-      @for (proj of projects; track proj.id) {
-      <option [value]="proj.name">{{ proj.name }}</option>
-      }
-    </select>
+<!-- Header + UTC badge + project selector -->
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+  <h1 class="page-title-centered" style="margin:0; font-size:22px;">Test Plans</h1>
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <span class="utc-badge">All timings are in UTC</span>
+    <div>
+      <label for="testplan-proj" style="margin-right:8px; font-size:13px; color:#64748b;">Select Project:</label>
+      <select id="testplan-proj" class="month-dropdown" style="width:auto; font-size:13px;"
+        [value]="selectedTestPlanProject" (change)="onTestPlanProjectChange($event)">
+        <option value="">Select Project</option>
+        @for (proj of projects; track proj.id) {
+        <option [value]="proj.name">{{ proj.name }}</option>
+        }
+      </select>
+    </div>
   </div>
 </div>
 
 @if (testPlansError) {
-<div class="error-banner">
-  Could not load test plans: {{ testPlansError }}
-</div>
+<div class="error-banner">Could not load test plans: {{ testPlansError }}</div>
 } @else if (!selectedTestPlanProject) {
-<div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
-  <p style="color: #6b7280; font-size: 16px;">Please select a project to view test plans.</p>
+<div class="material-card" style="text-align:center; padding:40px;">
+  <p style="color:#6b7280; font-size:15px;">Please select a project to view test plans.</p>
 </div>
 } @else if (isLoadingTestPlans) {
-<div style="text-align: center; padding: 40px;">
-  <p>Loading test plans...</p>
+<div class="material-card">
+  @for (_ of [1,2,3,4,5]; track $index) {
+  <div class="skeleton skeleton-row"></div>
+  }
 </div>
 } @else {
-<table>
-  <tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Owner</th>
-    <th>State</th>
-    <th>Start Date</th>
-    <th>End Date</th>
-  </tr>
+<div class="material-card" style="padding:0; overflow:hidden;">
+  <!-- Search filter (C) -->
+  <div style="padding:14px 18px; border-bottom:1px solid #f1f5f9;">
+    <input class="filter-search" type="text" [(ngModel)]="testPlanSearch"
+      placeholder="Search by name, owner, or state…" style="margin:0;" />
+  </div>
 
-  @for (plan of testPlans; track plan.id || $index) {
-  <tr>
-    <td>{{ plan.id }}</td>
-    <td>{{ plan.name }}</td>
-    <td>{{ plan.owner }}</td>
-    <td>{{ plan.state }}</td>
-    <td>{{ plan.startDate || 'N/A' }}</td>
-    <td>{{ plan.endDate || 'N/A' }}</td>
-  </tr>
-  } @empty {
-  <tr>
-    <td colspan="6" style="text-align: center;">No test plans found for this project.</td>
-  </tr>
-  }
-</table>
+  <table style="margin-top:0; border-radius:0;">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Owner</th>
+      <th>State</th>
+      <th>Start Date</th>
+      <th>End Date</th>
+    </tr>
+    @for (plan of filteredTestPlans; track plan.id || $index) {
+    <tr>
+      <td><span class="badge-cyan">{{ plan.id }}</span></td>
+      <td>{{ plan.name }}</td>
+      <td style="color:#64748b; font-size:13px;">{{ plan.owner }}</td>
+      <td>
+        <span [class]="plan.state === 'Active' || plan.state === 'InProgress'
+                       ? 'badge-green' : plan.state === 'Inactive' || plan.state === 'Closed'
+                       ? 'badge-red' : 'badge-amber'">
+          {{ plan.state }}
+        </span>
+      </td>
+      <td style="font-size:13px; color:#64748b;">{{ plan.startDate || 'N/A' }}</td>
+      <td style="font-size:13px; color:#64748b;">{{ plan.endDate || 'N/A' }}</td>
+    </tr>
+    } @empty {
+    <tr>
+      <td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">
+        No test plans found for this project.
+      </td>
+    </tr>
+    }
+  </table>
+</div>
 }

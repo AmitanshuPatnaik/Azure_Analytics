@@ -1,12 +1,13 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../../services/dashboard.service';
 import { ProjectsApiService } from '../../../../services/api/projects-api.service';
 import { TestPlansApiService } from '../../../../services/api/testplans-api.service';
 
 @Component({
   selector: 'app-testplans',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './testplans.html',
   styleUrl: '../../home.css'
 })
@@ -17,6 +18,17 @@ export class TestplansComponent implements OnInit {
   selectedTestPlanProject = '';
   isLoadingTestPlans = false;
   testPlansError: string | null = null;
+  testPlanSearch = '';
+
+  get filteredTestPlans(): any[] {
+    if (!this.testPlanSearch.trim()) return this.testPlans;
+    const q = this.testPlanSearch.trim().toLowerCase();
+    return this.testPlans.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.owner || '').toLowerCase().includes(q) ||
+      (p.state || '').toLowerCase().includes(q)
+    );
+  }
 
   constructor(
     public dashboardService: DashboardService,

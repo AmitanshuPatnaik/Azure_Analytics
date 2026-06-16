@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Sidebar } from '../../components/sidebar/sidebar';
 import { DashboardService } from '../../services/dashboard.service';
 
 // Sub-components imports
@@ -16,7 +15,6 @@ import { AzureComponent } from './components/azure/azure';
 @Component({
   selector: 'app-home',
   imports: [
-    Sidebar,
     CommonModule,
     DashboardHomeComponent,
     ProjectsComponent,

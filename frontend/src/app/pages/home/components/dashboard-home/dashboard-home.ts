@@ -1,5 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 // API Services imports
 import { ProjectsApiService } from '../../../../services/api/projects-api.service';
@@ -10,9 +12,9 @@ import { StatusApiService } from '../../../../services/api/status-api.service';
 
 @Component({
   selector: 'app-dashboard-home',
-  imports: [CommonModule],
   templateUrl: './dashboard-home.html',
-  styleUrl: '../../home.css'
+  styleUrl: '../../home.css',
+  imports: [CommonModule, FormsModule]
 })
 export class DashboardHomeComponent implements OnInit {
 
@@ -31,6 +33,16 @@ export class DashboardHomeComponent implements OnInit {
   activePipelinesCount = 0;
   yearlyCost = 0;
 
+  // Global aggregate combined cost
+  combinedYearlyCost = 0;
+  isLoadingCombinedCost = false;
+  combinedCostError: string | null = null;
+
+  // Multi-project cost trend properties
+  isLoadingMultiTrend = false;
+  multiTrendError: string | null = null;
+  projectTrends: any[] = [];
+
   // Selections
   selectedHomeAzureProject = '';
   selectedHomeSubscriptionId = '';
@@ -39,11 +51,17 @@ export class DashboardHomeComponent implements OnInit {
 
   // Chart Properties
   pieChartStyle = '';
-  polylinePoints = '';
-  circlePoints: any[] = [];
   yAxisLabels: string[] = [];
-  trendData: any[] = [];
   trendMonths: string[] = [];
+
+  // Pie legend filter
+  pieSearchQuery = '';
+
+  get filteredProjectDistribution(): any[] {
+    if (!this.pieSearchQuery?.trim()) return this.projectDistribution;
+    const q = this.pieSearchQuery.trim().toLowerCase();
+    return this.projectDistribution.filter(item => item.name.toLowerCase().includes(q));
+  }
 
   // Project distribution popup
   showProjectDistributionDetails = false;
@@ -53,7 +71,6 @@ export class DashboardHomeComponent implements OnInit {
   reposError: string | null = null;
   activePipelinesError: string | null = null;
   yearlyCostError: string | null = null;
-  trendDataError: string | null = null;
   servicesStatusError: string | null = null;
 
   constructor(
@@ -69,6 +86,8 @@ export class DashboardHomeComponent implements OnInit {
     this.loadProjects();
     this.loadRepositories();
     this.loadActivePipelinesCount();
+    this.loadCombinedYearlyCost();
+    this.loadMultiProjectTrends();
     this.loadServicesStatus();
     this.loadAzureProjects();
   }
@@ -212,41 +231,83 @@ export class DashboardHomeComponent implements OnInit {
     });
   }
 
-  loadTrendData() {
-    this.trendDataError = null;
-    this.azureApi.getCostTrend(this.selectedHomeAzureProject).subscribe({
+  loadCombinedYearlyCost() {
+    this.isLoadingCombinedCost = true;
+    this.combinedCostError = null;
+    this.azureApi.getCombinedYearlyCost().subscribe({
       next: (res: any) => {
-        if (res && res.trend && res.trend.length > 0) {
-          this.trendData = res.trend;
-          this.trendMonths = res.trend.map((d: any) => d.month);
-
-          const latest = res.trend[res.trend.length - 1];
-          this.selectedTrendMonth = latest.month;
-          this.monthlyCostTotal = latest.cost;
-
-          this.generateChartPoints();
+        if (res && res.success) {
+          this.combinedYearlyCost = res.yearly_cost;
         } else {
-          this.trendData = [];
-          this.trendMonths = [];
-          this.monthlyCostTotal = 0;
-          this.trendDataError = 'No cost trend data returned.';
+          this.combinedYearlyCost = 0;
         }
+        this.isLoadingCombinedCost = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Failed to load cost trend data', err);
-        this.trendData = [];
-        this.trendMonths = [];
-        this.monthlyCostTotal = 0;
-        this.trendDataError = err.error?.detail || err.error?.message || err.message || 'Failed to load cost trend data.';
+        console.warn('Failed to load combined yearly cost', err);
+        this.combinedYearlyCost = 0;
+        this.combinedCostError = err.error?.detail || err.error?.message || err.message || 'Failed to load combined yearly cost.';
+        this.isLoadingCombinedCost = false;
         this.cdr.detectChanges();
       }
     });
   }
 
-  loadServicesStatus() {
+  loadMultiProjectTrends() {
+    this.isLoadingMultiTrend = true;
+    this.multiTrendError = null;
+
+    const projNames = ['AiDocFlo', 'TimeFlow', 'Integrelity'];
+    const colors: { [key: string]: string } = {
+      'AiDocFlo': '#2563eb',     // Blue
+      'TimeFlow': '#16a34a',     // Green
+      'Integrelity': '#f59e0b'   // Amber
+    };
+
+    const requests = projNames.map(proj => this.azureApi.getCostTrend(proj));
+
+    forkJoin(requests).subscribe({
+      next: (results: any[]) => {
+        const trends: any[] = [];
+        let allMonths: string[] = [];
+
+        results.forEach((res, index) => {
+          const projName = projNames[index];
+          const color = colors[projName] || '#6b7280';
+          const points = res && res.trend ? res.trend : [];
+          
+          if (points.length > 0 && allMonths.length === 0) {
+            allMonths = points.map((p: any) => p.month);
+          }
+
+          trends.push({
+            projectName: projName,
+            color: color,
+            points: points,
+            polylinePoints: '',
+            circlePoints: []
+          });
+        });
+
+        this.projectTrends = trends;
+        this.trendMonths = allMonths;
+        this.generateMultiLineChartPoints();
+        this.isLoadingMultiTrend = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn('Failed to load multi-project cost trends', err);
+        this.multiTrendError = 'Failed to load multi-project cost trends.';
+        this.isLoadingMultiTrend = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadServicesStatus(project?: string) {
     this.servicesStatusError = null;
-    this.statusApi.getServicesStatus().subscribe({
+    this.statusApi.getServicesStatus(project).subscribe({
       next: (res: any) => {
         if (res && res.length > 0) {
           this.servicesStatus = res;
@@ -272,51 +333,84 @@ export class DashboardHomeComponent implements OnInit {
       return;
     }
 
-    const counts: { [key: string]: number } = {};
-    this.projects.forEach(p => {
-      counts[p.name] = 0;
-    });
-
-    this.repositories.forEach(r => {
-      if (counts[r.project] !== undefined) {
-        counts[r.project]++;
-      } else {
-        counts[r.project] = 1;
-      }
-    });
-
-    const totalRepos = this.repositories.length;
-    let accumulatedDegrees = 0;
     const colors = ['#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#3b82f6'];
-
     const dist: any[] = [];
     const gradientParts: string[] = [];
 
-    this.projects.forEach((proj, index) => {
-      const count = counts[proj.name] || 0;
-      const percentage = totalRepos > 0 ? (count / totalRepos) : 0;
-      const degrees = Math.round(percentage * 360);
-      const color = colors[index % colors.length];
+    if (this.selectedHomeAzureProject) {
+      // Show distribution of repositories within the selected project
+      const projectRepos = this.repositories.filter(r => r.project === this.selectedHomeAzureProject);
+      const totalRepos = projectRepos.length;
+      let accumulatedDegrees = 0;
 
-      dist.push({
-        name: proj.name,
-        count: count,
-        color: color
-      });
+      projectRepos.forEach((repo, index) => {
+        const color = colors[index % colors.length];
+        const degrees = totalRepos > 0 ? Math.round(360 / totalRepos) : 0;
+        
+        dist.push({
+          name: repo.name,
+          count: 1,
+          color: color
+        });
 
-      if (count > 0) {
         const nextDegrees = accumulatedDegrees + degrees;
         gradientParts.push(`${color} ${accumulatedDegrees}deg ${nextDegrees}deg`);
         accumulatedDegrees = nextDegrees;
-      }
-    });
+      });
 
-    if (gradientParts.length > 0 && accumulatedDegrees > 0) {
-      const lastIndex = gradientParts.length - 1;
-      const part = gradientParts[lastIndex];
-      const match = part.match(/^(.+?)\s+(\d+)deg\s+(\d+)deg$/);
-      if (match) {
-        gradientParts[lastIndex] = `${match[1]} ${match[2]}deg 360deg`;
+      if (gradientParts.length > 0 && accumulatedDegrees > 0) {
+        const lastIndex = gradientParts.length - 1;
+        const part = gradientParts[lastIndex];
+        const match = part.match(/^(.+?)\s+(\d+)deg\s+(\d+)deg$/);
+        if (match) {
+          gradientParts[lastIndex] = `${match[1]} ${match[2]}deg 360deg`;
+        }
+      }
+
+    } else {
+      // Global distribution of repositories across all projects
+      const counts: { [key: string]: number } = {};
+      this.projects.forEach(p => {
+        counts[p.name] = 0;
+      });
+
+      this.repositories.forEach(r => {
+        if (counts[r.project] !== undefined) {
+          counts[r.project]++;
+        } else {
+          counts[r.project] = 1;
+        }
+      });
+
+      const totalRepos = this.repositories.length;
+      let accumulatedDegrees = 0;
+
+      this.projects.forEach((proj, index) => {
+        const count = counts[proj.name] || 0;
+        const percentage = totalRepos > 0 ? (count / totalRepos) : 0;
+        const degrees = Math.round(percentage * 360);
+        const color = colors[index % colors.length];
+
+        dist.push({
+          name: proj.name,
+          count: count,
+          color: color
+        });
+
+        if (count > 0) {
+          const nextDegrees = accumulatedDegrees + degrees;
+          gradientParts.push(`${color} ${accumulatedDegrees}deg ${nextDegrees}deg`);
+          accumulatedDegrees = nextDegrees;
+        }
+      });
+
+      if (gradientParts.length > 0 && accumulatedDegrees > 0) {
+        const lastIndex = gradientParts.length - 1;
+        const part = gradientParts[lastIndex];
+        const match = part.match(/^(.+?)\s+(\d+)deg\s+(\d+)deg$/);
+        if (match) {
+          gradientParts[lastIndex] = `${match[1]} ${match[2]}deg 360deg`;
+        }
       }
     }
 
@@ -324,16 +418,23 @@ export class DashboardHomeComponent implements OnInit {
     this.pieChartStyle = gradientParts.length > 0 ? `conic-gradient(${gradientParts.join(', ')})` : 'gray';
   }
 
-  generateChartPoints(): void {
-    if (!this.trendData?.length) {
-      this.polylinePoints = '';
-      this.circlePoints = [];
+  generateMultiLineChartPoints(): void {
+    if (!this.projectTrends || this.projectTrends.length === 0) {
       this.yAxisLabels = [];
       return;
     }
 
-    const actualMax = Math.max(...this.trendData.map(d => d.cost));
-    const maxVal = this.getNiceMax(actualMax);
+    let globalMax = 0;
+    this.projectTrends.forEach(trend => {
+      trend.points.forEach((p: any) => {
+        if (p.cost > globalMax) {
+          globalMax = p.cost;
+        }
+      });
+    });
+
+    const maxVal = this.getNiceMax(globalMax);
+    this.generateYAxisLabels(maxVal);
 
     const chartLeft = 55;
     const chartRight = 585;
@@ -343,29 +444,30 @@ export class DashboardHomeComponent implements OnInit {
     const chartWidth = chartRight - chartLeft;
     const chartHeight = chartBottom - chartTop;
 
-    const points: string[] = [];
-    const circles: any[] = [];
-    const totalPoints = this.trendData.length;
+    this.projectTrends.forEach(trend => {
+      const points: string[] = [];
+      const circles: any[] = [];
+      const totalPoints = trend.points.length;
 
-    this.trendData.forEach((item, index) => {
-      const cx = totalPoints > 1
-        ? chartLeft + (index * chartWidth) / (totalPoints - 1)
-        : chartLeft + chartWidth / 2;
+      trend.points.forEach((item: any, index: number) => {
+        const cx = totalPoints > 1
+          ? chartLeft + (index * chartWidth) / (totalPoints - 1)
+          : chartLeft + chartWidth / 2;
 
-      const cy = chartBottom - (item.cost / maxVal) * chartHeight;
-      points.push(`${cx},${cy}`);
+        const cy = chartBottom - (item.cost / maxVal) * chartHeight;
+        points.push(`${cx},${cy}`);
 
-      circles.push({
-        cx,
-        cy,
-        cost: item.cost,
-        month: item.month
+        circles.push({
+          cx,
+          cy,
+          cost: item.cost,
+          month: item.month
+        });
       });
-    });
 
-    this.polylinePoints = points.join(' ');
-    this.circlePoints = circles;
-    this.generateYAxisLabels(maxVal);
+      trend.polylinePoints = points.join(' ');
+      trend.circlePoints = circles;
+    });
   }
 
   private getNiceMax(value: number): number {
@@ -405,15 +507,16 @@ export class DashboardHomeComponent implements OnInit {
     this.selectedHomeSubscriptionId = '';
     this.yearlyCost = 0;
 
+    this.calculateProjectDistribution();
+
     if (!proj) {
-      this.trendData = [];
-      this.circlePoints = [];
-      this.polylinePoints = '';
-      this.yAxisLabels = [];
+      this.yearlyCost = 0;
+      this.servicesStatus = [];
+      this.loadServicesStatus();
       return;
     }
-    this.loadTrendData();
     this.loadHomeSubscriptions(proj);
+    this.loadServicesStatus(proj);
   }
 
   getProjectDescription(projName: string): string {

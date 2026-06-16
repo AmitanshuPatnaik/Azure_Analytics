@@ -68,7 +68,7 @@ def _sync_subscriptions() -> list:
             prefix = key[:-10]
             if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
                 if prefix == "DOC_FLOW":
-                    name = "DocFlow"
+                    name = "AiDocFlo"
                 else:
                     words = prefix.lower().split("_")
                     name = "".join(word.capitalize() for word in words)
@@ -123,7 +123,7 @@ def _sync_cost_trend() -> None:
             prefix = key[:-10]
             if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
                 if prefix == "DOC_FLOW":
-                    name = "DocFlow"
+                    name = "AiDocFlo"
                 else:
                     words = prefix.lower().split("_")
                     name = "".join(word.capitalize() for word in words)

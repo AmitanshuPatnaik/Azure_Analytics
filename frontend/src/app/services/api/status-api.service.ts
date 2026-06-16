@@ -15,13 +15,16 @@ export class StatusApiService {
     private cache: FrontendCacheService
   ) {}
 
-  getServicesStatus(): Observable<any> {
-    const cacheKey = 'status:services';
+  getServicesStatus(project?: string): Observable<any> {
+    const cacheKey = `status:services:${project || ''}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/services`).pipe(
+    const url = project
+      ? `${this.baseUrl}/services?project=${encodeURIComponent(project)}`
+      : `${this.baseUrl}/services`;
+    return this.http.get<any>(url).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }

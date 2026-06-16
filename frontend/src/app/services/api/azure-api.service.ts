@@ -201,4 +201,14 @@ export class AzureApiService {
       tap(data => this.cache.set(cacheKey, data))
     );
   }
+
+  getCombinedYearlyCost(): Observable<any> {
+    const cacheKey = `azure:combinedyearlycost`;
+    const cached = this.cache.get(cacheKey);
+    if (cached) return of(cached);
+
+    return this.http.get<any>(this.getUrl('costs/combined-yearly')).pipe(
+      tap(data => this.cache.set(cacheKey, data))
+    );
+  }
 }

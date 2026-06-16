@@ -24,7 +24,7 @@ def _check_azure_service(url: str, token: str) -> str:
 
 
 @router.get("/services")
-async def get_services_status():
+async def get_services_status(project: str = None):
 
     # ── 1. Azure DevOps ──────────────────────────────────────────────────────
     devops_status = "Healthy"
@@ -41,9 +41,12 @@ async def get_services_status():
     # ── 2. CI/CD Pipelines ───────────────────────────────────────────────────
     pipelines_status = "Healthy"
     try:
-        if devops_status == "Healthy" and projects:
-            first_project = projects[0]["name"]
-            pipelines_res = fetch_pipelines(first_project)
+        target_project = project
+        if not target_project and projects:
+            target_project = projects[0]["name"]
+
+        if devops_status == "Healthy" and target_project:
+            pipelines_res = fetch_pipelines(target_project)
             if not (isinstance(pipelines_res, dict) and pipelines_res.get("success")):
                 pipelines_status = "Warning"
         else:
@@ -54,7 +57,7 @@ async def get_services_status():
     # ── 3–5. Azure platform services (each independently probed) ─────────────
     azure_services = []
     try:
-        token = get_azure_token()
+        token = get_azure_token(project)
 
         # 3. Azure Subscriptions — core ARM subscriptions listing
         subs_status = _check_azure_service(

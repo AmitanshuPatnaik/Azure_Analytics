@@ -1,8 +1,27 @@
 <div class="home-container">
 
-  <app-sidebar></app-sidebar>
-
   <div class="dashboard-content">
+    <!-- Horizontal sub-nav tabs for DevOps sub-pages -->
+    @if (dashboardService.selectedModule === 'DevOps' && dashboardService.selectedPage !== 'home') {
+      <div class="horizontal-sub-nav">
+        <button class="sub-nav-btn" [class.active]="dashboardService.selectedPage === 'projects' || dashboardService.selectedPage === 'project-detail'" (click)="dashboardService.selectedPage = 'projects'">
+          Projects
+        </button>
+        <button class="sub-nav-btn" [class.active]="dashboardService.selectedPage === 'repos'" (click)="dashboardService.selectedPage = 'repos'">
+          Repositories
+        </button>
+        <button class="sub-nav-btn" [class.active]="dashboardService.selectedPage === 'pipelines'" (click)="dashboardService.selectedPage = 'pipelines'">
+          Pipelines
+        </button>
+        <button class="sub-nav-btn" [class.active]="dashboardService.selectedPage === 'boards'" (click)="dashboardService.selectedPage = 'boards'">
+          Boards
+        </button>
+        <button class="sub-nav-btn" [class.active]="dashboardService.selectedPage === 'testplans'" (click)="dashboardService.selectedPage = 'testplans'">
+          Test Plans
+        </button>
+      </div>
+    }
+
     @switch (dashboardService.selectedPage) {
       @case ('home') {
         <app-dashboard-home></app-dashboard-home>

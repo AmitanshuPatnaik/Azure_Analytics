@@ -1,22 +1,38 @@
-<div class="tab-header" style="margin-bottom: 24px;">
-  <h1 style="margin: 0 0 16px 0;">Azure Resources & Cost Analytics</h1>
-  
-  <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 20px; border-radius: 10px;">
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <label for="azure-proj-select" style="font-weight: 500; font-size: 14px; color: #475569;">Azure Project:</label>
-      <select id="azure-proj-select" class="month-dropdown" style="width: auto; padding: 6px 12px;" [value]="selectedAzureProject"
-        (change)="onAzureProjectChange($event)">
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE HEADER                                                             -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="tab-header" style="margin-bottom:20px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+    <div>
+      <h1 class="page-title-centered" style="margin:0; font-size:22px;">Azure Resources &amp; Cost Analytics</h1>
+      <div style="display:flex; align-items:center; gap:8px; margin-top:5px;">
+        <span class="utc-badge">All timings are in UTC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control bar -->
+  <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; background:#f8fafc;
+              border:1px solid #e2e8f0; padding:12px 18px; border-radius:10px;">
+
+    <!-- Project selector -->
+    <div style="display:flex; align-items:center; gap:8px;">
+      <label for="azure-proj-select" style="font-size:13px; color:#475569; white-space:nowrap;">Azure Project:</label>
+      <select id="azure-proj-select" class="month-dropdown" style="width:auto; padding:6px 12px; font-size:13px;"
+        [value]="selectedAzureProject" (change)="onAzureProjectChange($event)">
         <option value="">Select Azure Project</option>
         @for (proj of azureProjects; track proj) {
         <option [value]="proj">{{ proj }}</option>
         }
       </select>
     </div>
-    
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <label for="sub-select" style="font-weight: 500; font-size: 14px; color: #475569;">Subscription:</label>
-      <select id="sub-select" class="month-dropdown" style="width: auto; padding: 6px 12px;" [value]="selectedSubscriptionId"
-        [disabled]="!selectedAzureProject" (change)="onSubscriptionChange($event)">
+
+    <!-- Subscription selector -->
+    <div style="display:flex; align-items:center; gap:8px;">
+      <label for="sub-select" style="font-size:13px; color:#475569; white-space:nowrap;">Subscription:</label>
+      <select id="sub-select" class="month-dropdown" style="width:auto; padding:6px 12px; font-size:13px;"
+        [value]="selectedSubscriptionId" [disabled]="!selectedAzureProject"
+        (change)="onSubscriptionChange($event)">
         <option value="">Select Subscription</option>
         @for (sub of subscriptions; track sub.subscriptionId || $index) {
         <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
@@ -24,220 +40,230 @@
       </select>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <span style="font-weight: 500; font-size: 14px; color: #475569;">Date Range (UTC):</span>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <label style="font-size: 13px; font-weight: 500; color: #64748b;">From</label>
-        <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 5px 10px;"
-          [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="pendingFromDate"
-          [disabled]="!selectedSubscriptionId"
-          (change)="pendingFromDate = $any($event.target).value; onCostTrendDateChange()">
+    <!-- Date range with format hint -->
+    <div style="display:flex; align-items:flex-start; gap:10px; flex-direction:column;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:13px; color:#475569; white-space:nowrap;">Date Range:</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label style="font-size:12px; color:#64748b;">From</label>
+          <div style="display:flex; flex-direction:column;">
+            <input type="date" class="month-dropdown"
+              style="width:auto; font-size:13px; padding:5px 10px;"
+              [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="pendingFromDate"
+              [disabled]="!selectedSubscriptionId"
+              title="Date format: MM-DD-YYYY"
+              placeholder="MM-DD-YYYY"
+              (change)="pendingFromDate = $any($event.target).value; onCostTrendDateChange()">
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label style="font-size:12px; color:#64748b;">To</label>
+          <div style="display:flex; flex-direction:column;">
+            <input type="date" class="month-dropdown"
+              style="width:auto; font-size:13px; padding:5px 10px;"
+              [min]="pendingFromDate" [max]="costTrendMaxDate" [value]="pendingToDate"
+              [disabled]="!selectedSubscriptionId"
+              title="Date format: MM-DD-YYYY"
+              placeholder="MM-DD-YYYY"
+              (change)="pendingToDate = $any($event.target).value; onCostTrendDateChange()">
+          </div>
+        </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <label style="font-size: 13px; font-weight: 500; color: #64748b;">To</label>
-        <input type="date" class="month-dropdown" style="width: auto; font-size: 13px; padding: 5px 10px;"
-          [min]="pendingFromDate" [max]="costTrendMaxDate" [value]="pendingToDate"
-          [disabled]="!selectedSubscriptionId"
-          (change)="pendingToDate = $any($event.target).value; onCostTrendDateChange()">
-      </div>
+      <span class="date-fmt-hint" style="padding-left:80px;">Date format: MM-DD-YYYY &nbsp;·&nbsp; All dates in UTC</span>
     </div>
 
+    <!-- Submit button (B – renamed from "Fetch Data") -->
     <button
       (click)="applyDateFilter()"
-      [disabled]="!selectedSubscriptionId || !pendingFromDate || !pendingToDate || isLoadingAzureRange"
-      style="
-        padding: 6px 20px;
-        font-size: 13px;
-        font-weight: 600;
-        background: #2563eb;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background 0.2s, opacity 0.2s;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      "
-      [style.opacity]="(!selectedSubscriptionId || !pendingFromDate || !pendingToDate) ? '0.5' : '1'"
-    >
+      [disabled]="!isReadyToSubmit || isLoadingAzureRange"
+      style="padding:7px 22px; font-size:13px; background:#2563eb; color:white; border:none;
+             border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:6px;
+             white-space:nowrap; transition:background 0.2s, opacity 0.2s;"
+      [style.opacity]="!isReadyToSubmit ? '0.5' : '1'">
       @if (isLoadingAzureRange) {
-        <span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
-        Loading...
+        <span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;
+                     border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
+        Loading…
       } @else {
-        ⬇ Fetch Data
+        Submit
       }
     </button>
+
   </div>
 </div>
 
+<!-- Error banners -->
 @if (subscriptionsError) {
-<div class="error-banner">
-  Could not load subscriptions: {{ subscriptionsError }}
-</div>
+<div class="error-banner">Could not load subscriptions: {{ subscriptionsError }}</div>
 } @else if (azureError) {
-<div class="error-banner">
-  Could not load subscription details: {{ azureError }}
-</div>
+<div class="error-banner">Could not load subscription details: {{ azureError }}</div>
 } @else if (!selectedAzureProject) {
-<div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
-  <p style="color: #6b7280; font-size: 16px;">Please select an Azure project to view cost metrics.</p>
+<div style="text-align:center; padding:40px; background:var(--bg-card); border-radius:8px;">
+  <p style="color:#6b7280; font-size:16px;">Please select an Azure project to view cost metrics.</p>
 </div>
 } @else if (!selectedSubscriptionId) {
-<div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px;">
-  <p style="color: #6b7280; font-size: 16px;">Please select an Azure subscription to view cost metrics.</p>
+<div style="text-align:center; padding:40px; background:var(--bg-card); border-radius:8px;">
+  <p style="color:#6b7280; font-size:16px;">Please select an Azure subscription to view cost metrics.</p>
 </div>
 } @else {
+
+<!-- ── Metric summary cards ──────────────────────────────────────────── -->
 <div class="cards">
 
   <div class="card">
     <h3>MTD Total Cost (Current Month)</h3>
     @if (isLoadingAzure && totalCost === 0) {
-    <p style="color: #6b7280; font-size: 14px;">Loading...</p>
+    <div class="skeleton skeleton-value"></div>
     } @else {
-    <h2>₹{{ totalCost | number:'1.2-2' }}</h2>
+    <h2 style="color:#2563eb;">₹{{ totalCost | number:'1.2-2' }}</h2>
     }
   </div>
 
   <div class="card">
     <h3>Budgets set</h3>
     @if (isLoadingAzure && !budgets.length) {
-    <p style="color: #6b7280; font-size: 14px;">Loading...</p>
+    <div class="skeleton skeleton-value"></div>
     } @else {
     @for (b of budgets; track b.name || $index) {
-    <p style="margin: 5px 0;"><strong>{{ b.name }}:</strong> ₹{{ b.amount }} ({{ b.timeGrain }})</p>
+    <p style="margin:5px 0;"><strong>{{ b.name }}:</strong> ₹{{ b.amount }} ({{ b.timeGrain }})</p>
     } @empty {
-    <h2>No budget</h2>
+    <h2 style="color:#94a3b8;">No budget</h2>
     }
     }
   </div>
 
 </div>
 
-<!-- ── Daily Cost Trend ─────────────────────────────────────────── -->
-<div class="chart-card" style="margin-top: 24px;">
+<!-- ── Daily Cost Trend (A – stripped "UTC" from title) ──────────────── -->
+<div class="chart-card" style="margin-top:20px; position:relative;">
   <div class="chart-header"
-    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-    <h2 style="margin: 0;">Daily Cost Trend</h2>
+    style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+    <h2 style="margin:0; text-align:center; flex:1;">Daily Cost Trend</h2>
     @if (costTrendPoints.length) {
-    <span style="font-size: 12px; color: #6b7280;">{{ costTrendPoints.length }} day(s)</span>
+    <span style="font-size:12px; color:#6b7280;">{{ costTrendPoints.length }} day(s)</span>
     }
   </div>
 
-  @if (costTrendError) {
-  <div class="error-inline">{{ costTrendError }}</div>
-  } @else if (isLoadingCostTrend || isLoadingAzureRange) {
-  <div style="text-align: center; padding: 40px;">
-    <p style="color: #6b7280;">Loading daily costs (UTC)...</p>
+  @if (isLoadingCostTrend || isLoadingAzureRange) {
+  <!-- Skeleton overlay while loading -->
+  <div style="padding:20px 0;">
+    <div class="skeleton skeleton-chart" style="height:220px;"></div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <div class="skeleton skeleton-line" style="width:30%;"></div>
+      <div class="skeleton skeleton-line" style="width:20%;"></div>
+    </div>
   </div>
+  } @else if (costTrendError) {
+  <div class="error-inline">{{ costTrendError }}</div>
   } @else if (!costTrendPoints.length) {
-  <div style="text-align: center; padding: 40px;">
-    <p style="color: #6b7280; font-size: 14px;">No cost data found for the selected UTC date range.</p>
+  <div style="text-align:center; padding:40px;">
+    <p style="color:#6b7280; font-size:14px;">No cost data found for the selected date range. Click Submit to load.</p>
   </div>
   } @else {
-  <div style="display: flex; justify-content: space-evenly; align-items: center; flex-wrap: wrap; gap: 20px;">
-    <div class="graph-container" style="flex: 0 1 660px; min-width: 320px;">
+  <div style="display:flex; justify-content:space-evenly; align-items:center; flex-wrap:wrap; gap:20px;">
+    <div class="graph-container" style="flex:0 1 660px; min-width:320px;">
       <svg viewBox="0 0 660 260" width="100%" height="260">
 
         @for (lbl of costTrendYLabels; track $index) {
-        <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)" stroke="#e2e8f0"
-          stroke-width="1"></line>
+        <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)"
+              stroke="#e2e8f0" stroke-width="1"></line>
+        <!-- K – ₹ currency symbol on Y-axis -->
         <text x="55" [attr.y]="24 + ($index * 40)" text-anchor="end" fill="#64748b" font-size="11">{{ lbl }}</text>
         }
 
         @if (costTrendPolyline) {
-        <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'" fill="rgba(37,99,235,0.08)"></polygon>
+        <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'"
+                 fill="rgba(37,99,235,0.08)"></polygon>
         <polyline [attr.points]="costTrendPolyline" fill="none" stroke="#2563eb" stroke-width="2.5"
-          stroke-linecap="round" stroke-linejoin="round"></polyline>
+                  stroke-linecap="round" stroke-linejoin="round"></polyline>
         }
 
         @for (c of costTrendCircles; track c.dateUtc) {
         <circle [attr.cx]="c.x" [attr.cy]="c.y" r="5" fill="#2563eb" stroke="#fff" stroke-width="2">
           <title>{{ c.dateUtc }}: ₹{{ c.cost | number:'1.2-2' }}</title>
         </circle>
-        @if (costTrendPoints.length <= 14) { <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b"
-          font-size="10">{{ c.date.slice(5) }} UTC</text>
-          }
-          }
+        <!-- K – Month/date label on X-axis -->
+        @if (costTrendPoints.length <= 14) {
+        <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b" font-size="10">
+          {{ c.date.slice(5) }}
+        </text>
+        }
+        }
 
       </svg>
     </div>
 
     <!-- Range Total Cost Card -->
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; min-width: 220px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 10px; margin-bottom: 10px; height: 100px; padding-top: 65px;">
-      <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em;">
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:22px 28px;
+                min-width:200px; text-align:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+      <div style="font-size:11px; color:#64748b; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em;">
         Range Total Cost
       </div>
-      <div style="font-size: 32px; font-weight: 700; color: #2563eb;">
+      <div style="font-size:28px; color:#2563eb;">
         ₹{{ costTrendRangeTotal | number:'1.2-2' }}
       </div>
-      <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">
-        Cumulative for selected range
-      </div>
+      <div style="font-size:11px; color:#94a3b8; margin-top:6px;">Cumulative for selected range</div>
     </div>
   </div>
   }
 </div>
-<!-- ── End Daily Cost Trend ──────────────────────────────────────── -->
 
-<div class="dashboard-row" style="margin-top: 24px; display: flex; gap: 20px;">
+<!-- ── PIE CHARTS ROW ──────────────────────────────────────────────── -->
+<div class="dashboard-row" style="margin-top:20px; display:flex; gap:20px;">
 
-  <!-- ── TOP RESOURCES PIE ───────────────────────────────────────────── -->
-  <div class="chart-card" style="flex: 1; position: relative;">
+  <!-- Top High-Spending Resources -->
+  <div class="chart-card" style="flex:1; position:relative;">
     <div class="chart-header">
-      <h2>Top High-Spending Resources</h2>
+      <h2 style="text-align:center; flex:1;">Top High-Spending Resources</h2>
     </div>
 
     @if (isLoadingAzureRange) {
-    <div style="text-align:center; padding: 40px; color: #6b7280;">Loading resources (UTC)...</div>
+    <div style="padding:20px 0;">
+      <div class="skeleton skeleton-chart" style="height:200px;"></div>
+    </div>
     } @else if (topResourcesError) {
-    <div class="error-inline" style="padding: 20px; text-align:center;">{{ topResourcesError }}</div>
+    <div class="error-inline" style="padding:20px; text-align:center;">{{ topResourcesError }}</div>
     } @else if (!topResourcesPieSlices.length) {
-    <div style="text-align:center; padding: 40px; color: #6b7280;">No data available for the selected UTC range.<br><span style="font-size:12px;">Try adjusting the date range and clicking Fetch Data.</span></div>
+    <div style="text-align:center; padding:40px; color:#6b7280;">
+      No data available for the selected date range.<br>
+      <span style="font-size:12px;">Click Submit to fetch data.</span>
+    </div>
     } @else {
-    <!-- Tooltip -->
     @if (hoveredTopResource) {
-    <div
-      style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff;
+                padding:10px 16px; border-radius:10px; font-size:13px; z-index:20;
+                pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
         <span [style.background]="hoveredTopResource.color"
-          style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
-        <strong style="font-size:13px;">{{ hoveredTopResource.name }}</strong>
+          style="display:inline-block; width:10px; height:10px; border-radius:50%;"></span>
+        {{ hoveredTopResource.name }}
       </div>
       <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredTopResource.cost | number:'1.2-2' }}</div>
       <div style="color:#64748b; font-size:11px;">{{ hoveredTopResource.percentage }}% of total</div>
     </div>
     }
-
-    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
-      <!-- SVG Pie -->
-      <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
+    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:12px 0;">
+      <svg viewBox="0 0 300 300" width="200" height="200" style="flex-shrink:0; overflow:visible;">
         @for (s of topResourcesPieSlices; track s.name) {
         <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
-          style="cursor:pointer; transition: opacity 0.15s;"
+          style="cursor:pointer; transition:opacity 0.15s;"
           [style.opacity]="hoveredTopResource && hoveredTopResource.name !== s.name ? '0.55' : '1'"
           (mouseenter)="hoveredTopResource = s" (mouseleave)="hoveredTopResource = null">
         </path>
         }
       </svg>
-
-      <!-- Legend -->
       <div style="flex:1; padding-right:4px;">
         @for (s of topResourcesPieSlices; track s.name) {
-        <div
-          style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
+                    padding:4px 6px; border-radius:6px; cursor:default;"
           (mouseenter)="hoveredTopResource = s" (mouseleave)="hoveredTopResource = null">
           <span [style.background]="s.color"
-            style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
-          <span
-            style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{
-            s.name }}</span>
-          <span style="font-size:11.5px; color:#6b7280; white-space:nowrap;">&#8377;{{
-            s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}</span>
-          <span
-            style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{
-            s.percentage }}%</span>
+            style="display:inline-block; width:12px; height:12px; border-radius:3px; flex-shrink:0;"></span>
+          <span style="font-size:12px; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
+          <span style="font-size:11px; color:#6b7280; white-space:nowrap;">
+            &#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}
+          </span>
+          <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
         </div>
         }
       </div>
@@ -245,61 +271,59 @@
     }
   </div>
 
-  <!-- ── SERVICES PIE ────────────────────────────────────────────────── -->
-  <div class="chart-card" style="flex: 1; position: relative;">
+  <!-- Costs by Service -->
+  <div class="chart-card" style="flex:1; position:relative;">
     <div class="chart-header">
-      <h2>Costs by Service</h2>
+      <h2 style="text-align:center; flex:1;">Costs by Service</h2>
     </div>
 
     @if (isLoadingAzureRange) {
-    <div style="text-align:center; padding: 40px; color: #6b7280;">Loading services (UTC)...</div>
+    <div style="padding:20px 0;">
+      <div class="skeleton skeleton-chart" style="height:200px;"></div>
+    </div>
     } @else if (serviceCostsError) {
-    <div class="error-inline" style="padding: 20px; text-align:center;">{{ serviceCostsError }}</div>
+    <div class="error-inline" style="padding:20px; text-align:center;">{{ serviceCostsError }}</div>
     } @else if (!serviceCostsPieSlices.length) {
-    <div style="text-align:center; padding: 40px; color: #6b7280;">No data available for the selected UTC range.<br><span style="font-size:12px;">Try adjusting the date range and clicking Fetch Data.</span></div>
+    <div style="text-align:center; padding:40px; color:#6b7280;">
+      No data available for the selected date range.<br>
+      <span style="font-size:12px;">Click Submit to fetch data.</span>
+    </div>
     } @else {
-    <!-- Tooltip -->
     @if (hoveredServiceCost) {
-    <div
-      style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff;
+                padding:10px 16px; border-radius:10px; font-size:13px; z-index:20;
+                pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
         <span [style.background]="hoveredServiceCost.color"
-          style="display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
-        <strong style="font-size:13px;">{{ hoveredServiceCost.name }}</strong>
+          style="display:inline-block; width:10px; height:10px; border-radius:50%;"></span>
+        {{ hoveredServiceCost.name }}
       </div>
       <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredServiceCost.cost | number:'1.2-2' }}</div>
       <div style="color:#64748b; font-size:11px;">{{ hoveredServiceCost.percentage }}% of total</div>
     </div>
     }
-
-    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding: 12px 0;">
-      <!-- SVG Pie -->
-      <svg viewBox="0 0 300 300" width="220" height="220" style="flex-shrink:0; overflow:visible;">
+    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:12px 0;">
+      <svg viewBox="0 0 300 300" width="200" height="200" style="flex-shrink:0; overflow:visible;">
         @for (s of serviceCostsPieSlices; track s.name) {
         <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
-          style="cursor:pointer; transition: opacity 0.15s;"
+          style="cursor:pointer; transition:opacity 0.15s;"
           [style.opacity]="hoveredServiceCost && hoveredServiceCost.name !== s.name ? '0.55' : '1'"
           (mouseenter)="hoveredServiceCost = s" (mouseleave)="hoveredServiceCost = null">
         </path>
         }
       </svg>
-
-      <!-- Legend -->
       <div style="flex:1; padding-right:4px;">
         @for (s of serviceCostsPieSlices; track s.name) {
-        <div
-          style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding:5px 8px; border-radius:6px; cursor:default;"
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
+                    padding:4px 6px; border-radius:6px; cursor:default;"
           (mouseenter)="hoveredServiceCost = s" (mouseleave)="hoveredServiceCost = null">
           <span [style.background]="s.color"
-            style="display:inline-block; width:13px; height:13px; border-radius:3px; flex-shrink:0;"></span>
-          <span
-            style="font-size:12.5px; color:#374151; line-height:1.4; flex:1; min-width:0; word-break:break-word;">{{
-            s.name }}</span>
-          <span style="font-size:11.5px; color:#6b7280; white-space:nowrap;">&#8377;{{
-            s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}</span>
-          <span
-            style="font-size:12px; color:#2563eb; font-weight:600; white-space:nowrap; background:#eff6ff; padding:2px 7px; border-radius:12px;">{{
-            s.percentage }}%</span>
+            style="display:inline-block; width:12px; height:12px; border-radius:3px; flex-shrink:0;"></span>
+          <span style="font-size:12px; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
+          <span style="font-size:11px; color:#6b7280; white-space:nowrap;">
+            &#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}
+          </span>
+          <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
         </div>
         }
       </div>

@@ -583,3 +583,173 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.55 !important;
 }
+
+/* ── Design tokens ──────────────────────────────────────────────────── */
+:root {
+  --color-healthy: #10b981;
+  --color-alert:   #dc2626;
+  --card-radius:   12px;
+  --card-shadow:   0 4px 12px rgba(0,0,0,0.08);
+  --card-padding:  24px;
+}
+
+/* ── Skeleton / shimmer loader ──────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 6px;
+}
+
+.skeleton-line {
+  height: 14px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.skeleton-value {
+  height: 36px;
+  width: 60%;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.skeleton-chart {
+  height: 180px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.skeleton-row {
+  height: 44px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+/* ── UTC / Date-format badges ───────────────────────────────────────── */
+.utc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  font-size: 11px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.date-fmt-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+/* ── Status semantic colours ────────────────────────────────────────── */
+.status-healthy {
+  color: var(--color-healthy);
+  font-weight: 500;
+}
+
+.status-alert {
+  color: var(--color-alert);
+  font-weight: 500;
+}
+
+.status-badge-healthy {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge-alert {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ── Material card wrapper ──────────────────────────────────────────── */
+.material-card {
+  background: #fff;
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: var(--card-padding);
+  margin-bottom: 20px;
+}
+
+/* ── Page title centering ───────────────────────────────────────────── */
+.page-title-centered {
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+/* ── Inline search filter ───────────────────────────────────────────── */
+.filter-search {
+  width: 100%;
+  padding: 7px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #f8fafc;
+}
+.filter-search:focus {
+  border-color: #2563eb;
+  background: #fff;
+}
+
+/* ── Vibrant DevOps metric badges ───────────────────────────────────── */
+.badge-purple  { background:#ede9fe; color:#6d28d9; padding:2px 9px; border-radius:12px; font-size:12px; }
+.badge-cyan    { background:#cffafe; color:#0e7490; padding:2px 9px; border-radius:12px; font-size:12px; }
+.badge-green   { background:#d1fae5; color:#065f46; padding:2px 9px; border-radius:12px; font-size:12px; }
+.badge-amber   { background:#fef3c7; color:#92400e; padding:2px 9px; border-radius:12px; font-size:12px; }
+.badge-red     { background:#fee2e2; color:#991b1b; padding:2px 9px; border-radius:12px; font-size:12px; }
+.badge-blue    { background:#dbeafe; color:#1e40af; padding:2px 9px; border-radius:12px; font-size:12px; }
+
+/* ── Horizontal sub-navigation tabs ───────────────────────────────────── */
+.horizontal-sub-nav {
+  display: flex;
+  gap: 10px;
+  background: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.sub-nav-btn {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sub-nav-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.sub-nav-btn.active {
+  background: #ede9fe;
+  color: #6d28d9;
+}

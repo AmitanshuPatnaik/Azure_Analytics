@@ -1,12 +1,13 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../../services/dashboard.service';
 import { ProjectsApiService } from '../../../../services/api/projects-api.service';
 import { BoardsApiService } from '../../../../services/api/boards-api.service';
 
 @Component({
   selector: 'app-boards',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './boards.html',
   styleUrl: '../../home.css'
 })

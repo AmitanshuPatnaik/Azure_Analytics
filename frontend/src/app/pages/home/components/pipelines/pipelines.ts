@@ -1,12 +1,13 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../../services/dashboard.service';
 import { ProjectsApiService } from '../../../../services/api/projects-api.service';
 import { PipelinesApiService } from '../../../../services/api/pipelines-api.service';
 
 @Component({
   selector: 'app-pipelines',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './pipelines.html',
   styleUrl: '../../home.css'
 })
@@ -17,6 +18,16 @@ export class PipelinesComponent implements OnInit {
   selectedPipelineProject = '';
   isLoadingPipelines = false;
   pipelinesError: string | null = null;
+  pipelineSearch = '';
+
+  get filteredPipelines(): any[] {
+    if (!this.pipelineSearch.trim()) return this.pipelines;
+    const q = this.pipelineSearch.trim().toLowerCase();
+    return this.pipelines.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.folder || '').toLowerCase().includes(q)
+    );
+  }
 
   constructor(
     public dashboardService: DashboardService,

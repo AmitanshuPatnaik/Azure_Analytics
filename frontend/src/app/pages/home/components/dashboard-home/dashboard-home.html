@@ -1,226 +1,311 @@
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-  <h1 style="margin: 0;">Watcher Analytics Dashboard</h1>
-  <div>
-    <label for="home-azure-proj-select" style="margin-right: 10px; font-weight: 500;">Select Azure Project:</label>
-    <select id="home-azure-proj-select" class="month-dropdown" style="width: auto;"
-      [value]="selectedHomeAzureProject" (change)="onHomeAzureProjectChange($event)">
-      <option value="">Select Azure Project</option>
-      @for (proj of azureProjects; track proj) {
-      <option [value]="proj">{{ proj }}</option>
-      }
-    </select>
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE HEADER                                                             -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div style="text-align:center; margin-bottom:20px;">
+  <h1 class="page-title-centered" style="margin:0; font-size:26px; color:#1e293b; font-weight:700;">
+    Watcher Analytics Dashboard
+  </h1>
+  <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-top:8px;">
+    <span class="utc-badge">All timings are in UTC</span>
   </div>
 </div>
 
-<div class="cards">
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TOP METRIC CARDS                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="cards" style="margin-top:16px;">
 
+  <!-- Total Repositories -->
   <div class="card">
     <h3>Total Repositories</h3>
-    @if (reposError) {
-    <div class="error-inline">{{ reposError }}</div>
+    @if (isLoadingRepos) {
+    <div class="skeleton skeleton-value"></div>
+    } @else if (reposError) {
+    <div style="color:#dc2626; font-size:13px;">{{ reposError }}</div>
     } @else {
     <h2>{{ repositories.length }}</h2>
     }
   </div>
 
+  <!-- Total Projects -->
   <div class="card">
     <h3>Total Projects</h3>
-    @if (projectsError) {
-    <div class="error-inline">{{ projectsError }}</div>
+    @if (isLoadingProjects) {
+    <div class="skeleton skeleton-value"></div>
+    } @else if (projectsError) {
+    <div style="color:#dc2626; font-size:13px;">{{ projectsError }}</div>
     } @else {
     <h2>{{ projects.length }}</h2>
     }
   </div>
 
+  <!-- Active Pipelines -->
   <div class="card">
     <h3>Active Pipelines</h3>
     @if (activePipelinesError) {
-    <div class="error-inline">{{ activePipelinesError }}</div>
+    <div style="color:#dc2626; font-size:13px;">{{ activePipelinesError }}</div>
     } @else {
     <h2>{{ activePipelinesCount }}</h2>
     }
   </div>
 
-  <div class="card">
-    <h3>Yearly Cost</h3>
-    @if (!selectedHomeAzureProject) {
-    <div class="error-inline">Select Azure Project</div>
-    } @else if (yearlyCostError) {
-    <div class="error-inline">{{ yearlyCostError }}</div>
-    } @else if (isLoadingYearlyCost) {
-    <div class="error-inline">Loading...</div>
+  <!-- Total Combined Cost -->
+  <div class="card" style="border-top:3px solid #7c3aed;">
+    <h3>Total Combined Cost</h3>
+    @if (isLoadingCombinedCost) {
+    <div class="skeleton skeleton-value"></div>
+    } @else if (combinedCostError) {
+    <div style="color:#dc2626; font-size:13px;">{{ combinedCostError }}</div>
     } @else {
-    <h2>₹{{ yearlyCost | number:'1.2-2' }}</h2>
+    <h2 style="color:#7c3aed;">₹{{ combinedYearlyCost | number:'1.2-2' }}</h2>
     }
   </div>
 
 </div>
 
-<div class="dashboard-row">
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- RELOCATED AZURE PROJECT DROPDOWN & PROJECT METADATA                    -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div style="background:white; border:1px solid #e2e8f0; padding:16px 24px; border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.04); margin-top:20px; display:flex; align-items:center; gap:12px;">
+  <span style="font-size:14px; font-weight:600; color:#334155;">Select Azure Project to inspect details:</span>
+  <select id="home-azure-proj-select" class="month-dropdown" style="width:240px; font-size:13.5px; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;"
+    [value]="selectedHomeAzureProject" (change)="onHomeAzureProjectChange($event)">
+    <option value="">Select Azure Project</option>
+    @for (proj of azureProjects; track proj) {
+    <option [value]="proj">{{ proj }}</option>
+    }
+  </select>
+</div>
 
-  <!-- PIE CHART CARD -->
+<!-- PROJECT STATUS BADGES — shown when a project is selected -->
+@if (selectedHomeAzureProject) {
+<div style="display:flex; align-items:center; gap:12px; margin:12px 0 0 0; padding:10px 18px;
+            background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; flex-wrap:wrap;">
+  <span style="font-size:13px; color:#64748b;">
+    Project: <strong>{{ selectedHomeAzureProject }}</strong>
+  </span>
+  <span [class]="getProjectState(selectedHomeAzureProject) === 'wellFormed' ||
+                 getProjectState(selectedHomeAzureProject) === 'Active'
+                 ? 'status-badge-healthy' : 'status-badge-alert'">
+    State: {{ getProjectState(selectedHomeAzureProject) }}
+  </span>
+  <span [class]="getProjectVisibility(selectedHomeAzureProject) === 'private'
+                 ? 'status-badge-alert' : 'status-badge-healthy'">
+    {{ getProjectVisibility(selectedHomeAzureProject) === 'private' ? 'Private' : 'Public' }}
+  </span>
+</div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- PIE CHART + COST TREND ROW                                             -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="dashboard-row" style="margin-top:20px;">
+
+  <!-- PIE CHART CARD (legend filter) -->
   <div class="chart-card">
-
     <div class="chart-header">
-      <h2>Project Repository Distribution</h2>
-
+      <h2 style="text-align:center; flex:1;">Project Repository Distribution</h2>
       <button class="details-btn" (click)="openProjectDistributionDetailsModal()"
-        [disabled]="projectsError || reposError">
+        [disabled]="!!(projectsError || reposError)">
         View Details
       </button>
-
     </div>
 
-    @if (projectsError || reposError) {
-    <div class="error-block">
+    @if (isLoadingProjects || isLoadingRepos) {
+    <div style="padding:20px 0;">
+      <div class="skeleton skeleton-chart"></div>
+    </div>
+    } @else if (projectsError || reposError) {
+    <div style="color:#dc2626; padding:16px; font-size:13px;">
       Could not display distribution: {{ projectsError || reposError }}
     </div>
     } @else {
     <div class="pie-wrapper">
-
       <div class="project-pie-chart" [style.background]="pieChartStyle"></div>
 
-      <div class="pie-legend">
-        @for (item of projectDistribution; track item.name) {
+      <div class="pie-legend" style="flex:1; min-width:0;">
+        <!-- Legend search box -->
+        <input class="filter-search" type="text" placeholder="Search projects…"
+          [(ngModel)]="pieSearchQuery" style="margin-bottom:10px;" />
+
+        @for (item of filteredProjectDistribution; track item.name) {
         <div>
           <span class="dot" [style.backgroundColor]="item.color"></span>
           {{ item.name }} ({{ item.count }})
         </div>
         }
       </div>
-
     </div>
     }
-
   </div>
 
-  <!-- COST TREND CARD -->
+  <!-- CLOUD COST TREND CARD (MULTI-LINE) -->
   <div class="chart-card">
-
     <div class="chart-header">
-      <h2>Cloud Cost Trend</h2>
+      <h2 style="text-align:center; flex:1;">Cloud Cost Trend</h2>
     </div>
 
-    @if (!selectedHomeAzureProject) {
-    <div style="text-align: center; padding: 40px;">
-      <p style="color: #6b7280; font-size: 14px;">Please select an Azure project to view cost trend.</p>
+    <!-- Chart legend -->
+    <div style="display:flex; justify-content:center; gap:20px; font-size:12px; margin-bottom:12px;">
+      <div><span style="display:inline-block; width:12px; height:12px; background:#2563eb; margin-right:6px; border-radius:2px;"></span>AiDocFlo</div>
+      <div><span style="display:inline-block; width:12px; height:12px; background:#16a34a; margin-right:6px; border-radius:2px;"></span>TimeFlow</div>
+      <div><span style="display:inline-block; width:12px; height:12px; background:#f59e0b; margin-right:6px; border-radius:2px;"></span>Integrelity</div>
     </div>
-    } @else if (trendDataError) {
-    <div class="error-block">
-      Could not display cost trend: {{ trendDataError }}
+
+    @if (isLoadingMultiTrend) {
+    <div style="padding:20px 0;">
+      <div class="skeleton skeleton-chart"></div>
+      <div class="skeleton skeleton-line" style="width:40%; margin-top:10px;"></div>
     </div>
+    } @else if (multiTrendError) {
+    <div style="color:#dc2626; padding:16px; font-size:13px;">{{ multiTrendError }}</div>
     } @else {
     <div class="graph-container">
       <svg viewBox="0 0 620 280" width="100%" height="280">
 
-        <!-- Y Axis Grid + Labels -->
-        @for (lbl of yAxisLabels; track $index) {
-
-        <line x1="55" [attr.y1]="30 + ($index * 45)" x2="585" [attr.y2]="30 + ($index * 45)" stroke="#e2e8f0"
-          stroke-width="1">
-        </line>
-
-        <text x="45" [attr.y]="34 + ($index * 45)" text-anchor="end" fill="#64748b" font-size="12">
-          {{ lbl }}
-        </text>
-
+        <!-- Area fills (faint overlapping fills) -->
+        @for (trend of projectTrends; track trend.projectName) {
+          @if (trend.polylinePoints) {
+            <polygon [attr.points]="trend.polylinePoints + ' 585,255 55,255'"
+                     [attr.fill]="trend.projectName === 'AiDocFlo' ? 'rgba(37,99,235,0.03)' : trend.projectName === 'TimeFlow' ? 'rgba(22,163,74,0.03)' : 'rgba(245,158,11,0.03)'"></polygon>
+          }
         }
 
-        <!-- Trend Line -->
-        <polyline *ngIf="polylinePoints" [attr.points]="polylinePoints" fill="none" stroke="#2563eb"
-          stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-        </polyline>
+        <!-- Y-axis grid + ₹ labels -->
+        @for (lbl of yAxisLabels; track $index) {
+        <line x1="55" [attr.y1]="30 + ($index * 45)"
+              x2="585" [attr.y2]="30 + ($index * 45)"
+              stroke="#e2e8f0" stroke-width="1"></line>
+        <text x="50" [attr.y]="34 + ($index * 45)"
+              text-anchor="end" fill="#64748b" font-size="11">
+          ₹{{ lbl }}
+        </text>
+        }
 
-        <!-- Data Points -->
-        @for (c of circlePoints; track c.month) {
+        <!-- Multi-line trends -->
+        @for (trend of projectTrends; track trend.projectName) {
+          <!-- Polyline -->
+          <polyline *ngIf="trend.polylinePoints" [attr.points]="trend.polylinePoints"
+                    fill="none" [attr.stroke]="trend.color" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round"></polyline>
 
-        <circle [attr.cx]="c.cx" [attr.cy]="c.cy" r="6" fill="#2563eb" stroke="#fff" stroke-width="2">
+          <!-- Data points -->
+          @for (c of trend.circlePoints; track c.month) {
+          <circle [attr.cx]="c.cx" [attr.cy]="c.cy" r="5"
+                  [attr.fill]="trend.color" stroke="#fff" stroke-width="2">
+            <title>{{ trend.projectName }} - {{ c.month }}: ₹{{ c.cost | number:'1.0-0' }}</title>
+          </circle>
+          }
+        }
 
-          <title>
-            {{ c.month }} :
-            ₹{{ c.cost | number:'1.0-0' }}
-          </title>
-
-        </circle>
-
-        <!-- X Axis Labels -->
-        <text [attr.x]="c.cx" y="275" text-anchor="middle" fill="#64748b" font-size="12" font-weight="500">
-
+        <!-- X-axis month labels (using the first trend's timeline) -->
+        @for (c of projectTrends[0]?.circlePoints; track c.month) {
+        <text [attr.x]="c.cx" y="275" text-anchor="middle"
+              fill="#64748b" font-size="11">
           {{ c.month?.substring(0,3) }}
-
         </text>
         }
 
       </svg>
     </div>
     }
-
   </div>
 
 </div>
 
-<div class="section">
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- PROJECT COST BREAKDOWN (E) — below trend chart                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+@if (selectedHomeAzureProject && yearlyCost > 0) {
+<div class="section" style="margin-top:20px;">
+  <h2 style="text-align:center; margin-bottom:16px;">Project-Based Total Cost Breakdown</h2>
+  <table>
+    <tr>
+      <th>Project</th>
+      <th style="text-align:right;">Yearly Cost (₹)</th>
+    </tr>
+    <tr>
+      <td>{{ selectedHomeAzureProject }}</td>
+      <td style="text-align:right; color:#2563eb;">₹{{ yearlyCost | number:'1.2-2' }}</td>
+    </tr>
+  </table>
+</div>
+}
 
-  <h2>DevOps Services Summary</h2>
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- DEVOPS SERVICES SUMMARY (J – semantic status colours)                  -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section" style="margin-top:20px;">
+  <h2 style="text-align:center; margin-bottom:16px;">DevOps Services Summary</h2>
 
-  @if (servicesStatusError) {
-  <div class="error-block">
-    Could not load services status: {{ servicesStatusError }}
+  @if (isLoadingRepos || isLoadingProjects) {
+  <div>
+    @for (_ of [1,2,3,4,5]; track $index) {
+    <div class="skeleton skeleton-row"></div>
+    }
   </div>
+  } @else if (servicesStatusError) {
+  <div style="color:#dc2626; font-size:13px;">{{ servicesStatusError }}</div>
   } @else {
   <table>
-
     <tr>
       <th>Service</th>
       <th>Status</th>
     </tr>
-
     @for (srv of servicesStatus; track srv.service) {
     <tr>
       <td>{{ srv.service }}</td>
-      <td>{{ srv.status }}</td>
+      <td>
+        <span [class]="srv.status === 'Healthy' || srv.status === 'healthy'
+                       ? 'status-badge-healthy' : 'status-badge-alert'">
+          {{ srv.status }}
+        </span>
+      </td>
     </tr>
     }
-
   </table>
   }
-
 </div>
 
-<!-- PROJECT REPOSITORY DISTRIBUTION DETAILS MODAL -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- PROJECT DISTRIBUTION DETAILS MODAL                                    -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
 @if(showProjectDistributionDetails){
-
 <div class="modal-overlay">
-
-  <div class="modal-card" style="max-height: 85vh; overflow-y: auto; width: 800px; max-width: 95%;">
-
+  <div class="modal-card" style="max-height:85vh; overflow-y:auto; width:800px; max-width:95%;">
     <div class="modal-header">
-      <h2>Project Repository Distribution Details</h2>
-
+      <h2 style="text-align:center; flex:1;">Project Repository Distribution Details</h2>
       <button class="close-btn" (click)="closeProjectDistributionDetailsModal()">✕</button>
     </div>
-
-    <table style="margin-top: 10px;">
+    <table style="margin-top:10px;">
       <tr>
         <th>Project Name</th>
         <th>Description</th>
         <th>State</th>
         <th>Visibility</th>
-        <th>Repositories Count</th>
+        <th>Repositories</th>
       </tr>
       @for (item of projectDistribution; track item.name) {
       <tr>
-        <td style="font-weight: 600; color: #1e293b;">{{ item.name }}</td>
-        <td>{{ getProjectDescription(item.name) }}</td>
-        <td>{{ getProjectState(item.name) }}</td>
-        <td>{{ getProjectVisibility(item.name) }}</td>
-        <td style="font-weight: bold; color: #2563eb; text-align: center;">{{ item.count }}</td>
+        <td>{{ item.name }}</td>
+        <td style="font-size:12px; color:#64748b;">{{ getProjectDescription(item.name) }}</td>
+        <td>
+          <span [class]="getProjectState(item.name) === 'wellFormed' || getProjectState(item.name) === 'Active'
+                         ? 'status-badge-healthy' : 'status-badge-alert'">
+            {{ getProjectState(item.name) }}
+          </span>
+        </td>
+        <td>
+          <span [class]="getProjectVisibility(item.name) === 'private'
+                         ? 'status-badge-alert' : 'status-badge-healthy'">
+            {{ getProjectVisibility(item.name) }}
+          </span>
+        </td>
+        <td style="text-align:center; color:#2563eb;">{{ item.count }}</td>
       </tr>
       }
     </table>
-
   </div>
-
 </div>
-
 }
