@@ -12,7 +12,6 @@ from services.Azure.subscriptions import fetch_subscriptions
 from core.data_cache import cache 
 from core.azure_throttle import azure_semaphore
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +32,7 @@ def normalize_utc_date(date_str: str | None) -> str:
     if len(raw) == 10 and raw[4] == "-" and raw[7] == "-":
         return raw
 
-    if len(raw) == 8 and raw.isdigit():
+    if len(raw) == 8 and raw[4].isdigit() and raw.isdigit():
         return f"{raw[:4]}-{raw[4:6]}-{raw[6:8]}"
 
     try:
@@ -158,74 +157,128 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
 
 
 def _execute_azure_query(subscription_id: str, payload: dict):
-    key = get_cache_key("cost_query", subscription_id, payload)
-    ttl = determine_cost_query_ttl(payload)
-    return get_cached_azure_data(
-        key=key,
-        fetch_fn=lambda: _execute_azure_query_live(subscription_id, payload),
-        ttl=ttl
-    )
-
+    try:
+        key = get_cache_key("cost_query", subscription_id, payload)
+        ttl = determine_cost_query_ttl(payload)
+        return get_cached_azure_data(
+            key=key,
+            fetch_fn=lambda: _execute_azure_query_live(subscription_id, payload),
+            ttl=ttl
+        )
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing _execute_azure_query: %s", str(e))
+        return {"success": False, "error": str(e), "properties": {"rows": []}}
 
 
 def fetch_total_cost(subscription_id: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "MonthToDate",
-        "dataset": {
-            "granularity": "None",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
-            }
-        }
-    }
-    result = _execute_azure_query(subscription_id, payload)
-
-    if not isinstance(result, dict) or "properties" not in result:
-        return _stamp_utc_metadata({
-            "success": False,
-            "total_cost": 0.0,
-            "amount": 0.0,
-            "error": result.get("error", "Failed to fetch total cost") if isinstance(result, dict) else "Failed to fetch total cost",
-        })
-
-    total_amount = 0.0
-    rows = result["properties"].get("rows", [])
-    if rows and len(rows) > 0 and len(rows[0]) > 0:
-        total_amount = float(rows[0][0])
-
-    return _stamp_utc_metadata({
-        "success": True,
-        "total_cost": total_amount,
-        "amount": total_amount,
-    })
-
-
-def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: str = None):
-    utc_from = normalize_utc_date(from_date) if from_date else None
-    utc_to = normalize_utc_date(to_date) if to_date else None
-
-    if utc_from and utc_to:
+    try:
         payload = {
             "type": "ActualCost",
-            "timeframe": "Custom",
-            "timePeriod": {
-                "from": utc_day_start_iso(utc_from),
-                "to": utc_day_end_iso(utc_to),
-            },
+            "timeframe": "MonthToDate",
             "dataset": {
                 "granularity": "None",
                 "aggregation": {
                     "totalCost": {"name": "Cost", "function": "Sum"}
-                },
-                "grouping": [
-                    {"type": "Dimension", "name": "ServiceName"}
-                ]
+                }
             }
         }
-    else:
-        utc_from = None
-        utc_to = None
+        result = _execute_azure_query(subscription_id, payload)
+
+        if not isinstance(result, dict) or "properties" not in result:
+            return _stamp_utc_metadata({
+                "success": False,
+                "total_cost": 0.0,
+                "amount": 0.0,
+                "error": result.get("error", "Failed to fetch total cost") if isinstance(result, dict) else "Failed to fetch total cost",
+            })
+
+        total_amount = 0.0
+        rows = result["properties"].get("rows", [])
+        if rows and len(rows) > 0 and len(rows[0]) > 0:
+            total_amount = float(rows[0][0])
+
+        return _stamp_utc_metadata({
+            "success": True,
+            "total_cost": total_amount,
+            "amount": total_amount,
+        })
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_total_cost: %s", str(e))
+        return _stamp_utc_metadata({
+            "success": False,
+            "total_cost": 0.0,
+            "amount": 0.0,
+            "error": str(e),
+        })
+
+
+def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: str = None):
+    try:
+        utc_from = normalize_utc_date(from_date) if from_date else None
+        utc_to = normalize_utc_date(to_date) if to_date else None
+
+        if utc_from and utc_to:
+            payload = {
+                "type": "ActualCost",
+                "timeframe": "Custom",
+                "timePeriod": {
+                    "from": utc_day_start_iso(utc_from),
+                    "to": utc_day_end_iso(utc_to),
+                },
+                "dataset": {
+                    "granularity": "None",
+                    "aggregation": {
+                        "totalCost": {"name": "Cost", "function": "Sum"}
+                    },
+                    "grouping": [
+                        {"type": "Dimension", "name": "ServiceName"}
+                    ]
+                }
+            }
+        else:
+            utc_from = None
+            utc_to = None
+            payload = {
+                "type": "ActualCost",
+                "timeframe": "MonthToDate",
+                "dataset": {
+                    "granularity": "None",
+                    "aggregation": {
+                        "totalCost": {"name": "Cost", "function": "Sum"}
+                    },
+                    "grouping": [
+                        {"type": "Dimension", "name": "ServiceName"}
+                    ]
+                }
+            }
+
+        result = _execute_azure_query(subscription_id, payload)
+        if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+            return _stamp_utc_metadata({
+                "success": False,
+                "error": result.get("error", "Failed to fetch service costs") if isinstance(result, dict) else "Failed to fetch service costs",
+                "services": [],
+                "rows": [],
+            }, utc_from, utc_to)
+
+        rows = result.get("properties", {}).get("rows", [])
+        return _stamp_utc_metadata({
+            "success": True,
+            "services": rows,
+            "rows": rows,
+        }, utc_from, utc_to)
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_service_costs: %s", str(e))
+        return _stamp_utc_metadata({
+            "success": False,
+            "error": str(e),
+            "services": [],
+            "rows": [],
+        }, from_date, to_date)
+
+
+def fetch_resource_group_costs(subscription_id: str):
+    try:
         payload = {
             "type": "ActualCost",
             "timeframe": "MonthToDate",
@@ -235,188 +288,215 @@ def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: st
                     "totalCost": {"name": "Cost", "function": "Sum"}
                 },
                 "grouping": [
-                    {"type": "Dimension", "name": "ServiceName"}
+                    {"type": "Dimension", "name": "ResourceGroupName"}
                 ]
             }
         }
+        result = _execute_azure_query(subscription_id, payload)
+        if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+            return _stamp_utc_metadata({
+                "success": False,
+                "error": result.get("error", "Failed to fetch resource group costs") if isinstance(result, dict) else "Failed to fetch resource group costs",
+                "resource_groups": [],
+                "rows": [],
+            })
 
-    result = _execute_azure_query(subscription_id, payload)
-    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+        rows = result.get("properties", {}).get("rows", [])
+        return _stamp_utc_metadata({
+            "success": True,
+            "resource_groups": rows,
+            "rows": rows,
+        })
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_resource_group_costs: %s", str(e))
         return _stamp_utc_metadata({
             "success": False,
-            "error": result.get("error", "Failed to fetch service costs") if isinstance(result, dict) else "Failed to fetch service costs",
-            "services": [],
-            "rows": [],
-        }, utc_from, utc_to)
-
-    rows = result.get("properties", {}).get("rows", [])
-    return _stamp_utc_metadata({
-        "success": True,
-        "services": rows,
-        "rows": rows,
-    }, utc_from, utc_to)
-
-
-def fetch_resource_group_costs(subscription_id: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "MonthToDate",
-        "dataset": {
-            "granularity": "None",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
-            },
-            "grouping": [
-                {"type": "Dimension", "name": "ResourceGroupName"}
-            ]
-        }
-    }
-    result = _execute_azure_query(subscription_id, payload)
-    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
-        return _stamp_utc_metadata({
-            "success": False,
-            "error": result.get("error", "Failed to fetch resource group costs") if isinstance(result, dict) else "Failed to fetch resource group costs",
+            "error": str(e),
             "resource_groups": [],
             "rows": [],
         })
 
-    rows = result.get("properties", {}).get("rows", [])
-    return _stamp_utc_metadata({
-        "success": True,
-        "resource_groups": rows,
-        "rows": rows,
-    })
-
 
 def fetch_daily_costs(subscription_id: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "MonthToDate",
-        "dataset": {
-            "granularity": "Daily",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
+    try:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "MonthToDate",
+            "dataset": {
+                "granularity": "Daily",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                }
             }
         }
-    }
-    result = _execute_azure_query(subscription_id, payload)
-    if not isinstance(result, dict) or "properties" not in result:
+        result = _execute_azure_query(subscription_id, payload)
+        if not isinstance(result, dict) or "properties" not in result:
+            return _stamp_utc_metadata({
+                "success": False,
+                "daily_costs": [],
+                "rows": [],
+                "error": result.get("error", "Failed to fetch daily costs") if isinstance(result, dict) else "Failed to fetch daily costs",
+            })
+
+        rows = result.get("properties", {}).get("rows", [])
+        return _stamp_utc_metadata({
+            "success": True,
+            "daily_costs": rows,
+            "rows": rows,
+        })
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_daily_costs: %s", str(e))
         return _stamp_utc_metadata({
             "success": False,
             "daily_costs": [],
             "rows": [],
-            "error": result.get("error", "Failed to fetch daily costs") if isinstance(result, dict) else "Failed to fetch daily costs",
+            "error": str(e),
         })
-
-    rows = result.get("properties", {}).get("rows", [])
-    return _stamp_utc_metadata({
-        "success": True,
-        "daily_costs": rows,
-        "rows": rows,
-    })
 
 
 def fetch_daily_costs_by_range(subscription_id: str, from_date: str, to_date: str):
-    utc_from = normalize_utc_date(from_date)
-    utc_to = normalize_utc_date(to_date)
+    try:
+        utc_from = normalize_utc_date(from_date)
+        utc_to = normalize_utc_date(to_date)
 
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "Custom",
-        "timePeriod": {
-            "from": utc_day_start_iso(utc_from),
-            "to": utc_day_end_iso(utc_to),
-        },
-        "dataset": {
-            "granularity": "Daily",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "Custom",
+            "timePeriod": {
+                "from": utc_day_start_iso(utc_from),
+                "to": utc_day_end_iso(utc_to),
+            },
+            "dataset": {
+                "granularity": "Daily",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                }
             }
         }
-    }
-    result = _execute_azure_query(subscription_id, payload)
-    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+        result = _execute_azure_query(subscription_id, payload)
+        if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+            return _stamp_utc_metadata({
+                "success": False,
+                "error": result.get("error", "Failed to fetch daily costs") if isinstance(result, dict) else "Failed to fetch daily costs",
+                "points": [],
+                "count": 0,
+            }, utc_from, utc_to)
+
+        raw_rows = result.get("properties", {}).get("rows", [])
+
+        points = []
+        for row in raw_rows:
+            if len(row) >= 2:
+                cost = float(row[0])
+                raw_date = str(row[1])
+                if len(raw_date) == 8 and raw_date.isdigit():
+                    label = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
+                else:
+                    label = normalize_utc_date(raw_date)
+                points.append({
+                    "date": label,
+                    "dateUtc": utc_day_start_iso(label),
+                    "cost": round(cost, 2),
+                })
+
+        points.sort(key=lambda p: p["date"])
+        return _stamp_utc_metadata({
+            "success": True,
+            "points": points,
+            "count": len(points),
+        }, utc_from, utc_to)
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_daily_costs_by_range: %s", str(e))
         return _stamp_utc_metadata({
             "success": False,
-            "error": result.get("error", "Failed to fetch daily costs") if isinstance(result, dict) else "Failed to fetch daily costs",
+            "error": str(e),
             "points": [],
             "count": 0,
-        }, utc_from, utc_to)
-
-    raw_rows = result.get("properties", {}).get("rows", [])
-
-    points = []
-    for row in raw_rows:
-        if len(row) >= 2:
-            cost = float(row[0])
-            raw_date = str(row[1])
-            if len(raw_date) == 8 and raw_date.isdigit():
-                label = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
-            else:
-                label = normalize_utc_date(raw_date)
-            points.append({
-                "date": label,
-                "dateUtc": utc_day_start_iso(label),
-                "cost": round(cost, 2),
-            })
-
-    points.sort(key=lambda p: p["date"])
-    return _stamp_utc_metadata({
-        "success": True,
-        "points": points,
-        "count": len(points),
-    }, utc_from, utc_to)
+        }, from_date, to_date)
 
 
 def fetch_monthly_costs(subscription_id: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "YearToDate",
-        "dataset": {
-            "granularity": "Monthly",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
+    try:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "YearToDate",
+            "dataset": {
+                "granularity": "Monthly",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                }
             }
         }
-    }
-    result = _execute_azure_query(subscription_id, payload)
-    if not isinstance(result, dict) or "properties" not in result:
+        result = _execute_azure_query(subscription_id, payload)
+        if not isinstance(result, dict) or "properties" not in result:
+            return _stamp_utc_metadata({
+                "success": False,
+                "monthly_costs": [],
+                "rows": [],
+                "error": result.get("error", "Failed to fetch monthly costs") if isinstance(result, dict) else "Failed to fetch monthly costs",
+            })
+
+        rows = result.get("properties", {}).get("rows", [])
+        return _stamp_utc_metadata({
+            "success": True,
+            "monthly_costs": rows,
+            "rows": rows,
+        })
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_monthly_costs: %s", str(e))
         return _stamp_utc_metadata({
             "success": False,
             "monthly_costs": [],
             "rows": [],
-            "error": result.get("error", "Failed to fetch monthly costs") if isinstance(result, dict) else "Failed to fetch monthly costs",
+            "error": str(e),
         })
 
-    rows = result.get("properties", {}).get("rows", [])
-    return _stamp_utc_metadata({
-        "success": True,
-        "monthly_costs": rows,
-        "rows": rows,
-    })
 
-
-# 6. Fetch yearly summary projections
 def fetch_yearly_costs(subscription_id: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "YearToDate",
-        "dataset": {
-            "granularity": "None",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
+    try:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "YearToDate",
+            "dataset": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                }
             }
         }
-    }
-    result = _execute_azure_query(subscription_id, payload)
+        result = _execute_azure_query(subscription_id, payload)
 
-    rows = []
-    if isinstance(result, dict) and "properties" in result:
-        rows = result["properties"].get("rows", [])
-    elif isinstance(result, dict):
-        rows = result.get("rows", [])
+        rows = []
+        if isinstance(result, dict) and "properties" in result:
+            rows = result["properties"].get("rows", [])
+        elif isinstance(result, dict):
+            rows = result.get("rows", [])
 
-    if not isinstance(result, dict) or "properties" not in result:
+        if not isinstance(result, dict) or "properties" not in result:
+            return _stamp_utc_metadata({
+                "success": False,
+                "yearly_costs": [],
+                "rows": [],
+                "yearly_cost": 0.0,
+                "amount": 0.0,
+                "total_cost": 0.0,
+                "error": result.get("error", "Failed to fetch yearly costs") if isinstance(result, dict) else "Failed to fetch yearly costs",
+            })
+
+        yearly_amount = 0.0
+        if rows and len(rows) > 0 and len(rows[0]) > 0:
+            yearly_amount = float(rows[0][0])
+
+        return _stamp_utc_metadata({
+            "success": True,
+            "yearly_costs": rows,
+            "rows": rows,
+            "yearly_cost": yearly_amount,
+            "amount": yearly_amount,
+            "total_cost": yearly_amount,
+        })
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_yearly_costs: %s", str(e))
         return _stamp_utc_metadata({
             "success": False,
             "yearly_costs": [],
@@ -424,52 +504,48 @@ def fetch_yearly_costs(subscription_id: str):
             "yearly_cost": 0.0,
             "amount": 0.0,
             "total_cost": 0.0,
-            "error": result.get("error", "Failed to fetch yearly costs") if isinstance(result, dict) else "Failed to fetch yearly costs",
+            "error": str(e),
         })
-
-    yearly_amount = 0.0
-    if rows and len(rows) > 0 and len(rows[0]) > 0:
-        yearly_amount = float(rows[0][0])
-
-    return _stamp_utc_metadata({
-        "success": True,
-        "yearly_costs": rows,
-        "rows": rows,
-        "yearly_cost": yearly_amount,
-        "amount": yearly_amount,
-        "total_cost": yearly_amount,
-    })
 
 
 def fetch_resource_costs(subscription_id: str):
-    payload = {
-        "type": "ActualCost",
-        "timeframe": "MonthToDate",
-        "dataset": {
-            "granularity": "None",
-            "aggregation": {
-                "totalCost": {"name": "Cost", "function": "Sum"}
-            },
-            "grouping": [
-                {"type": "Dimension", "name": "ResourceId"}
-            ]
+    try:
+        payload = {
+            "type": "ActualCost",
+            "timeframe": "MonthToDate",
+            "dataset": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"}
+                },
+                "grouping": [
+                    {"type": "Dimension", "name": "ResourceId"}
+                ]
+            }
         }
-    }
-    result = _execute_azure_query(subscription_id, payload)
-    if not isinstance(result, dict) or "properties" not in result:
+        result = _execute_azure_query(subscription_id, payload)
+        if not isinstance(result, dict) or "properties" not in result:
+            return _stamp_utc_metadata({
+                "success": False,
+                "resources": [],
+                "rows": [],
+                "error": result.get("error", "Failed to fetch resource costs") if isinstance(result, dict) else "Failed to fetch resource costs",
+            })
+
+        rows = result.get("properties", {}).get("rows", [])
+        return _stamp_utc_metadata({
+            "success": True,
+            "resources": rows,
+            "rows": rows,
+        })
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_resource_costs: %s", str(e))
         return _stamp_utc_metadata({
             "success": False,
             "resources": [],
             "rows": [],
-            "error": result.get("error", "Failed to fetch resource costs") if isinstance(result, dict) else "Failed to fetch resource costs",
+            "error": str(e),
         })
-
-    rows = result.get("properties", {}).get("rows", [])
-    return _stamp_utc_metadata({
-        "success": True,
-        "resources": rows,
-        "rows": rows,
-    })
 
 
 def _extract_resource_name(resource_id: str) -> str:
@@ -480,70 +556,79 @@ def _extract_resource_name(resource_id: str) -> str:
 
 
 def fetch_top_resources(subscription_id: str, from_date: str = None, to_date: str = None):
-    utc_from = normalize_utc_date(from_date) if from_date else None
-    utc_to = normalize_utc_date(to_date) if to_date else None
+    try:
+        utc_from = normalize_utc_date(from_date) if from_date else None
+        utc_to = normalize_utc_date(to_date) if to_date else None
 
-    if utc_from and utc_to:
-        payload = {
-            "type": "ActualCost",
-            "timeframe": "Custom",
-            "timePeriod": {
-                "from": utc_day_start_iso(utc_from),
-                "to": utc_day_end_iso(utc_to),
-            },
-            "dataset": {
-                "granularity": "None",
-                "aggregation": {
-                    "totalCost": {"name": "Cost", "function": "Sum"}
+        if utc_from and utc_to:
+            payload = {
+                "type": "ActualCost",
+                "timeframe": "Custom",
+                "timePeriod": {
+                    "from": utc_day_start_iso(utc_from),
+                    "to": utc_day_end_iso(utc_to),
                 },
-                "grouping": [
-                    {"type": "Dimension", "name": "ResourceId"}
-                ]
+                "dataset": {
+                    "granularity": "None",
+                    "aggregation": {
+                        "totalCost": {"name": "Cost", "function": "Sum"}
+                    },
+                    "grouping": [
+                        {"type": "Dimension", "name": "ResourceId"}
+                    ]
+                }
             }
-        }
-    else:
-        utc_from = None
-        utc_to = None
-        payload = {
-            "type": "ActualCost",
-            "timeframe": "MonthToDate",
-            "dataset": {
-                "granularity": "None",
-                "aggregation": {
-                    "totalCost": {"name": "Cost", "function": "Sum"}
-                },
-                "grouping": [
-                    {"type": "Dimension", "name": "ResourceId"}
-                ]
+        else:
+            utc_from = None
+            utc_to = None
+            payload = {
+                "type": "ActualCost",
+                "timeframe": "MonthToDate",
+                "dataset": {
+                    "granularity": "None",
+                    "aggregation": {
+                        "totalCost": {"name": "Cost", "function": "Sum"}
+                    },
+                    "grouping": [
+                        {"type": "Dimension", "name": "ResourceId"}
+                    ]
+                }
             }
-        }
 
-    result = _execute_azure_query(subscription_id, payload)
-    if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+        result = _execute_azure_query(subscription_id, payload)
+        if not isinstance(result, dict) or "properties" not in result or result.get("error"):
+            return _stamp_utc_metadata({
+                "success": False,
+                "error": result.get("error", "Failed to fetch top resources") if isinstance(result, dict) else "Failed to fetch top resources",
+                "top_resources": [],
+                "rows": [],
+            }, utc_from, utc_to)
+
+        rows = result.get("properties", {}).get("rows", [])
+        sorted_rows = sorted(rows, key=lambda x: x[0], reverse=True) if rows else []
+
+        cleaned_rows = []
+        for row in sorted_rows[:10]:
+            if len(row) >= 2:
+                cleaned = list(row)
+                cleaned[1] = _extract_resource_name(str(row[1]))
+                cleaned_rows.append(cleaned)
+            else:
+                cleaned_rows.append(row)
+
+        return _stamp_utc_metadata({
+            "success": True,
+            "top_resources": cleaned_rows,
+            "rows": cleaned_rows,
+        }, utc_from, utc_to)
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_top_resources: %s", str(e))
         return _stamp_utc_metadata({
             "success": False,
-            "error": result.get("error", "Failed to fetch top resources") if isinstance(result, dict) else "Failed to fetch top resources",
+            "error": str(e),
             "top_resources": [],
             "rows": [],
-        }, utc_from, utc_to)
-
-    rows = result.get("properties", {}).get("rows", [])
-    sorted_rows = sorted(rows, key=lambda x: x[0], reverse=True) if rows else []
-
-    cleaned_rows = []
-    for row in sorted_rows[:10]:
-        if len(row) >= 2:
-            cleaned = list(row)
-            cleaned[1] = _extract_resource_name(str(row[1]))
-            cleaned_rows.append(cleaned)
-        else:
-            cleaned_rows.append(row)
-
-    return _stamp_utc_metadata({
-        "success": True,
-        "top_resources": cleaned_rows,
-        "rows": cleaned_rows,
-    }, utc_from, utc_to)
+        }, from_date, to_date)
 
 
 def _fetch_budgets_live(subscription_id: str):
@@ -570,88 +655,102 @@ def _fetch_budgets_live(subscription_id: str):
 
 
 def fetch_budgets(subscription_id: str):
-    key = get_cache_key("budgets", subscription_id)
     try:
+        key = get_cache_key("budgets", subscription_id)
         return get_cached_azure_data(
             key=key,
             fetch_fn=lambda: _fetch_budgets_live(subscription_id),
             ttl=7200
         )
     except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_budgets: %s", str(e))
         return _stamp_utc_metadata({"success": True, "budgets": [], "error": str(e)})
 
 
 def fetch_aggregated_monthly_costs(project_name: str = None):
     try:
-        subs_data = fetch_subscriptions(project_name)
-    except Exception:
-        subs_data = []
-
-    subs = []
-    if isinstance(subs_data, dict) and "subscriptions" in subs_data:
-        subs = subs_data["subscriptions"]
-    elif isinstance(subs_data, list):
-        subs = subs_data
-
-    fallback_data = [
-        {"month": "January", "cost": 0}, {"month": "February", "cost": 0},
-        {"month": "March", "cost": 0}, {"month": "April", "cost": 0},
-        {"month": "May", "cost": 0}, {"month": "June", "cost": 0}
-    ]
-
-    if not subs:
-        return _stamp_utc_metadata({
-            "success": False,
-            "trend": fallback_data,
-            "error": "No subscriptions found",
-        })
-
-    aggregated = {}
-    has_real_data = False
-
-    for sub in subs:
-        sub_id = sub.get("subscriptionId")
-        if not sub_id:
-            continue
         try:
-            res = cache.get(f"monthly:{sub_id}")
-
-            if not res or not isinstance(res, dict) or not res.get("rows"):
-                res = fetch_monthly_costs(sub_id)
-
-            if res and res.get("success") and res.get("rows"):
-                has_real_data = True
-                for row in res["rows"]:
-                    if len(row) >= 2:
-                        cost = float(row[0])
-                        month_raw = str(row[1])
-                        month_name = _parse_month_name(month_raw)
-                        if month_name:
-                            aggregated[month_name] = aggregated.get(month_name, 0.0) + cost
+            subs_data = fetch_subscriptions(project_name)
         except Exception:
-            pass
+            subs_data = []
 
-    if not has_real_data:
+        subs = []
+        if isinstance(subs_data, dict) and "subscriptions" in subs_data:
+            subs = subs_data["subscriptions"]
+        elif isinstance(subs_data, list):
+            subs = subs_data
+
+        fallback_data = [
+            {"month": "January", "cost": 0}, {"month": "February", "cost": 0},
+            {"month": "March", "cost": 0}, {"month": "April", "cost": 0},
+            {"month": "May", "cost": 0}, {"month": "June", "cost": 0}
+        ]
+
+        if not subs:
+            return _stamp_utc_metadata({
+                "success": False,
+                "trend": fallback_data,
+                "error": "No subscriptions found",
+            })
+
+        aggregated = {}
+        has_real_data = False
+
+        for sub in subs:
+            sub_id = sub.get("subscriptionId")
+            if not sub_id:
+                continue
+            try:
+                res = cache.get(f"monthly:{sub_id}")
+
+                if not res or not isinstance(res, dict) or not res.get("rows"):
+                    res = fetch_monthly_costs(sub_id)
+
+                if res and res.get("success") and res.get("rows"):
+                    has_real_data = True
+                    for row in res["rows"]:
+                        if len(row) >= 2:
+                            cost = float(row[0])
+                            month_raw = str(row[1])
+                            month_name = _parse_month_name(month_raw)
+                            if month_name:
+                                aggregated[month_name] = aggregated.get(month_name, 0.0) + cost
+            except Exception:
+                pass
+
+        if not has_real_data:
+            return _stamp_utc_metadata({
+                "success": False,
+                "trend": fallback_data,
+                "error": "API rate-limited or cache warming up",
+            })
+
+        month_order = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+        trend = []
+        for m in month_order:
+            if m in aggregated:
+                trend.append({"month": m, "cost": round(aggregated[m], 2)})
+
+        if not trend:
+            return _stamp_utc_metadata({
+                "success": False,
+                "trend": fallback_data,
+                "error": "Trend aggregation compiled empty",
+            })
+
+        return _stamp_utc_metadata({"success": True, "trend": trend})
+    except Exception as e:
+        logger.error("[AzureCosts] Failed executing fetch_aggregated_monthly_costs: %s", str(e))
+        fallback_data = [
+            {"month": "January", "cost": 0}, {"month": "February", "cost": 0},
+            {"month": "March", "cost": 0}, {"month": "April", "cost": 0},
+            {"month": "May", "cost": 0}, {"month": "June", "cost": 0}
+        ]
         return _stamp_utc_metadata({
             "success": False,
             "trend": fallback_data,
-            "error": "API rate-limited or cache warming up",
+            "error": str(e),
         })
-
-    month_order = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    trend = []
-    for m in month_order:
-        if m in aggregated:
-            trend.append({"month": m, "cost": round(aggregated[m], 2)})
-
-    if not trend:
-        return _stamp_utc_metadata({
-            "success": False,
-            "trend": fallback_data,
-            "error": "Trend aggregation compiled empty",
-        })
-
-    return _stamp_utc_metadata({"success": True, "trend": trend})
 
 
 def _parse_month_name(month_str: str) -> str:

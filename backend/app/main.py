@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
+
+from fastapi.responses import PlainTextResponse
 from models.handle_logging import get_logging_conf
 logging = get_logging_conf()
 import os
-from core.logging_config import setup_logging
-setup_logging()
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -79,6 +79,22 @@ async def default():
     logger.debug("[Main] Root health-check endpoint hit.")
     return "Watcher API is running ..."
 
+
+@app.get('/api/watcher/ghty34jkdzxdo0o/log', response_class=PlainTextResponse)
+async def log(lines: int = Query(default=100, description="Number of log lines to retrieve")):
+    try:
+        log=""
+        if lines is not None:
+            lines = min(int(lines), 100000)
+        with open("logs/app.log", "r") as f:
+            log = f.readlines()
+            if len(log)>lines:
+                log = log[len(log)-lines:]
+        log = "".join(log)
+        return log
+    except Exception as e:
+        logging.error(str(e))
+        return ""
 
 if __name__ == "__main__":
     port = int(os.environ.get("SERVER_PORT", 80))
