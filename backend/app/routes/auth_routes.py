@@ -21,7 +21,7 @@ async def login(credentials: LoginRequest):
         )
 
     token = create_access_token({"username": credentials.username})
-    logger.info("[AuthRoutes] ✓ Login successful for user: %s", credentials.username)
+    logger.info("[AuthRoutes] Login successful for user: %s", credentials.username)
     return {
         "access_token": token,
         "token_type": "bearer"

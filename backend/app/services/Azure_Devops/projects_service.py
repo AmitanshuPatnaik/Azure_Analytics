@@ -49,10 +49,10 @@ def fetch_projects():
             "count": len(projects),
             "projects": projects
         }
-        logger.info("[ProjectsService] ✓ Projects fetched successfully: %d projects", len(projects))
+        logger.info("[ProjectsService] Projects fetched successfully: %d projects", len(projects))
         return result
     except Exception as e:
-        logger.error("[ProjectsService] ✗ Failed to fetch projects: %s", e, exc_info=True)
+        logger.error("[ProjectsService] Failed to fetch projects: %s", e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch projects: {str(e)}",

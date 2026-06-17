@@ -63,7 +63,6 @@ def get_azure_token(project_name: str = None):
         logger.error("[AzureAuth] Azure configuration is incomplete or missing in config.json for project '%s'", project_name)
         raise ValueError("Azure configuration is incomplete or missing in config.json")
 
-    # ── Token cache: avoid hammering login.microsoftonline.com ──────────────────── #
     cached_token = token_cache.get(t_id, c_id)
     if cached_token:
         logger.debug("[AzureAuth] Token cache hit for project '%s' (tenant=%s)", project_name, t_id)
@@ -83,5 +82,5 @@ def get_azure_token(project_name: str = None):
 
     token = response.json()["access_token"]
     token_cache.set(t_id, c_id, token)
-    logger.info("[AzureAuth] ✓ Acquired and cached new Azure AD token for project '%s' (tenant=%s)", project_name, t_id)
-    return token
+    logger.info("[AzureAuth] Acquired and cached new Azure AD token for project '%s' (tenant=%s)", project_name, t_id)
+    return token

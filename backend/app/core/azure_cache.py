@@ -1,17 +1,3 @@
-"""
-azure_cache.py
-──────────────
-Multi-tier caching system for Azure Cost Management, Subscriptions, and Budgets APIs.
-
-Caching Hierarchy:
-1. Local File Cache (fast, persistent across restarts)
-2. Shared Azure Blob Storage Cache (shared across all laptops/systems)
-
-Fallback:
-If a live Azure API query fails or is rate-limited (429), the cache wrapper returns
-the last known cached response (stale fallback) instead of propagating the failure.
-"""
-
 import os
 import json
 import logging
@@ -23,7 +9,6 @@ from azure.storage.blob import BlobServiceClient
 
 logger = logging.getLogger(__name__)
 
-# ── Paths & Configurations ──────────────────────────────────────────────────
 
 _CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
 try:
@@ -42,10 +27,8 @@ try:
 except Exception as exc:
     logger.warning("[AzureCache] Failed to create local cache dir %s: %s", LOCAL_CACHE_DIR, exc)
 
-# ── Thread Safety Lock ──────────────────────────────────────────────────────
 _cache_lock = threading.RLock()
 
-# ── Lazy Blob Container Client ──────────────────────────────────────────────
 _container_client = None
 
 def get_blob_container():
@@ -68,10 +51,8 @@ def get_blob_container():
         return None
 
 
-# ── Core Caching Logics ─────────────────────────────────────────────────────
 
 def get_cache_key(prefix: str, identifier: str, payload: dict | None = None) -> str:
-    """Generate a sanitized, deterministic cache key based on query details."""
     clean_id = str(identifier).strip().replace("/", "_").replace("\\", "_")
     if payload:
         # Sort keys to ensure payload hashes are identical for identical queries
@@ -82,11 +63,6 @@ def get_cache_key(prefix: str, identifier: str, payload: dict | None = None) -> 
 
 
 def determine_cost_query_ttl(payload: dict) -> int:
-    """
-    Determine TTL in seconds based on payload parameters.
-    - If payload date range is entirely in the past (historical), TTL is 7 days.
-    - If payload date range includes today or future, TTL is 2 hours.
-    """
     timeframe = payload.get("timeframe")
     if timeframe == "Custom":
         time_period = payload.get("timePeriod", {})
@@ -110,7 +86,6 @@ def determine_cost_query_ttl(payload: dict) -> int:
 
 
 def _read_cache_entry(key: str) -> dict | None:
-    """Read a cache entry from local disk, falling back to Azure Blob storage."""
     local_path = os.path.join(LOCAL_CACHE_DIR, f"{key}.json")
     
     # 1. Try Local File Cache
@@ -148,7 +123,6 @@ def _read_cache_entry(key: str) -> dict | None:
 
 
 def _write_cache_entry(key: str, data: dict, ttl: int) -> None:
-    """Write a cache entry to both local disk and Azure Blob storage."""
     now = time.time()
     entry = {
         "fetched_at": now,
@@ -178,10 +152,6 @@ def _write_cache_entry(key: str, data: dict, ttl: int) -> None:
 
 
 def get_cached_azure_data(key: str, fetch_fn, ttl: int) -> dict:
-    """
-    Get data from cache. If expired or missing, fetch live using fetch_fn.
-    If fetch_fn fails or is rate-limited (429), fall back to expired cache if available.
-    """
     with _cache_lock:
         entry = _read_cache_entry(key)
         now = time.time()

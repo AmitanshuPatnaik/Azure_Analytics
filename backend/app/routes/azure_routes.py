@@ -26,7 +26,6 @@ router = APIRouter(prefix="/azure", tags=["Azure"])
 
 
 def resolve_project_for_subscription(subscription_id: str) -> str | None:
-    """Resolve Azure project context from the pre-warmed sub_project_map cache."""
     if not subscription_id:
         return None
 
@@ -53,13 +52,6 @@ def _set_project_context(subscription_id: str, project: str | None) -> str | Non
 
 
 def _cache_query(cache_key: str, fetch_fn, cold_default: dict):
-    """
-    CQRS query-side read: serve from memory instantly; on miss, single-flight
-    populate via get_or_fetch so parallel widgets share one Azure round-trip.
-    Only successful payloads are committed to the cache.
-    On a live fetch, always return the actual result (even on failure) so
-    the frontend can display a real error rather than an empty cold default.
-    """
     if cache.has(cache_key):
         return cache.get(cache_key)
 
@@ -341,8 +333,6 @@ def get_daily_costs_by_range(
     utc_from = normalize_utc_date(from_date)
     utc_to = normalize_utc_date(to_date)
 
-    # Check 5-minute TTL cache first — same date range from any machine/tab
-    # returns instantly without burning Azure quota.
     ttl_key = f"dailyrange:{subscription_id}:{utc_from}:{utc_to}"
     cached = range_cache.get(ttl_key)
     if cached is not None:

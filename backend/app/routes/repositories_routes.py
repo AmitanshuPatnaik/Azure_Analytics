@@ -1,14 +1,3 @@
-"""
-repositories_routes.py
-──────────────────────
-Critical cached endpoint:
-  GET /api/repos  — reads from local cache (no live call)
-
-All parameterised per-project / per-repo endpoints below still make live
-calls because they are scoped to specific parameters supplied at runtime
-and cannot practically be pre-cached en masse.
-"""
-
 from fastapi import APIRouter
 
 from core.data_cache import cache
@@ -24,7 +13,6 @@ from services.Azure_Devops.repositories_service import (
 
 router = APIRouter(tags=["Repositories"])
 
-# ── Cold-cache fallback ──────────────────────────────────────────────────── #
 _COLD_CACHE_RESPONSE = {
     "success": False,
     "count": 0,
@@ -33,18 +21,10 @@ _COLD_CACHE_RESPONSE = {
 }
 
 
-# ── CACHED endpoint ──────────────────────────────────────────────────────── #
-
 @router.get("/repos")
 async def get_all_repositories():
-    """
-    Return all repositories (across all projects) from the local cache.
-    Response time: sub-10 ms (in-memory read, no I/O).
-    """
     return cache.get("repos", _COLD_CACHE_RESPONSE)
 
-
-# ── Live endpoints (parameterised, not pre-cacheable) ───────────────────── #
 
 @router.get("/projects/{project_name}/repos")
 async def get_repositories(project_name: str):

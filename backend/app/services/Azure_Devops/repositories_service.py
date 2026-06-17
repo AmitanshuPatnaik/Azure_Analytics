@@ -91,11 +91,11 @@ def fetch_repositories(project_name):
             "count": len(repos),
             "repositories": repos
         }
-        logger.info("[ReposService] ✓ Repositories fetched: %d repos for project '%s'", len(repos), project_name)
+        logger.info("[ReposService] Repositories fetched: %d repos for project '%s'", len(repos), project_name)
         return result
 
     except Exception as e:
-        logger.error("[ReposService] ✗ Failed to fetch repositories for '%s': %s", project_name, e, exc_info=True)
+        logger.error("[ReposService] Failed to fetch repositories for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch repositories: {str(e)}",
@@ -252,7 +252,6 @@ def fetch_pushes(project_name, repo_name):
 
 
 def _fmt_date(iso_str: str) -> str:
-    # Convert an ISO date string (2025-07-15T...) to '15 Jul 2025'
     try:
         dt = datetime.fromisoformat(iso_str.split("T")[0])
         return dt.strftime("%-d %b %Y")  # Linux/Mac

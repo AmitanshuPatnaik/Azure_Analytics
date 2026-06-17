@@ -1,10 +1,3 @@
-"""
-sync_worker.py
-──────────────
-Background daemon thread that periodically syncs live Azure & Azure DevOps
-data into the local in-memory cache (data_cache.py) with open-validation protection.
-"""
-
 import logging
 import threading
 import time
@@ -12,7 +5,6 @@ from datetime import datetime, timezone
 
 from core.data_cache import cache
 
-# ── Service imports ──────────────────────────────────────────────────────── #
 from services.Azure_Devops.projects_service import fetch_projects
 from services.Azure_Devops.repositories_service import fetch_all_repositories
 from services.Azure.subscriptions import fetch_subscriptions
@@ -37,9 +29,9 @@ def _sync_projects() -> None:
         result = fetch_projects()
         if isinstance(result, dict) and result.get("success", True):
             cache.set("projects", result)
-            logger.info("[SyncWorker] ✓ projects cached (%d entries)", len(result.get("projects", [])))
+            logger.info("[SyncWorker] projects cached (%d entries)", len(result.get("projects", [])))
     except Exception as exc:
-        logger.warning("[SyncWorker] ✗ projects sync failed: %s", exc)
+        logger.warning("[SyncWorker] projects sync failed: %s", exc)
 
 
 def _sync_repos() -> None:
@@ -47,9 +39,9 @@ def _sync_repos() -> None:
         result = fetch_all_repositories()
         if isinstance(result, dict) and result.get("success", True):
             cache.set("repos", result)
-            logger.info("[SyncWorker] ✓ repos cached (%d entries)", len(result.get("repositories", [])))
+            logger.info("[SyncWorker] repos cached (%d entries)", len(result.get("repositories", [])))
     except Exception as exc:
-        logger.warning("[SyncWorker] ✗ repos sync failed: %s", exc)
+        logger.warning("[SyncWorker] repos sync failed: %s", exc)
 
 
 def _sync_subscriptions() -> list:
@@ -94,15 +86,15 @@ def _sync_subscriptions() -> list:
                         all_sub_ids.append((sub_id, proj))
                         sub_project_map[sub_id] = proj
         except Exception as exc:
-            logger.warning("[SyncWorker] ✗ subscriptions sync failed for project %s: %s", proj, exc)
+            logger.warning("[SyncWorker] subscriptions sync failed for project %s: %s", proj, exc)
 
     if all_subscriptions:
         cache.set("subscriptions", {"success": True, "subscriptions": all_subscriptions})
-        logger.info("[SyncWorker] ✓ all subscriptions cached (%d entries)", len(all_subscriptions))
+        logger.info("[SyncWorker] all subscriptions cached (%d entries)", len(all_subscriptions))
 
     if sub_project_map:
         cache.set("sub_project_map", sub_project_map)
-        logger.info("[SyncWorker] ✓ sub_project_map cached (%d entries)", len(sub_project_map))
+        logger.info("[SyncWorker] sub_project_map cached (%d entries)", len(sub_project_map))
 
     return all_sub_ids
 
@@ -141,17 +133,12 @@ def _sync_cost_trend() -> None:
                 cache.set(f"costs:trend:{proj}", result)
                 if proj == projects[0]:
                     cache.set("costs:trend", result)
-                logger.info("[SyncWorker] ✓ cost trend analytics timeline cached successfully for project %s", proj)
+                logger.info("[SyncWorker] cost trend analytics timeline cached successfully for project %s", proj)
         except Exception as exc:
-            logger.warning("[SyncWorker] ✗ cost trend sync failed for project %s: %s", proj, exc)
+            logger.warning("[SyncWorker] cost trend sync failed for project %s: %s", proj, exc)
 
 
 def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: str = None) -> None:
-    """
-    Fetch all cost payloads for a single subscription and commit them to cache
-    under structured keys protected by a performance-safe execution delay.
-    """
-    # ── MTD total cost ───────────────────────────────────────────────────── #
     try:
         result = fetch_total_cost(sub_id)
         if isinstance(result, dict) and result.get("success"):
@@ -161,7 +148,6 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: st
     except Exception as exc:
         logger.warning("[SyncWorker] costs sync failed for sub=%s: %s", sub_id, exc)
 
-    # ── Resource group breakdown ─────────────────────────────────────────── #
     try:
         result = fetch_resource_group_costs(sub_id)
         if isinstance(result, dict) and result.get("success"):
@@ -170,7 +156,6 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: st
     except Exception as exc:
         logger.warning("[SyncWorker] resourcegroups sync failed for sub=%s: %s", sub_id, exc)
 
-    # ── Service allocation breakdown ─────────────────────────────────────── #
     try:
         result = fetch_service_costs(sub_id, from_date, to_date)
         if isinstance(result, dict) and result.get("success"):
@@ -179,17 +164,15 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: st
     except Exception as exc:
         logger.warning("[SyncWorker] services sync failed for sub=%s: %s", sub_id, exc)
 
-    # ── Top high-spending resources ──────────────────────────────────────── #
     try:
         result = fetch_top_resources(sub_id, from_date, to_date)
         # Verify the payload structure is successful and contains valid items before committing to memory
         if isinstance(result, dict) and result.get("success") and result.get("top_resources"):
             cache.set(f"topresources:{sub_id}", result)
-            logger.info("[SyncWorker] ✓ topresources successfully validated and cached for sub=%s", sub_id)
+            logger.info("[SyncWorker] topresources successfully validated and cached for sub=%s", sub_id)
     except Exception as exc:
         logger.warning("[SyncWorker] topresources sync failed for sub=%s: %s", sub_id, exc)
 
-    # ── Budget thresholds ────────────────────────────────────────────────── #
     try:
         result = fetch_budgets(sub_id)
         if isinstance(result, dict) and result.get("success"):
@@ -198,7 +181,6 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: st
     except Exception as exc:
         logger.warning("[SyncWorker] budgets sync failed for sub=%s: %s", sub_id, exc)
 
-    # ── Year-to-date cost breakdown ──────────────────────────────────────── #
     try:
         result = fetch_yearly_costs(sub_id)
         if isinstance(result, dict) and result.get("success") and result.get("yearly_cost", 0) > 0:
@@ -207,24 +189,18 @@ def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: st
     except Exception as exc:
         logger.warning("[SyncWorker] yearly sync failed for sub=%s: %s", sub_id, exc)
 
-    # ── 🎯 HISTORICAL MONTHLY TREND MATRICES (The Graph Fix) ─────────────── #
     try:
         result = fetch_monthly_costs(sub_id)
         if isinstance(result, dict) and result.get("success") and result.get("rows"):
             cache.set(f"monthly:{sub_id}", result)
-            logger.info("[SyncWorker] ✓ historical monthly intervals cached for sub=%s", sub_id)
+            logger.info("[SyncWorker] historical monthly intervals cached for sub=%s", sub_id)
     except Exception as exc:
         logger.warning("[SyncWorker] historical trend lines sync failed for sub=%s: %s", sub_id, exc)
 
-    # 🛡️ ANTI-THROTTLING RATE GATEWAY
-    # The sync worker shares the same global Azure semaphore (MAX_CONCURRENT=2)
-    # as live user requests. A longer sleep between subscriptions ensures the
-    # background sweep does not hold both semaphore slots indefinitely,
-    # leaving user "Fetch Data" clicks blocked for extended periods.
     time.sleep(3.0)
 
 def run_sync() -> None:
-    logger.info("[SyncWorker] ── Starting sync sweep ──────────────────────────")
+    logger.info("[SyncWorker] Starting sync sweep")
     cache.set("worker_status", "running")
 
     try:
@@ -248,7 +224,7 @@ def run_sync() -> None:
 
     except Exception as exc:
         cache.set("worker_status", f"error:{exc}")
-        logger.error("[SyncWorker] ✗ Unexpected sweep failure: %s", exc)
+        logger.error("[SyncWorker] Unexpected sweep failure: %s", exc)
 
 
 class SyncWorker(threading.Thread):

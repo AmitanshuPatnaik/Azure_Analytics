@@ -48,10 +48,10 @@ def fetch_pipelines(project_name):
             "count" : len(pipelines),
             "pipelines" : pipelines
         }
-        logger.info("[PipelinesService] ✓ Pipelines fetched: %d pipelines for project '%s'", len(pipelines), project_name)
+        logger.info("[PipelinesService] Pipelines fetched: %d pipelines for project '%s'", len(pipelines), project_name)
         return result
     except Exception as e:
-        logger.error("[PipelinesService] ✗ Failed to fetch pipelines for '%s': %s", project_name, e, exc_info=True)
+        logger.error("[PipelinesService] Failed to fetch pipelines for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch pipelines: {str(e)}",

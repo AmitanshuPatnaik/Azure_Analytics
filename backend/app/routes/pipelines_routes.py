@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from services.Azure_Devops.pipelines_service import fetch_pipelines, fetch_active_pipelines_count
 
-
 router = APIRouter(tags=["Pipelines"])
 
 @router.get("/projects/{project_name}/pipelines")

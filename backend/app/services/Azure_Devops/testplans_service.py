@@ -54,10 +54,10 @@ def fetch_test_plans(project_name):
             "count" : len(tps),
             "test_plans" : tps
         }
-        logger.info("[TestPlansService] ✓ Test plans fetched: %d plans for project '%s'", len(tps), project_name)
+        logger.info("[TestPlansService] Test plans fetched: %d plans for project '%s'", len(tps), project_name)
         return result
     except Exception as e:
-        logger.error("[TestPlansService] ✗ Failed to fetch test plans for '%s': %s", project_name, e, exc_info=True)
+        logger.error("[TestPlansService] Failed to fetch test plans for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch test plans: {str(e)}",

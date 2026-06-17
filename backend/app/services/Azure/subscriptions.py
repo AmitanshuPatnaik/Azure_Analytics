@@ -35,7 +35,7 @@ def _fetch_subscriptions_live(project_name: str = None):
             "displayName": sub.get("displayName"),
             "state": sub.get("state")
         })
-    logger.info("[Subscriptions] ✓ Fetched %d subscriptions for project '%s'", len(subscriptions), project_name)
+    logger.info("[Subscriptions] Fetched %d subscriptions for project '%s'", len(subscriptions), project_name)
     return {
         "success": True,
         "subscriptions": subscriptions
@@ -43,9 +43,6 @@ def _fetch_subscriptions_live(project_name: str = None):
 
 
 def fetch_subscriptions(project_name: str = None):
-    """
-    Fetch subscriptions with multi-tiered persistent cache (TTL = 2 hours).
-    """
     logger.info("[Subscriptions] Requesting subscriptions for project: %s", project_name)
     from core.azure_cache import get_cached_azure_data, get_cache_key
     key = get_cache_key("subscriptions", project_name or "default")
@@ -56,7 +53,7 @@ def fetch_subscriptions(project_name: str = None):
             ttl=7200
         )
     except Exception as e:
-        logger.error("[Subscriptions] ✗ Failed to fetch subscriptions for project '%s': %s", project_name, e, exc_info=True)
+        logger.error("[Subscriptions] Failed to fetch subscriptions for project '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "error": str(e),

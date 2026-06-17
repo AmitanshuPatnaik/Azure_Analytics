@@ -13,8 +13,6 @@ router = APIRouter(prefix="/status", tags=["Status"])
 
 
 def _check_azure_service(url: str, token: str) -> str:
-    """Return 'Healthy' if the Azure Management URL responds, else 'Warning'.
-    404 is accepted — endpoint is reachable, resource just doesn't exist."""
     try:
         resp = requests.get(
             url,
@@ -30,7 +28,6 @@ def _check_azure_service(url: str, token: str) -> str:
 async def get_services_status(project: str = None):
     logger.info("[StatusRoutes] Running service health check (project=%s)", project)
 
-    # ── 1. Azure DevOps ──────────────────────────────────────────────────────
     devops_status = "Healthy"
     projects = []
     try:
@@ -43,7 +40,6 @@ async def get_services_status(project: str = None):
         devops_status = "Warning"
     logger.info("[StatusRoutes] Azure DevOps status: %s", devops_status)
 
-    # ── 2. CI/CD Pipelines ───────────────────────────────────────────────────
     pipelines_status = "Healthy"
     try:
         target_project = project
@@ -59,28 +55,15 @@ async def get_services_status(project: str = None):
     except Exception:
         pipelines_status = "Warning"
 
-    # ── 3–5. Azure platform services (each independently probed) ─────────────
     azure_services = []
     try:
         token = get_azure_token(project)
 
-        # 3. Azure Subscriptions — core ARM subscriptions listing
-        subs_status = _check_azure_service(
-            "https://management.azure.com/subscriptions?api-version=2020-01-01",
-            token
-        )
+        subs_status = _check_azure_service("https://management.azure.com/subscriptions?api-version=2020-01-01",token)
 
-        # 4. Azure Cost Management — provider registration check
-        cost_status = _check_azure_service(
-            "https://management.azure.com/providers/Microsoft.CostManagement?api-version=2021-04-01",
-            token
-        )
+        cost_status = _check_azure_service("https://management.azure.com/providers/Microsoft.CostManagement?api-version=2021-04-01",token)
 
-        # 5. Azure Resource Manager — ARM providers endpoint (top=1 for speed)
-        arm_status = _check_azure_service(
-            "https://management.azure.com/providers?api-version=2021-04-01&$top=1",
-            token
-        )
+        arm_status = _check_azure_service("https://management.azure.com/providers?api-version=2021-04-01&$top=1",token)
 
         azure_services = [
             {"service": "Azure Subscriptions",   "status": subs_status},
@@ -89,7 +72,6 @@ async def get_services_status(project: str = None):
         ]
 
     except Exception:
-        # Token acquisition failed — all Azure platform services are unreachable
         azure_services = [
             {"service": "Azure Subscriptions",   "status": "Warning"},
             {"service": "Azure Cost Management",  "status": "Warning"},
@@ -104,5 +86,4 @@ async def get_services_status(project: str = None):
 
 @router.get("/api/debug/cache")
 def check_cache_health():
-    # This runs your thread-safe dictionary scanner
     return cache.stats()

@@ -2,26 +2,24 @@ import logging
 import requests
 import time
 from datetime import datetime, timezone
+import random
 
 from services.Azure.azure_auth import get_azure_token
 from core.config import azure_cost_base_url
 from core.azure_cache import get_cached_azure_data, get_cache_key, determine_cost_query_ttl
+from services.Azure.subscriptions import fetch_subscriptions
+from core.data_cache import cache 
+from core.azure_throttle import azure_semaphore
+
 
 logger = logging.getLogger(__name__)
 
 
-# ── UTC presentation & cache-key helpers ───────────────────────────────── #
-
 def utc_now_iso() -> str:
-    """Current instant as ISO-8601 UTC with Z suffix."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def normalize_utc_date(date_str: str | None) -> str:
-    """
-    Normalize any date/datetime string to a YYYY-MM-DD UTC calendar day.
-    Used for cache keys and API timePeriod boundaries.
-    """
     if not date_str:
         return ""
     raw = str(date_str).strip()
@@ -59,7 +57,6 @@ def utc_day_end_iso(date_str: str | None) -> str:
 
 
 def build_dated_cache_key(prefix: str, subscription_id: str, from_date: str | None, to_date: str | None) -> str:
-    """Uniform UTC cache key for date-scoped cost endpoints."""
     if from_date and to_date:
         utc_from = normalize_utc_date(from_date)
         utc_to = normalize_utc_date(to_date)
@@ -68,7 +65,6 @@ def build_dated_cache_key(prefix: str, subscription_id: str, from_date: str | No
 
 
 def _stamp_utc_metadata(payload: dict, from_date: str | None = None, to_date: str | None = None) -> dict:
-    """Attach normalized UTC date fields to every user-facing payload."""
     if from_date:
         utc_from = normalize_utc_date(from_date)
         payload["fromDate"] = utc_from
@@ -82,17 +78,6 @@ def _stamp_utc_metadata(payload: dict, from_date: str | None = None, to_date: st
 
 
 def _execute_azure_query_live(subscription_id: str, payload: dict):
-    """
-    Execute a POST request to the Azure Cost Management API with:
-      • Global concurrency gate (semaphore) — at most 2 threads hit Azure at once
-      • Exponential back-off + full jitter — avoids thundering-herd retries
-      • Retry-After header respect — honors Azure's own cooldown instruction
-      • 8 total attempts over up to ~120 seconds before giving up
-      • 60-second per-request timeout instead of 10s for slow Azure responses
-    """
-    import random
-    from core.azure_throttle import azure_semaphore
-
     MAX_ATTEMPTS = 8
     BASE_DELAY   = 2.0   # seconds
     MAX_DELAY    = 60.0  # seconds cap per sleep
@@ -101,9 +86,8 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
         for attempt in range(MAX_ATTEMPTS):
             try:
                 token = get_azure_token()
-                url = (
-                    f"{azure_cost_base_url}/{subscription_id}"
-                    f"/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
+                url = (f"{azure_cost_base_url}/{subscription_id}"
+                       f"/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
                 )
                 headers = {
                     "Authorization": f"Bearer {token}",
@@ -126,7 +110,6 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
                         "error": "Azure Cost Management rate limit exceeded. Cached fallback data will be served if available.",
                     }
 
-                # Non-retryable HTTP error (4xx except 429, 5xx transient)
                 if response.status_code >= 500 and attempt < MAX_ATTEMPTS - 1:
                     sleep_time = random.uniform(0, min(MAX_DELAY, BASE_DELAY * (2 ** attempt)))
                     logger.warning(
@@ -174,9 +157,6 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
 
 
 def _execute_azure_query(subscription_id: str, payload: dict):
-    """
-    Wrapper around _execute_azure_query_live that applies a persistent, multi-tiered cache.
-    """
     key = get_cache_key("cost_query", subscription_id, payload)
     ttl = determine_cost_query_ttl(payload)
     return get_cached_azure_data(
@@ -187,7 +167,6 @@ def _execute_azure_query(subscription_id: str, payload: dict):
 
 
 
-# 1. Fetch Month-To-Date overall billing total balance
 def fetch_total_cost(subscription_id: str):
     payload = {
         "type": "ActualCost",
@@ -221,7 +200,6 @@ def fetch_total_cost(subscription_id: str):
     })
 
 
-# 2. Fetch costs broken down by Service categories (e.g., Storage, Virtual Machines)
 def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: str = None):
     utc_from = normalize_utc_date(from_date) if from_date else None
     utc_to = normalize_utc_date(to_date) if to_date else None
@@ -278,7 +256,6 @@ def fetch_service_costs(subscription_id: str, from_date: str = None, to_date: st
     }, utc_from, utc_to)
 
 
-# 3. Fetch costs grouped by Resource Groups
 def fetch_resource_group_costs(subscription_id: str):
     payload = {
         "type": "ActualCost",
@@ -310,7 +287,6 @@ def fetch_resource_group_costs(subscription_id: str):
     })
 
 
-# 4. Fetch daily cost tracking points
 def fetch_daily_costs(subscription_id: str):
     payload = {
         "type": "ActualCost",
@@ -339,12 +315,7 @@ def fetch_daily_costs(subscription_id: str):
     })
 
 
-# 4b. Fetch day-wise costs for a custom date range
 def fetch_daily_costs_by_range(subscription_id: str, from_date: str, to_date: str):
-    """
-    Fetch daily granularity costs between from_date and to_date (inclusive).
-    Dates are normalized to UTC YYYY-MM-DD before querying Azure.
-    """
     utc_from = normalize_utc_date(from_date)
     utc_to = normalize_utc_date(to_date)
 
@@ -396,7 +367,6 @@ def fetch_daily_costs_by_range(subscription_id: str, from_date: str, to_date: st
     }, utc_from, utc_to)
 
 
-# 5. Fetch monthly historical cost matrices
 def fetch_monthly_costs(subscription_id: str):
     payload = {
         "type": "ActualCost",
@@ -470,7 +440,6 @@ def fetch_yearly_costs(subscription_id: str):
     })
 
 
-# 7. Fetch granular raw resource asset costs
 def fetch_resource_costs(subscription_id: str):
     payload = {
         "type": "ActualCost",
@@ -502,9 +471,7 @@ def fetch_resource_costs(subscription_id: str):
     })
 
 
-# 8. Fetch the top high-spending resource instances
 def _extract_resource_name(resource_id: str) -> str:
-    """Extract the friendly resource name from a full Azure resource ID path."""
     if not resource_id or not isinstance(resource_id, str):
         return resource_id or "Unknown"
     parts = [p for p in resource_id.strip("/").split("/") if p]
@@ -578,7 +545,6 @@ def fetch_top_resources(subscription_id: str, from_date: str = None, to_date: st
     }, utc_from, utc_to)
 
 
-# 9. Fetch active Cloud Spending budgets thresholds
 def _fetch_budgets_live(subscription_id: str):
     token = get_azure_token()
     url = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.Consumption/budgets?api-version=2023-05-01"
@@ -603,9 +569,6 @@ def _fetch_budgets_live(subscription_id: str):
 
 
 def fetch_budgets(subscription_id: str):
-    """
-    Fetch budgets with multi-tiered persistent cache (TTL = 2 hours).
-    """
     key = get_cache_key("budgets", subscription_id)
     try:
         return get_cached_azure_data(
@@ -618,9 +581,6 @@ def fetch_budgets(subscription_id: str):
 
 
 def fetch_aggregated_monthly_costs(project_name: str = None):
-    from services.Azure.subscriptions import fetch_subscriptions
-    from core.data_cache import cache
-
     try:
         subs_data = fetch_subscriptions(project_name)
     except Exception:

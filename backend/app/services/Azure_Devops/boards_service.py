@@ -3,6 +3,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
 from datetime import datetime, timezone, timedelta
+import re
 
 from core.config import base_url, collection, pat
 from services.Azure_Devops.projects_service import fetch_projects
@@ -43,7 +44,6 @@ def fetch_work_item_ids(project_name):
 
 
 def fetch_sprints(project_name):
-    """Return a list of sprint names for the given project."""
     if not base_url or not collection or not pat:
         return []
     try:
@@ -62,25 +62,20 @@ def fetch_sprints(project_name):
 
 
 def get_sprint_sort_key(sprint_name, project_name):
-    import re
     s_name_lower = sprint_name.lower() if sprint_name else ""
     p_name_lower = project_name.lower() if project_name else ""
     
-    # 1. Priority (contains 'priority')
     if "priority" in s_name_lower:
         return (0, 0, sprint_name)
         
-    # 2. Numbered (contains digits)
     digits = re.findall(r'\d+', sprint_name)
     if digits:
         num = int(digits[0])
         return (1, -num, sprint_name)
         
-    # 3. Contains project name
     if p_name_lower in s_name_lower:
         return (2, 0, sprint_name)
         
-    # 4. Others
     return (3, 0, sprint_name)
 
 
@@ -202,7 +197,7 @@ def fetch_work_items(project_name):
         raw_items.sort(key=lambda x: get_sprint_sort_key(x["fields"]["_sprint"], project_name))
 
         sprints = sorted(list(sprint_set), key=lambda s: get_sprint_sort_key(s, project_name))
-        logger.info("[BoardsService] ✓ Work items fetched: %d items, %d sprints for project '%s'", len(raw_items), len(sprints), project_name)
+        logger.info("[BoardsService] Work items fetched: %d items, %d sprints for project '%s'", len(raw_items), len(sprints), project_name)
 
         return {
             "success": True,
@@ -211,7 +206,7 @@ def fetch_work_items(project_name):
             "sprints": sprints,
         }
     except Exception as e:
-        logger.error("[BoardsService] ✗ Failed to fetch work items for '%s': %s", project_name, e, exc_info=True)
+        logger.error("[BoardsService] Failed to fetch work items for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch work items: {str(e)}",
@@ -222,10 +217,6 @@ def fetch_work_items(project_name):
 
 
 def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 25):
-    """
-    Returns work items whose state changed within the last `days` days,
-    enriched with the previous state inferred from the update history.
-    """
     logger.info("[BoardsService] Fetching recent state changes for project '%s' (days=%d, limit=%d)", project_name, days, limit)
     if not base_url or not collection or not pat:
         logger.warning("[BoardsService] Azure DevOps not configured — skipping recent state changes for '%s'", project_name)
@@ -239,7 +230,6 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
     try:
         since_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
 
-        # ── Step 1: WIQL – IDs of items with recent state changes ──────────────
         wiql_url = (
             f"{base_url}/{collection}/{project_name}/_apis/wit/wiql"
             f"?api-version={API_VERSION}"
@@ -253,9 +243,7 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
             ORDER BY [Microsoft.VSTS.Common.StateChangeDate] DESC
             """
         }
-        wiql_resp = requests.post(
-            url=wiql_url, json=query, auth=auth, verify=False, timeout=10
-        )
+        wiql_resp = requests.post(url=wiql_url, json=query, auth=auth, verify=False, timeout=10)
         if wiql_resp.status_code != 200:
             return {
                 "success": False,
@@ -273,7 +261,6 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
         if not ids:
             return {"success": True, "count": 0, "changes": []}
 
-        # ── Step 2: Bulk fetch fields ───────────────────────────────────────────
         ids_str = ",".join(map(str, ids))
         fields_param = (
             "System.Id,System.Title,System.WorkItemType,System.State,"
@@ -283,9 +270,8 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
             f"{base_url}/{collection}/_apis/wit/workitems"
             f"?ids={ids_str}&fields={fields_param}&api-version={API_VERSION}"
         )
-        bulk_resp = requests.get(
-            bulk_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=10
-        )
+
+        bulk_resp = requests.get(bulk_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=10)
         if bulk_resp.status_code != 200:
             return {
                 "success": False,
@@ -314,21 +300,18 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
                 ),
             }
 
-        # ── Step 3: Fetch update history to extract previous state ──────────────
         for wid in ids:
             try:
                 upd_url = (
                     f"{base_url}/{collection}/_apis/wit/workitems/{wid}/updates"
                     f"?api-version={API_VERSION}"
                 )
-                upd_resp = requests.get(
-                    upd_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=8
-                )
+
+                upd_resp = requests.get(upd_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=8)
                 if upd_resp.status_code != 200:
                     continue
 
                 updates = upd_resp.json().get("value", [])
-                # Walk updates newest-first to find the last state transition
                 for upd in reversed(updates):
                     fields_changed = upd.get("fields", {})
                     state_change = fields_changed.get("System.State")
@@ -336,23 +319,22 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
                         items_by_id[wid]["prev_state"] = state_change["oldValue"]
                         break
             except Exception:
-                pass  # History fetch is best-effort; silently skip on error
+                pass
 
-        # ── Step 4: Build ordered result list ──────────────────────────────────
         changes = sorted(
             items_by_id.values(),
             key=lambda x: x["changed_at"] or "",
             reverse=True,
         )
 
-        logger.info("[BoardsService] ✓ Recent state changes fetched: %d items for project '%s'", len(changes), project_name)
+        logger.info("[BoardsService] Recent state changes fetched: %d items for project '%s'", len(changes), project_name)
         return {"success": True, "count": len(changes), "changes": changes}
 
     except Exception as exc:
-        logger.error("[BoardsService] ✗ Failed to fetch recent state changes for '%s': %s", project_name, exc, exc_info=True)
+        logger.error("[BoardsService] Failed to fetch recent state changes for '%s': %s", project_name, exc, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch recent state changes: {str(exc)}",
             "count": 0,
             "changes": []
-        }
+        }
