@@ -65,6 +65,17 @@ export class DashboardHomeComponent implements OnInit {
 
   // Project distribution popup
   showProjectDistributionDetails = false;
+  repoSortOrder = 'default';
+
+  get sortedProjectDistribution(): any[] {
+    if (this.repoSortOrder === 'desc') {
+      return [...this.projectDistribution].sort((a, b) => b.count - a.count);
+    }
+    if (this.repoSortOrder === 'asc') {
+      return [...this.projectDistribution].sort((a, b) => a.count - b.count);
+    }
+    return this.projectDistribution;
+  }
 
   // Error States
   projectsError: string | null = null;

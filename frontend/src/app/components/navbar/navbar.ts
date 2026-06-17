@@ -21,6 +21,27 @@ export class Navbar {
     public dashboardService: DashboardService
   ) {}
 
+  isDevOpsActive(): boolean {
+    return this.router.url.startsWith('/home') &&
+           this.dashboardService.selectedModule === 'DevOps' &&
+           this.dashboardService.selectedPage !== 'home';
+  }
+
+  isAzureActive(): boolean {
+    return this.router.url.startsWith('/home') &&
+           this.dashboardService.selectedModule === 'Azure' &&
+           this.dashboardService.selectedPage !== 'home';
+  }
+
+  isHomeActive(): boolean {
+    return this.router.url.startsWith('/home') &&
+           this.dashboardService.selectedPage === 'home';
+  }
+
+  isAboutActive(): boolean {
+    return this.router.url.startsWith('/about');
+  }
+
   toggleLogout() {
 
     this.showLogout = !this.showLogout;

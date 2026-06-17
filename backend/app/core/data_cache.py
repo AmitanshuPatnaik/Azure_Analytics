@@ -1,5 +1,6 @@
 import threading
-import logging
+from models.handle_logging import get_logging_conf
+logging = get_logging_conf()
 from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)

@@ -17,7 +17,7 @@
 
   <!-- Total Repositories -->
   <div class="card">
-    <h3>Total Repositories</h3>
+    <h3>Repositories</h3>
     @if (isLoadingRepos) {
     <div class="skeleton skeleton-value"></div>
     } @else if (reposError) {
@@ -29,7 +29,7 @@
 
   <!-- Total Projects -->
   <div class="card">
-    <h3>Total Projects</h3>
+    <h3>Projects</h3>
     @if (isLoadingProjects) {
     <div class="skeleton skeleton-value"></div>
     } @else if (projectsError) {
@@ -41,7 +41,7 @@
 
   <!-- Active Pipelines -->
   <div class="card">
-    <h3>Active Pipelines</h3>
+    <h3>Pipelines</h3>
     @if (activePipelinesError) {
     <div style="color:#dc2626; font-size:13px;">{{ activePipelinesError }}</div>
     } @else {
@@ -51,7 +51,7 @@
 
   <!-- Total Combined Cost -->
   <div class="card">
-    <h3>Total Combined Cost</h3>
+    <h3>Combined Cost</h3>
     @if (isLoadingCombinedCost) {
     <div class="skeleton skeleton-value"></div>
     } @else if (combinedCostError) {
@@ -97,7 +97,7 @@
   <!-- PIE CHART CARD (legend filter) -->
   <div class="chart-card">
     <div class="chart-header">
-      <h2 style="text-align:center; flex:1;">Project Repository Distribution</h2>
+      <h2 style="text-align:center; flex:1;">Repository Distribution</h2>
       <button class="details-btn" (click)="openProjectDistributionDetailsModal()"
         [disabled]="!!(projectsError || reposError)">
         View Details
@@ -244,7 +244,7 @@
 <!-- DEVOPS SERVICES SUMMARY (J – semantic status colours)                  -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <div class="section" style="margin-top:20px;">
-  <h2 style="text-align:center; margin-bottom:16px;">DevOps Services Summary</h2>
+  <h2 style="text-align:center; margin-bottom:16px;">DevOps Service Status</h2>
 
   @if (isLoadingRepos || isLoadingProjects) {
   <div>
@@ -287,6 +287,17 @@
       <h2 style="text-align:center; flex:1;">Project Repository Distribution Details</h2>
       <button class="close-btn" (click)="closeProjectDistributionDetailsModal()">✕</button>
     </div>
+    
+    <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:10px; margin-bottom:10px; padding-right:10px;">
+      <label for="repo-sort-select" style="font-size:13px; color:#475569; font-weight:600;">Sort by Repository Count:</label>
+      <select id="repo-sort-select" class="month-dropdown" style="padding:6px 12px; font-size:13px; border:1px solid #cbd5e1; border-radius:8px; outline:none;"
+        [(ngModel)]="repoSortOrder">
+        <option value="default">Default</option>
+        <option value="desc">Decreasing</option>
+        <option value="asc">Increasing</option>
+      </select>
+    </div>
+
     <table style="margin-top:10px;">
       <tr>
         <th>Project Name</th>
@@ -295,7 +306,7 @@
         <th>Visibility</th>
         <th>Repositories</th>
       </tr>
-      @for (item of projectDistribution; track item.name) {
+      @for (item of sortedProjectDistribution; track item.name) {
       <tr>
         <td>{{ item.name }}</td>
         <td style="font-size:12px; color:#64748b;">{{ getProjectDescription(item.name) }}</td>

@@ -1,4 +1,5 @@
-import logging
+from models.handle_logging import get_logging_conf
+logging = get_logging_conf()
 from fastapi import APIRouter
 from services.Azure_Devops.projects_service import fetch_projects
 from services.Azure_Devops.pipelines_service import fetch_pipelines

@@ -1,6 +1,7 @@
 import threading
 import time
-import logging
+from models.handle_logging import get_logging_conf
+logging = get_logging_conf()
 
 logger = logging.getLogger(__name__)
 

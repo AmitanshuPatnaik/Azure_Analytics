@@ -7,11 +7,13 @@
 
     <div class="nav-links-left">
       <a routerLink="/home" class="nav-link nav-link-devops"
+         [class.active]="isDevOpsActive()"
          (click)="selectDevOps()">
         DevOps
       </a>
 
       <a routerLink="/home" class="nav-link nav-link-azure"
+         [class.active]="isAzureActive()"
          (click)="selectAzure()">
         Azure
       </a>
@@ -21,11 +23,13 @@
   <div class="links">
 
     <a routerLink="/home" class="nav-link"
+       [class.active]="isHomeActive()"
        (click)="dashboardService.selectedPage='home'; dashboardService.sidebarVisible=false">
       Home
     </a>
 
-    <a routerLink="/about" class="nav-link">
+    <a routerLink="/about" class="nav-link"
+       [class.active]="isAboutActive()">
       About
     </a>
 
