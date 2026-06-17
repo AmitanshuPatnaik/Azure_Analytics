@@ -22,34 +22,16 @@ export class TestplansComponent implements OnInit {
   currentPage = 1;
   projectsCurrentPage = 1;
   pageSize = 10;
+  totalProjectsCount = 0;
+  totalTestPlansCount = 0;
   get Math() { return Math; }
 
-  get paginatedTestPlans(): any[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredTestPlans.slice(start, start + this.pageSize);
-  }
-
   get testPlansTotalPages(): number {
-    return Math.ceil(this.filteredTestPlans.length / this.pageSize);
-  }
-
-  get paginatedProjects(): any[] {
-    const start = (this.projectsCurrentPage - 1) * this.pageSize;
-    return this.projects.slice(start, start + this.pageSize);
+    return Math.ceil(this.totalTestPlansCount / this.pageSize);
   }
 
   get projectsTotalPages(): number {
-    return Math.ceil(this.projects.length / this.pageSize);
-  }
-
-  get filteredTestPlans(): any[] {
-    if (!this.testPlanSearch.trim()) return this.testPlans;
-    const q = this.testPlanSearch.trim().toLowerCase();
-    return this.testPlans.filter(p =>
-      (p.name || '').toLowerCase().includes(q) ||
-      (p.owner || '').toLowerCase().includes(q) ||
-      (p.state || '').toLowerCase().includes(q)
-    );
+    return Math.ceil(this.totalProjectsCount / this.pageSize);
   }
 
   constructor(
@@ -67,15 +49,19 @@ export class TestplansComponent implements OnInit {
   }
 
   loadProjects() {
-    this.projectsApi.getProjects().subscribe({
+    this.projectsApi.getProjects(this.projectsCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         let projs = [];
-        if (res && res.success && res.projects) {
+        let total = 0;
+        if (res && res.success) {
           projs = res.projects;
+          total = res.total_count;
         } else if (res && res.projects) {
           projs = res.projects;
+          total = res.total_count || projs.length;
         }
         this.projects = projs || [];
+        this.totalProjectsCount = total || this.projects.length;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -87,12 +73,14 @@ export class TestplansComponent implements OnInit {
   loadTestPlans(projName: string) {
     this.isLoadingTestPlans = true;
     this.testPlansError = null;
-    this.testPlansApi.getTestPlans(projName).subscribe({
+    this.testPlansApi.getTestPlans(projName, this.currentPage, this.pageSize, this.testPlanSearch).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.testPlans = res.test_plans || [];
+          this.totalTestPlansCount = res.total_count || 0;
         } else {
           this.testPlans = [];
+          this.totalTestPlansCount = 0;
           this.testPlansError = res?.message || 'Failed to load test plans from backend.';
         }
         this.isLoadingTestPlans = false;
@@ -101,6 +89,7 @@ export class TestplansComponent implements OnInit {
       error: (err) => {
         console.warn(`Could not load test plans for project ${projName}`, err);
         this.testPlans = [];
+        this.totalTestPlansCount = 0;
         this.testPlansError = err.error?.detail || err.error?.message || err.message || `Failed to load test plans for project ${projName}.`;
         this.isLoadingTestPlans = false;
         this.cdr.detectChanges();
@@ -120,6 +109,9 @@ export class TestplansComponent implements OnInit {
     this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
     this.testPlans = [];
+    this.totalTestPlansCount = 0;
     this.testPlansError = null;
+    this.testPlanSearch = '';
+    this.loadProjects();
   }
 }

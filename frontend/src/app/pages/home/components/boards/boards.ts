@@ -24,9 +24,18 @@ export class BoardsComponent implements OnInit {
   isLoadingChanges = false;
   changesError: string | null = null;
 
-  sprintPages = new Map<string, number>();
+  currentPage = 1;
   changesCurrentPage = 1;
   projectsCurrentPage = 1;
+  pageSize = 10;
+  totalProjectsCount = 0;
+  totalWorkItemsCount = 0;
+  totalChangesCount = 0;
+
+  boardUniqueTypes: string[] = [];
+  boardUniqueStates: string[] = [];
+  boardUniqueAssignees: string[] = [];
+
   get Math() { return Math; }
 
   get paginatedProjects(): any[] {
@@ -35,34 +44,19 @@ export class BoardsComponent implements OnInit {
   }
 
   get projectsTotalPages(): number {
-    return Math.ceil(this.projects.length / 10);
-  }
-
-  getSprintPage(sprintName: string): number {
-    return this.sprintPages.get(sprintName) || 1;
-  }
-
-  setSprintPage(sprintName: string, page: number) {
-    this.sprintPages.set(sprintName, page);
-  }
-
-  getPaginatedSprintItems(sprintName: string, items: any[]): any[] {
-    const page = this.getSprintPage(sprintName);
-    const start = (page - 1) * 10;
-    return items.slice(start, start + 10);
-  }
-
-  getSprintTotalPages(items: any[]): number {
-    return Math.ceil(items.length / 10);
+    return Math.ceil(this.totalProjectsCount / 10);
   }
 
   get paginatedRecentChanges(): any[] {
-    const start = (this.changesCurrentPage - 1) * 10;
-    return this.recentChanges.slice(start, start + 10);
+    return this.recentChanges;
   }
 
   get changesTotalPages(): number {
-    return Math.ceil(this.recentChanges.length / 10);
+    return Math.ceil(this.totalChangesCount / 10);
+  }
+
+  get workItemsTotalPages(): number {
+    return Math.ceil(this.totalWorkItemsCount / this.pageSize);
   }
 
   boardFilterSprint = '';
@@ -87,15 +81,19 @@ export class BoardsComponent implements OnInit {
   }
 
   loadProjects() {
-    this.projectsApi.getProjects().subscribe({
+    this.projectsApi.getProjects(this.projectsCurrentPage, 10).subscribe({
       next: (res: any) => {
         let projs = [];
-        if (res && res.success && res.projects) {
+        let total = 0;
+        if (res && res.success) {
           projs = res.projects;
+          total = res.total_count;
         } else if (res && res.projects) {
           projs = res.projects;
+          total = res.total_count || projs.length;
         }
         this.projects = projs || [];
+        this.totalProjectsCount = total || this.projects.length;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -107,7 +105,15 @@ export class BoardsComponent implements OnInit {
   loadWorkItems(projName: string) {
     this.isLoadingWorkItems = true;
     this.workItemsError = null;
-    this.boardsApi.getWorkItems(projName).subscribe({
+    this.boardsApi.getWorkItems(
+      projName,
+      this.currentPage,
+      this.pageSize,
+      this.boardFilterSprint,
+      this.boardFilterType,
+      this.boardFilterState,
+      this.boardFilterAssigned
+    ).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.workItems = (res.value || []).map((item: any) => {
@@ -130,9 +136,17 @@ export class BoardsComponent implements OnInit {
             };
           });
           this.workItemSprints = res.sprints || [];
+          this.boardUniqueTypes = res.types || [];
+          this.boardUniqueStates = res.states || [];
+          this.boardUniqueAssignees = res.assignees || [];
+          this.totalWorkItemsCount = res.total_count || 0;
         } else {
           this.workItems = [];
           this.workItemSprints = [];
+          this.boardUniqueTypes = [];
+          this.boardUniqueStates = [];
+          this.boardUniqueAssignees = [];
+          this.totalWorkItemsCount = 0;
           this.workItemsError = res?.message || 'Failed to load work items from backend.';
         }
         this.isLoadingWorkItems = false;
@@ -142,6 +156,10 @@ export class BoardsComponent implements OnInit {
         console.warn(`Could not load work items for project ${projName}`, err);
         this.workItems = [];
         this.workItemSprints = [];
+        this.boardUniqueTypes = [];
+        this.boardUniqueStates = [];
+        this.boardUniqueAssignees = [];
+        this.totalWorkItemsCount = 0;
         this.workItemsError = err.error?.detail || err.error?.message || err.message || `Failed to load work items for project ${projName}.`;
         this.isLoadingWorkItems = false;
         this.cdr.detectChanges();
@@ -152,12 +170,14 @@ export class BoardsComponent implements OnInit {
   loadRecentChanges(projName: string) {
     this.isLoadingChanges = true;
     this.changesError = null;
-    this.boardsApi.getRecentChanges(projName).subscribe({
+    this.boardsApi.getRecentChanges(projName, 30, 25, this.changesCurrentPage, 10).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.recentChanges = res.changes || [];
+          this.totalChangesCount = res.total_count || 0;
         } else {
           this.recentChanges = [];
+          this.totalChangesCount = 0;
           this.changesError = res?.message || 'Could not load recent changes.';
         }
         this.isLoadingChanges = false;
@@ -166,6 +186,7 @@ export class BoardsComponent implements OnInit {
       error: (err) => {
         console.warn(`Could not load recent changes for project ${projName}`, err);
         this.recentChanges = [];
+        this.totalChangesCount = 0;
         this.changesError = err.error?.detail || err.message || 'Failed to load recent changes.';
         this.isLoadingChanges = false;
         this.cdr.detectChanges();
@@ -174,7 +195,7 @@ export class BoardsComponent implements OnInit {
   }
 
   selectProject(project: any) {
-    this.sprintPages.clear();
+    this.currentPage = 1;
     this.changesCurrentPage = 1;
     this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = project;
@@ -183,25 +204,37 @@ export class BoardsComponent implements OnInit {
   }
 
   changeProject() {
-    this.sprintPages.clear();
+    this.currentPage = 1;
     this.changesCurrentPage = 1;
     this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
     this.workItems = [];
     this.workItemSprints = [];
     this.recentChanges = [];
+    this.totalWorkItemsCount = 0;
+    this.totalChangesCount = 0;
     this.workItemsError = null;
     this.changesError = null;
+    this.loadProjects();
+  }
+
+  onFilterChange() {
+    this.currentPage = 1;
+    if (this.dashboardService.selectedProject) {
+      this.loadWorkItems(this.dashboardService.selectedProject.name);
+    }
+  }
+
+  clearFilters() {
+    this.boardFilterSprint = '';
+    this.boardFilterType = '';
+    this.boardFilterState = '';
+    this.boardFilterAssigned = '';
+    this.onFilterChange();
   }
 
   get filteredWorkItems(): any[] {
-    return this.workItems.filter(item => {
-      if (this.boardFilterSprint && item.sprint !== this.boardFilterSprint) return false;
-      if (this.boardFilterType && item.type !== this.boardFilterType) return false;
-      if (this.boardFilterState && item.state !== this.boardFilterState) return false;
-      if (this.boardFilterAssigned && (item.assignedTo || 'Unassigned') !== this.boardFilterAssigned) return false;
-      return true;
-    });
+    return this.workItems;
   }
 
   get groupedWorkItems(): { sprint: string; items: any[] }[] {
@@ -213,18 +246,6 @@ export class BoardsComponent implements OnInit {
       map.get(sprint)!.push(item);
     }
     return Array.from(map.entries()).map(([sprint, items]) => ({ sprint, items }));
-  }
-
-  get boardUniqueTypes(): string[] {
-    return [...new Set(this.workItems.map(i => i.type).filter(Boolean))];
-  }
-
-  get boardUniqueStates(): string[] {
-    return [...new Set(this.workItems.map(i => i.state).filter(Boolean))];
-  }
-
-  get boardUniqueAssignees(): string[] {
-    return [...new Set(this.workItems.map(i => i.assignedTo || 'Unassigned'))];
   }
 
   toggleSprintCollapse(sprint: string) {

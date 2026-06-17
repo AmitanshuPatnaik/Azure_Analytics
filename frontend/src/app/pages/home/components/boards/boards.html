@@ -5,7 +5,7 @@
   </div>
 
   <div class="cards">
-    @for (project of paginatedProjects; track project.id || $index) {
+    @for (project of projects; track project.id || $index) {
       <div class="card">
         <h3>{{ project.name }}</h3>
         <hr>
@@ -19,15 +19,15 @@
       </div>
     }
   </div>
-  @if (projects.length > 10) {
+  @if (totalProjectsCount > 10) {
   <div class="pagination-container standalone">
     <div class="pagination-tracker">
-      Showing <strong>{{ (projectsCurrentPage - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(projectsCurrentPage * 10, projects.length) }}</strong> of <strong>{{ projects.length }}</strong> projects
+      Showing <strong>{{ (projectsCurrentPage - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(projectsCurrentPage * 10, totalProjectsCount) }}</strong> of <strong>{{ totalProjectsCount }}</strong> projects
     </div>
     <div class="pagination-controls">
-      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage - 1" [disabled]="projectsCurrentPage === 1">← Previous</button>
+      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage - 1; loadProjects()" [disabled]="projectsCurrentPage === 1">← Previous</button>
       <span class="pagination-tracker">Page <strong>{{ projectsCurrentPage }}</strong> of <strong>{{ projectsTotalPages }}</strong></span>
-      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage + 1" [disabled]="projectsCurrentPage >= projectsTotalPages">Next →</button>
+      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage + 1; loadProjects()" [disabled]="projectsCurrentPage >= projectsTotalPages">Next →</button>
     </div>
   </div>
   }
@@ -64,7 +64,7 @@
 
       <!-- Sprint -->
       <select class="month-dropdown" style="width: auto; font-size: 13px;" [value]="boardFilterSprint"
-        (change)="boardFilterSprint = $any($event.target).value">
+        (change)="boardFilterSprint = $any($event.target).value; onFilterChange()">
         <option value="">All Sprints</option>
         @for (s of workItemSprints; track s) {
         <option [value]="s">{{ s }}</option>
@@ -73,7 +73,7 @@
 
       <!-- Type -->
       <select class="month-dropdown" style="width: auto; font-size: 13px;" [value]="boardFilterType"
-        (change)="boardFilterType = $any($event.target).value">
+        (change)="boardFilterType = $any($event.target).value; onFilterChange()">
         <option value="">All Types</option>
         @for (t of boardUniqueTypes; track t) {
         <option [value]="t">{{ t }}</option>
@@ -82,7 +82,7 @@
 
       <!-- State -->
       <select class="month-dropdown" style="width: auto; font-size: 13px;" [value]="boardFilterState"
-        (change)="boardFilterState = $any($event.target).value">
+        (change)="boardFilterState = $any($event.target).value; onFilterChange()">
         <option value="">All States</option>
         @for (s of boardUniqueStates; track s) {
         <option [value]="s">{{ s }}</option>
@@ -91,7 +91,7 @@
 
       <!-- Assigned To -->
       <select class="month-dropdown" style="width: auto; font-size: 13px;" [value]="boardFilterAssigned"
-        (change)="boardFilterAssigned = $any($event.target).value">
+        (change)="boardFilterAssigned = $any($event.target).value; onFilterChange()">
         <option value="">All Assignees</option>
         @for (a of boardUniqueAssignees; track a) {
         <option [value]="a">{{ a }}</option>
@@ -101,13 +101,13 @@
       <!-- Clear -->
       @if (boardFilterSprint || boardFilterType || boardFilterState || boardFilterAssigned) {
       <button
-        (click)="boardFilterSprint=''; boardFilterType=''; boardFilterState=''; boardFilterAssigned='';"
+        (click)="clearFilters()"
         style="padding: 5px 14px; font-size: 12px; background: #fee2e2;
                color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; cursor: pointer;">
         ✕ Clear Filters
       </button>
       <span style="font-size: 12px; color: #64748b; margin-left: 4px;">
-        {{ filteredWorkItems.length }} of {{ workItems.length }} items
+        {{ totalWorkItemsCount }} matching items
       </span>
       }
     </div>
@@ -145,7 +145,7 @@
           <th>State</th>
           <th>Assigned To</th>
         </tr>
-        @for (item of getPaginatedSprintItems(group.sprint, group.items); track item.id || $index) {
+        @for (item of group.items; track item.id || $index) {
         <tr>
           <td style="color: #6b7280;">{{ item.id }}</td>
           <td>{{ item.title }}</td>
@@ -169,20 +169,20 @@
         </tr>
         }
       </table>
-      @if (group.items.length > 10) {
-      <div class="pagination-container">
-        <div class="pagination-tracker">
-          Showing <strong>{{ (getSprintPage(group.sprint) - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(getSprintPage(group.sprint) * 10, group.items.length) }}</strong> of <strong>{{ group.items.length }}</strong> items
-        </div>
-        <div class="pagination-controls">
-          <button class="pagination-btn" (click)="setSprintPage(group.sprint, getSprintPage(group.sprint) - 1)" [disabled]="getSprintPage(group.sprint) === 1">← Previous</button>
-          <span class="pagination-tracker">Page <strong>{{ getSprintPage(group.sprint) }}</strong> of <strong>{{ getSprintTotalPages(group.items) }}</strong></span>
-          <button class="pagination-btn" (click)="setSprintPage(group.sprint, getSprintPage(group.sprint) + 1)" [disabled]="getSprintPage(group.sprint) >= getSprintTotalPages(group.items)">Next →</button>
-        </div>
-      </div>
-      }
       }
 
+    </div>
+    }
+    @if (totalWorkItemsCount > pageSize) {
+    <div class="pagination-container standalone" style="margin-bottom: 20px;">
+      <div class="pagination-tracker">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(currentPage * pageSize, totalWorkItemsCount) }}</strong> of <strong>{{ totalWorkItemsCount }}</strong> items
+      </div>
+      <div class="pagination-controls">
+        <button class="pagination-btn" (click)="currentPage = currentPage - 1; loadWorkItems(dashboardService.selectedProject.name)" [disabled]="currentPage === 1">← Previous</button>
+        <span class="pagination-tracker">Page <strong>{{ currentPage }}</strong> of <strong>{{ workItemsTotalPages }}</strong></span>
+        <button class="pagination-btn" (click)="currentPage = currentPage + 1; loadWorkItems(dashboardService.selectedProject.name)" [disabled]="currentPage >= workItemsTotalPages">Next →</button>
+      </div>
     </div>
     }
   </div>
@@ -288,15 +288,15 @@
 
         </div>
         }
-        @if (recentChanges.length > 10) {
+        @if (totalChangesCount > 10) {
         <div class="pagination-container standalone" style="margin: 10px; border-top: 1px solid #e2e8f0; border-radius: 8px;">
           <div class="pagination-tracker">
-            Showing <strong>{{ (changesCurrentPage - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(changesCurrentPage * 10, recentChanges.length) }}</strong> of <strong>{{ recentChanges.length }}</strong> changes
+            Showing <strong>{{ (changesCurrentPage - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(changesCurrentPage * 10, totalChangesCount) }}</strong> of <strong>{{ totalChangesCount }}</strong> changes
           </div>
           <div class="pagination-controls">
-            <button class="pagination-btn" (click)="changesCurrentPage = changesCurrentPage - 1" [disabled]="changesCurrentPage === 1">← Prev</button>
+            <button class="pagination-btn" (click)="changesCurrentPage = changesCurrentPage - 1; loadRecentChanges(dashboardService.selectedProject.name)" [disabled]="changesCurrentPage === 1">← Prev</button>
             <span class="pagination-tracker">Page <strong>{{ changesCurrentPage }}</strong> of <strong>{{ changesTotalPages }}</strong></span>
-            <button class="pagination-btn" (click)="changesCurrentPage = changesCurrentPage + 1" [disabled]="changesCurrentPage >= changesTotalPages">Next →</button>
+            <button class="pagination-btn" (click)="changesCurrentPage = changesCurrentPage + 1; loadRecentChanges(dashboardService.selectedProject.name)" [disabled]="changesCurrentPage >= changesTotalPages">Next →</button>
           </div>
         </div>
         }

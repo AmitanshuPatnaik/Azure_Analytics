@@ -33,44 +33,30 @@ export class ProjectDetailComponent implements OnInit {
   branchesCurrentPage = 1;
   pushesCurrentPage = 1;
 
-  get paginatedRepos(): any[] {
-    const start = (this.reposCurrentPage - 1) * this.pageSize;
-    return this.selectedProjectRepos.slice(start, start + this.pageSize);
-  }
+  totalReposCount = 0;
+  totalCommitsCount = 0;
+  totalPRsCount = 0;
+  totalBranchesCount = 0;
+  totalPushesCount = 0;
+
   get reposTotalPages(): number {
-    return Math.ceil(this.selectedProjectRepos.length / this.pageSize);
+    return Math.ceil(this.totalReposCount / this.pageSize);
   }
 
-  get paginatedCommits(): any[] {
-    const start = (this.commitsCurrentPage - 1) * this.pageSize;
-    return this.repoCommits.slice(start, start + this.pageSize);
-  }
   get commitsTotalPages(): number {
-    return Math.ceil(this.repoCommits.length / this.pageSize);
+    return Math.ceil(this.totalCommitsCount / this.pageSize);
   }
 
-  get paginatedPRs(): any[] {
-    const start = (this.prsCurrentPage - 1) * this.pageSize;
-    return this.repoPRs.slice(start, start + this.pageSize);
-  }
   get prsTotalPages(): number {
-    return Math.ceil(this.repoPRs.length / this.pageSize);
+    return Math.ceil(this.totalPRsCount / this.pageSize);
   }
 
-  get paginatedBranches(): any[] {
-    const start = (this.branchesCurrentPage - 1) * this.pageSize;
-    return this.repoBranches.slice(start, start + this.pageSize);
-  }
   get branchesTotalPages(): number {
-    return Math.ceil(this.repoBranches.length / this.pageSize);
+    return Math.ceil(this.totalBranchesCount / this.pageSize);
   }
 
-  get paginatedPushes(): any[] {
-    const start = (this.pushesCurrentPage - 1) * this.pageSize;
-    return this.repoPushes.slice(start, start + this.pageSize);
-  }
   get pushesTotalPages(): number {
-    return Math.ceil(this.repoPushes.length / this.pageSize);
+    return Math.ceil(this.totalPushesCount / this.pageSize);
   }
 
   @ViewChild('repoDetailsAnchor') repoDetailsAnchor!: ElementRef;
@@ -92,16 +78,18 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   loadProjectRepos(projectName: string) {
-    this.reposCurrentPage = 1;
     this.reposError = null;
-    this.reposApi.getRepositoriesByProject(projectName).subscribe({
+    this.reposApi.getRepositoriesByProject(projectName, this.reposCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         if (res && res.success && res.repositories) {
           this.selectedProjectRepos = res.repositories;
+          this.totalReposCount = res.total_count || 0;
         } else if (res && res.repositories) {
           this.selectedProjectRepos = res.repositories;
+          this.totalReposCount = res.total_count || res.repositories.length;
         } else {
           this.selectedProjectRepos = [];
+          this.totalReposCount = 0;
           this.reposError = 'No repositories found in this project.';
         }
         this.cdr.detectChanges();
@@ -109,6 +97,7 @@ export class ProjectDetailComponent implements OnInit {
       error: (err) => {
         console.warn('Failed to load project repositories', err);
         this.selectedProjectRepos = [];
+        this.totalReposCount = 0;
         this.reposError = err.error?.detail || err.error?.message || err.message || 'Failed to load repositories.';
         this.cdr.detectChanges();
       }
@@ -124,15 +113,16 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoCommits(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'commits';
-    this.commitsCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
-    this.reposApi.getCommits(this.selectedProject.name, repo.name).subscribe({
+    this.reposApi.getCommits(this.selectedProject.name, repo.name, this.commitsCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         if (res && res.success && res.commits) {
           this.repoCommits = res.commits;
+          this.totalCommitsCount = res.total_count || 0;
         } else {
           this.repoCommits = [];
+          this.totalCommitsCount = 0;
           this.repoDetailsError = 'No commits found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
@@ -142,6 +132,7 @@ export class ProjectDetailComponent implements OnInit {
       error: (err) => {
         console.warn('Failed to load commits', err);
         this.repoCommits = [];
+        this.totalCommitsCount = 0;
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch commits.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
@@ -153,15 +144,16 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoPRs(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'prs';
-    this.prsCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
-    this.reposApi.getPullRequests(this.selectedProject.name, repo.name).subscribe({
+    this.reposApi.getPullRequests(this.selectedProject.name, repo.name, this.prsCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         if (res && res.success && res.pullRequests) {
           this.repoPRs = res.pullRequests;
+          this.totalPRsCount = res.total_count || 0;
         } else {
           this.repoPRs = [];
+          this.totalPRsCount = 0;
           this.repoDetailsError = 'No pull requests found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
@@ -171,6 +163,7 @@ export class ProjectDetailComponent implements OnInit {
       error: (err) => {
         console.warn('Failed to load pull requests', err);
         this.repoPRs = [];
+        this.totalPRsCount = 0;
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pull requests.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
@@ -182,16 +175,17 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoBranches(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'branches';
-    this.branchesCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
-    this.reposApi.getBranches(this.selectedProject.name, repo.name).subscribe({
+    this.reposApi.getBranches(this.selectedProject.name, repo.name, this.branchesCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         if (res && res.success && res.branches) {
           this.repoBranches = res.branches;
-          this.repoBranchesCount = res.count ?? res.branches.length;
+          this.totalBranchesCount = res.total_count || res.branches.length;
+          this.repoBranchesCount = res.total_count ?? res.branches.length;
         } else {
           this.repoBranches = [];
+          this.totalBranchesCount = 0;
           this.repoBranchesCount = null;
           this.repoDetailsError = 'No branches found or failed to parse response.';
         }
@@ -202,6 +196,7 @@ export class ProjectDetailComponent implements OnInit {
       error: (err) => {
         console.warn('Failed to load branches', err);
         this.repoBranches = [];
+        this.totalBranchesCount = 0;
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch branches.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
@@ -213,15 +208,16 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoPushes(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'pushes';
-    this.pushesCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
-    this.reposApi.getPushes(this.selectedProject.name, repo.name).subscribe({
+    this.reposApi.getPushes(this.selectedProject.name, repo.name, this.pushesCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         if (res && res.success && res.pushes) {
           this.repoPushes = res.pushes;
+          this.totalPushesCount = res.total_count || 0;
         } else {
           this.repoPushes = [];
+          this.totalPushesCount = 0;
           this.repoDetailsError = 'No pushes found or failed to parse response.';
         }
         this.isLoadingRepoDetails = false;
@@ -231,12 +227,38 @@ export class ProjectDetailComponent implements OnInit {
       error: (err) => {
         console.warn('Failed to load pushes', err);
         this.repoPushes = [];
+        this.totalPushesCount = 0;
         this.repoDetailsError = err.error?.detail || err.error?.message || err.message || 'Failed to fetch pushes.';
         this.isLoadingRepoDetails = false;
         this.cdr.detectChanges();
         this.scrollToRepoDetails();
       }
     });
+  }
+
+  changeReposPage(dir: number) {
+    this.reposCurrentPage += dir;
+    this.loadProjectRepos(this.selectedProject.name);
+  }
+
+  changeCommitsPage(dir: number) {
+    this.commitsCurrentPage += dir;
+    this.viewRepoCommits(this.selectedRepoForDetails);
+  }
+
+  changePRsPage(dir: number) {
+    this.prsCurrentPage += dir;
+    this.viewRepoPRs(this.selectedRepoForDetails);
+  }
+
+  changeBranchesPage(dir: number) {
+    this.branchesCurrentPage += dir;
+    this.viewRepoBranches(this.selectedRepoForDetails);
+  }
+
+  changePushesPage(dir: number) {
+    this.pushesCurrentPage += dir;
+    this.viewRepoPushes(this.selectedRepoForDetails);
   }
 
   private scrollToRepoDetails() {

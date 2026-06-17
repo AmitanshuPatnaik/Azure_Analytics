@@ -19,25 +19,18 @@ export class ReposComponent implements OnInit {
   currentPage = 1;
   projectsCurrentPage = 1;
   pageSize = 10;
+  totalProjectsCount = 0;
+  totalReposCount = 0;
+  ownersList: string[] = [];
+  selectedOwner = 'All';
   get Math() { return Math; }
 
-  get paginatedRepositories() {
-    const repos = this.filteredRepositories;
-    const start = (this.currentPage - 1) * this.pageSize;
-    return repos.slice(start, start + this.pageSize);
-  }
-
   get reposTotalPages(): number {
-    return Math.ceil(this.filteredRepositories.length / this.pageSize);
-  }
-
-  get paginatedProjects(): any[] {
-    const start = (this.projectsCurrentPage - 1) * this.pageSize;
-    return this.projects.slice(start, start + this.pageSize);
+    return Math.ceil(this.totalReposCount / this.pageSize);
   }
 
   get projectsTotalPages(): number {
-    return Math.ceil(this.projects.length / this.pageSize);
+    return Math.ceil(this.totalProjectsCount / this.pageSize);
   }
 
   constructor(
@@ -49,19 +42,25 @@ export class ReposComponent implements OnInit {
 
   ngOnInit() {
     this.loadProjects();
-    this.loadRepositories();
+    if (this.dashboardService.selectedProject) {
+      this.loadProjectRepositories();
+    }
   }
 
   loadProjects() {
-    this.projectsApi.getProjects().subscribe({
+    this.projectsApi.getProjects(this.projectsCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         let projs = [];
-        if (res && res.success && res.projects) {
+        let total = 0;
+        if (res && res.success) {
           projs = res.projects;
+          total = res.total_count;
         } else if (res && res.projects) {
           projs = res.projects;
+          total = res.total_count || projs.length;
         }
         this.projects = projs || [];
+        this.totalProjectsCount = total || this.projects.length;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -70,43 +69,42 @@ export class ReposComponent implements OnInit {
     });
   }
 
-  loadRepositories() {
+  loadProjectRepositories() {
+    if (!this.dashboardService.selectedProject) return;
+    const projName = this.dashboardService.selectedProject.name;
     this.reposError = null;
-    this.reposApi.getAllRepositories().subscribe({
+    this.reposApi.getRepositoriesByProject(projName, this.currentPage, this.pageSize, this.selectedOwner).subscribe({
       next: (res: any) => {
-        if (res && res.repositories && res.repositories.length > 0) {
-          this.repositories = res.repositories;
+        if (res && res.success) {
+          this.repositories = res.repositories || [];
+          this.totalReposCount = res.total_count || 0;
+          this.ownersList = res.owners || [];
         } else {
           this.repositories = [];
-          this.reposError = 'No repositories found on backend.';
+          this.totalReposCount = 0;
+          this.reposError = res?.message || 'No repositories found on backend.';
         }
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.warn('Could not fetch repositories from backend', err);
         this.repositories = [];
+        this.totalReposCount = 0;
         this.reposError = err.error?.detail || err.error?.message || err.message || 'Failed to load repositories.';
         this.cdr.detectChanges();
       }
     });
   }
 
-  selectedOwner = 'All';
-
   get uniqueOwners(): string[] {
-    if (!this.dashboardService.selectedProject) {
-      return [];
-    }
-    const projectRepos = this.repositories.filter(r => r.project === this.dashboardService.selectedProject.name);
-    const owners = projectRepos.map(r => r.owner || 'N/A');
-    return Array.from(new Set(owners)).sort();
+    return this.ownersList;
   }
 
   selectProject(project: any) {
     this.selectedOwner = 'All';
     this.currentPage = 1;
-    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = project;
+    this.loadProjectRepositories();
   }
 
   changeProject() {
@@ -114,17 +112,9 @@ export class ReposComponent implements OnInit {
     this.currentPage = 1;
     this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
+    this.repositories = [];
+    this.totalReposCount = 0;
     this.reposError = null;
-  }
-
-  get filteredRepositories() {
-    if (!this.dashboardService.selectedProject) {
-      return [];
-    }
-    const projectRepos = this.repositories.filter(r => r.project === this.dashboardService.selectedProject.name);
-    if (this.selectedOwner === 'All') {
-      return projectRepos;
-    }
-    return projectRepos.filter(r => (r.owner || 'N/A') === this.selectedOwner);
+    this.loadProjects();
   }
 }

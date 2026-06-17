@@ -15,13 +15,13 @@ export class ProjectsApiService {
     private cache: FrontendCacheService
   ) {}
 
-  getProjects(): Observable<any> {
-    const cacheKey = 'projects:all';
+  getProjects(page: number = 1, pageSize: number = 10): Observable<any> {
+    const cacheKey = `projects:all:page:${page}:${pageSize}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}`).pipe(
+    return this.http.get<any>(`${this.baseUrl}?page=${page}&page_size=${pageSize}`).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }

@@ -15,13 +15,17 @@ export class TestPlansApiService {
     private cache: FrontendCacheService
   ) {}
 
-  getTestPlans(projectName: string): Observable<any> {
-    const cacheKey = `testplans:all:${projectName}`;
+  getTestPlans(projectName: string, page: number = 1, pageSize: number = 10, search?: string): Observable<any> {
+    const cacheKey = `testplans:all:${projectName}:page:${page}:${pageSize}:search:${search || ''}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/${projectName}/testplans`).pipe(
+    let url = `${this.baseUrl}/${projectName}/testplans?page=${page}&page_size=${pageSize}`;
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    return this.http.get<any>(url).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }

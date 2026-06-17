@@ -16,25 +16,30 @@ export class BoardsApiService {
     private cache: FrontendCacheService
   ) {}
 
-  getWorkItems(projectName: string): Observable<any> {
-    const cacheKey = `boards:workitems:${projectName}`;
+  getWorkItems(projectName: string, page: number = 1, pageSize: number = 10, sprint?: string, type?: string, state?: string, assigned?: string): Observable<any> {
+    const cacheKey = `boards:workitems:${projectName}:page:${page}:${pageSize}:sprint:${sprint || ''}:type:${type || ''}:state:${state || ''}:assigned:${assigned || ''}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/${projectName}/workitems`).pipe(
+    let url = `${this.baseUrl}/${projectName}/workitems?page=${page}&page_size=${pageSize}`;
+    if (sprint) url += `&sprint=${encodeURIComponent(sprint)}`;
+    if (type) url += `&type=${encodeURIComponent(type)}`;
+    if (state) url += `&state=${encodeURIComponent(state)}`;
+    if (assigned) url += `&assigned=${encodeURIComponent(assigned)}`;
+    return this.http.get<any>(url).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }
 
-  getRecentChanges(projectName: string, days = 30, limit = 25): Observable<any> {
-    const cacheKey = `boards:recent-changes:${projectName}:${days}:${limit}`;
+  getRecentChanges(projectName: string, days = 30, limit = 25, page = 1, pageSize = 10): Observable<any> {
+    const cacheKey = `boards:recent-changes:${projectName}:${days}:${limit}:page:${page}:${pageSize}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
     return this.http.get<any>(
-      `${this.boardsUrl}/${projectName}/recent-changes?days=${days}&limit=${limit}`
+      `${this.boardsUrl}/${projectName}/recent-changes?days=${days}&limit=${limit}&page=${page}&page_size=${pageSize}`
     ).pipe(
       tap(data => this.cache.set(cacheKey, data, 3 * 60 * 1000)) // 3-min TTL for activity feed
     );

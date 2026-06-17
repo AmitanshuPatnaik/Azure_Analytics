@@ -26,13 +26,17 @@ export class RepositoriesApiService {
     );
   }
 
-  getRepositoriesByProject(projectName: string): Observable<any> {
-    const cacheKey = `repos:project:${projectName}`;
+  getRepositoriesByProject(projectName: string, page: number = 1, pageSize: number = 10, owner: string = 'All'): Observable<any> {
+    const cacheKey = `repos:project:${projectName}:page:${page}:${pageSize}:owner:${owner}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos`).pipe(
+    let url = `${this.baseUrl}/projects/${projectName}/repos?page=${page}&page_size=${pageSize}`;
+    if (owner && owner !== 'All') {
+      url += `&owner=${encodeURIComponent(owner)}`;
+    }
+    return this.http.get<any>(url).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }
@@ -48,35 +52,35 @@ export class RepositoriesApiService {
     );
   }
 
-  getCommits(projectName: string, repoName: string): Observable<any> {
-    const cacheKey = `repos:commits:${projectName}:${repoName}`;
+  getCommits(projectName: string, repoName: string, page: number = 1, pageSize: number = 10): Observable<any> {
+    const cacheKey = `repos:commits:${projectName}:${repoName}:page:${page}:${pageSize}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/commits`).pipe(
+    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/commits?page=${page}&page_size=${pageSize}`).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }
 
-  getPushes(projectName: string, repoName: string): Observable<any> {
-    const cacheKey = `repos:pushes:${projectName}:${repoName}`;
+  getPushes(projectName: string, repoName: string, page: number = 1, pageSize: number = 10): Observable<any> {
+    const cacheKey = `repos:pushes:${projectName}:${repoName}:page:${page}:${pageSize}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/pushes`).pipe(
+    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/pushes?page=${page}&page_size=${pageSize}`).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }
 
-  getBranches(projectName: string, repoName: string): Observable<any> {
-    const cacheKey = `repos:branches:${projectName}:${repoName}`;
+  getBranches(projectName: string, repoName: string, page: number = 1, pageSize: number = 10): Observable<any> {
+    const cacheKey = `repos:branches:${projectName}:${repoName}:page:${page}:${pageSize}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/branches`).pipe(
+    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/branches?page=${page}&page_size=${pageSize}`).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }
@@ -92,13 +96,13 @@ export class RepositoriesApiService {
     );
   }
 
-  getPullRequests(projectName: string, repoName: string): Observable<any> {
-    const cacheKey = `repos:pullrequests:${projectName}:${repoName}`;
+  getPullRequests(projectName: string, repoName: string, page: number = 1, pageSize: number = 10): Observable<any> {
+    const cacheKey = `repos:pullrequests:${projectName}:${repoName}:page:${page}:${pageSize}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/pullrequests`).pipe(
+    return this.http.get<any>(`${this.baseUrl}/projects/${projectName}/repos/${repoName}/pullrequests?page=${page}&page_size=${pageSize}`).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }

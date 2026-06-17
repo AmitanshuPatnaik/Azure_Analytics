@@ -4,7 +4,7 @@
   </div>
 
   <div class="cards">
-    @for (project of paginatedProjects; track project.id || $index) {
+    @for (project of projects; track project.id || $index) {
     <div class="card">
       <h3>{{ project.name }}</h3>
       <hr>
@@ -18,15 +18,15 @@
     </div>
     }
   </div>
-  @if (projects.length > 10) {
+  @if (totalProjectsCount > pageSize) {
   <div class="pagination-container standalone">
     <div class="pagination-tracker">
-      Showing <strong>{{ (projectsCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(projectsCurrentPage * pageSize, projects.length) }}</strong> of <strong>{{ projects.length }}</strong> projects
+      Showing <strong>{{ (projectsCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(projectsCurrentPage * pageSize, totalProjectsCount) }}</strong> of <strong>{{ totalProjectsCount }}</strong> projects
     </div>
     <div class="pagination-controls">
-      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage - 1" [disabled]="projectsCurrentPage === 1">← Previous</button>
+      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage - 1; loadProjects()" [disabled]="projectsCurrentPage === 1">← Previous</button>
       <span class="pagination-tracker">Page <strong>{{ projectsCurrentPage }}</strong> of <strong>{{ projectsTotalPages }}</strong></span>
-      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage + 1" [disabled]="projectsCurrentPage >= projectsTotalPages">Next →</button>
+      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage + 1; loadProjects()" [disabled]="projectsCurrentPage >= projectsTotalPages">Next →</button>
     </div>
   </div>
   }
@@ -44,7 +44,7 @@
     <div style="display: flex; align-items: center; gap: 8px;">
       <label for="owner-filter-select" style="font-size: 14px; font-weight: 600; color: #475569; white-space: nowrap;">Filter by Owner:</label>
       <select id="owner-filter-select" class="month-dropdown" style="padding: 6px 12px; font-size: 13.5px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; background: white;"
-        [value]="selectedOwner" (change)="selectedOwner = $any($event.target).value; currentPage = 1">
+        [value]="selectedOwner" (change)="selectedOwner = $any($event.target).value; currentPage = 1; loadProjectRepositories()">
         <option value="All">All Owners</option>
         @for (owner of uniqueOwners; track owner) {
         <option [value]="owner">{{ owner }}</option>
@@ -67,7 +67,7 @@
       <th>Remote URL</th>
     </tr>
 
-    @for (repo of paginatedRepositories; track repo.id || $index) {
+    @for (repo of repositories; track repo.id || $index) {
     <tr>
       <td>{{ repo.name }}</td>
       <td>{{ repo.project }}</td>
@@ -89,15 +89,15 @@
     </tr>
     }
   </table>
-  @if (filteredRepositories.length > 10) {
+  @if (totalReposCount > pageSize) {
   <div class="pagination-container">
     <div class="pagination-tracker">
-      Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(currentPage * pageSize, filteredRepositories.length) }}</strong> of <strong>{{ filteredRepositories.length }}</strong> repositories
+      Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(currentPage * pageSize, totalReposCount) }}</strong> of <strong>{{ totalReposCount }}</strong> repositories
     </div>
     <div class="pagination-controls">
-      <button class="pagination-btn" (click)="currentPage = currentPage - 1" [disabled]="currentPage === 1">← Previous</button>
+      <button class="pagination-btn" (click)="currentPage = currentPage - 1; loadProjectRepositories()" [disabled]="currentPage === 1">← Previous</button>
       <span class="pagination-tracker">Page <strong>{{ currentPage }}</strong> of <strong>{{ reposTotalPages }}</strong></span>
-      <button class="pagination-btn" (click)="currentPage = currentPage + 1" [disabled]="currentPage >= reposTotalPages">Next →</button>
+      <button class="pagination-btn" (click)="currentPage = currentPage + 1; loadProjectRepositories()" [disabled]="currentPage >= reposTotalPages">Next →</button>
     </div>
   </div>
   }

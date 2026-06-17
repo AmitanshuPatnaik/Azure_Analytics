@@ -17,15 +17,11 @@ export class ProjectsComponent implements OnInit {
 
   currentPage = 1;
   pageSize = 10;
+  totalProjectsCount = 0;
   get Math() { return Math; }
 
-  get paginatedProjects(): any[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.projects.slice(start, start + this.pageSize);
-  }
-
   get totalPages(): number {
-    return Math.ceil(this.projects.length / this.pageSize);
+    return Math.ceil(this.totalProjectsCount / this.pageSize);
   }
 
   constructor(
@@ -41,23 +37,26 @@ export class ProjectsComponent implements OnInit {
   loadProjects() {
     this.isLoadingProjects = true;
     this.projectsError = null;
-    this.projectsApi.getProjects().subscribe({
+    this.projectsApi.getProjects(this.currentPage, this.pageSize).subscribe({
       next: (res: any) => {
         let projs = [];
-        if (res && res.success && res.projects) {
+        let total = 0;
+        if (res && res.success) {
           projs = res.projects;
+          total = res.total_count;
         } else if (res && res.projects) {
           projs = res.projects;
+          total = res.total_count || projs.length;
         }
         this.projects = projs || [];
-        this.currentPage = 1;
+        this.totalProjectsCount = total || this.projects.length;
         this.isLoadingProjects = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.warn('Could not fetch projects from backend', err);
         this.projects = [];
-        this.currentPage = 1;
+        this.totalProjectsCount = 0;
         this.projectsError = err.error?.detail || err.error?.message || err.message || 'Failed to load projects from backend.';
         this.isLoadingProjects = false;
         this.cdr.detectChanges();

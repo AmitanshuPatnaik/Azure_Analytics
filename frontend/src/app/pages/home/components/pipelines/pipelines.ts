@@ -22,33 +22,16 @@ export class PipelinesComponent implements OnInit {
   currentPage = 1;
   projectsCurrentPage = 1;
   pageSize = 10;
+  totalProjectsCount = 0;
+  totalPipelinesCount = 0;
   get Math() { return Math; }
 
-  get paginatedPipelines(): any[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredPipelines.slice(start, start + this.pageSize);
-  }
-
   get pipelinesTotalPages(): number {
-    return Math.ceil(this.filteredPipelines.length / this.pageSize);
-  }
-
-  get paginatedProjects(): any[] {
-    const start = (this.projectsCurrentPage - 1) * this.pageSize;
-    return this.projects.slice(start, start + this.pageSize);
+    return Math.ceil(this.totalPipelinesCount / this.pageSize);
   }
 
   get projectsTotalPages(): number {
-    return Math.ceil(this.projects.length / this.pageSize);
-  }
-
-  get filteredPipelines(): any[] {
-    if (!this.pipelineSearch.trim()) return this.pipelines;
-    const q = this.pipelineSearch.trim().toLowerCase();
-    return this.pipelines.filter(p =>
-      (p.name || '').toLowerCase().includes(q) ||
-      (p.folder || '').toLowerCase().includes(q)
-    );
+    return Math.ceil(this.totalProjectsCount / this.pageSize);
   }
 
   constructor(
@@ -66,15 +49,19 @@ export class PipelinesComponent implements OnInit {
   }
 
   loadProjects() {
-    this.projectsApi.getProjects().subscribe({
+    this.projectsApi.getProjects(this.projectsCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         let projs = [];
-        if (res && res.success && res.projects) {
+        let total = 0;
+        if (res && res.success) {
           projs = res.projects;
+          total = res.total_count;
         } else if (res && res.projects) {
           projs = res.projects;
+          total = res.total_count || projs.length;
         }
         this.projects = projs || [];
+        this.totalProjectsCount = total || this.projects.length;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -86,12 +73,14 @@ export class PipelinesComponent implements OnInit {
   loadPipelines(projName: string) {
     this.isLoadingPipelines = true;
     this.pipelinesError = null;
-    this.pipelinesApi.getPipelines(projName).subscribe({
+    this.pipelinesApi.getPipelines(projName, this.currentPage, this.pageSize, this.pipelineSearch).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.pipelines = res.pipelines || [];
+          this.totalPipelinesCount = res.total_count || 0;
         } else {
           this.pipelines = [];
+          this.totalPipelinesCount = 0;
           this.pipelinesError = res?.message || 'Failed to load pipelines from backend.';
         }
         this.isLoadingPipelines = false;
@@ -100,6 +89,7 @@ export class PipelinesComponent implements OnInit {
       error: (err) => {
         console.warn(`Could not load pipelines for project ${projName}`, err);
         this.pipelines = [];
+        this.totalPipelinesCount = 0;
         this.pipelinesError = err.error?.detail || err.error?.message || err.message || `Failed to load pipelines for project ${projName}.`;
         this.isLoadingPipelines = false;
         this.cdr.detectChanges();
@@ -119,6 +109,9 @@ export class PipelinesComponent implements OnInit {
     this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
     this.pipelines = [];
+    this.totalPipelinesCount = 0;
     this.pipelinesError = null;
+    this.pipelineSearch = '';
+    this.loadProjects();
   }
 }

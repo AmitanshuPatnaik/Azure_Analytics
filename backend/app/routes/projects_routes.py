@@ -13,5 +13,18 @@ _COLD_CACHE_RESPONSE = {
 
 
 @router.get("")
-async def get_projects():
-    return cache.get("projects", _COLD_CACHE_RESPONSE)
+async def get_projects(page: int = 1, page_size: int = 10):
+    res = cache.get("projects", _COLD_CACHE_RESPONSE)
+    if not res.get("success"):
+        return res
+    projects = res.get("projects", [])
+    total_count = len(projects)
+    start = (page - 1) * page_size
+    end = start + page_size
+    sliced = projects[start:end]
+    return {
+        "success": True,
+        "total_count": total_count,
+        "count": len(sliced),
+        "projects": sliced
+    }
