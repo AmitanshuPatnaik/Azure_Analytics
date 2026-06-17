@@ -48,6 +48,12 @@
   color: #fff;
 }
 
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-weight: 500;
+}
+
 .nav-link-devops {
   color: #a5b4fc;
 }
@@ -57,6 +63,12 @@
   color: #c4b5fd;
 }
 
+.nav-link-devops.active {
+  background: rgba(139, 92, 246, 0.28);
+  color: #fff;
+  font-weight: 500;
+}
+
 .nav-link-azure {
   color: #7dd3fc;
 }
@@ -64,6 +76,12 @@
 .nav-link-azure:hover {
   background: rgba(14,165,233,0.18);
   color: #bae6fd;
+}
+
+.nav-link-azure.active {
+  background: rgba(14, 165, 233, 0.28);
+  color: #fff;
+  font-weight: 500;
 }
 
 .account {

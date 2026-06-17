@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
-import logging
+from models.handle_logging import get_logging_conf
+logging = get_logging_conf()
 import os
 from core.logging_config import setup_logging
 setup_logging()

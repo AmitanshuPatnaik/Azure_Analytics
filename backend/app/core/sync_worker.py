@@ -1,4 +1,5 @@
-import logging
+from models.handle_logging import get_logging_conf
+logging = get_logging_conf()
 import threading
 import time
 from datetime import datetime, timezone

@@ -67,11 +67,24 @@ export class ReposComponent implements OnInit {
     });
   }
 
+  selectedOwner = 'All';
+
+  get uniqueOwners(): string[] {
+    if (!this.dashboardService.selectedProject) {
+      return [];
+    }
+    const projectRepos = this.repositories.filter(r => r.project === this.dashboardService.selectedProject.name);
+    const owners = projectRepos.map(r => r.owner || 'N/A');
+    return Array.from(new Set(owners)).sort();
+  }
+
   selectProject(project: any) {
+    this.selectedOwner = 'All';
     this.dashboardService.selectedProject = project;
   }
 
   changeProject() {
+    this.selectedOwner = 'All';
     this.dashboardService.selectedProject = null;
     this.reposError = null;
   }
@@ -80,6 +93,10 @@ export class ReposComponent implements OnInit {
     if (!this.dashboardService.selectedProject) {
       return [];
     }
-    return this.repositories.filter(r => r.project === this.dashboardService.selectedProject.name);
+    const projectRepos = this.repositories.filter(r => r.project === this.dashboardService.selectedProject.name);
+    if (this.selectedOwner === 'All') {
+      return projectRepos;
+    }
+    return projectRepos.filter(r => (r.owner || 'N/A') === this.selectedOwner);
   }
 }

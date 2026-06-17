@@ -1,4 +1,5 @@
-import logging
+from models.handle_logging import get_logging_conf
+logging = get_logging_conf()
 from fastapi import APIRouter, Query
 from core.data_cache import cache
 from core.azure_throttle import range_cache
