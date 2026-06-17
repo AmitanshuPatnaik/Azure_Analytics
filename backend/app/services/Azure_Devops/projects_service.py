@@ -1,3 +1,4 @@
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
@@ -9,9 +10,13 @@ from core.constants import API_VERSION, RESOURCE_PROJECT
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+logger = logging.getLogger(__name__)
+
 
 def fetch_projects():
+    logger.info("[ProjectsService] Fetching projects from Azure DevOps")
     if not base_url or not collection or not pat:
+        logger.warning("[ProjectsService] Azure DevOps not configured — skipping projects fetch")
         return {
             "success": False,
             "message": "Azure DevOps is not configured. Please check config.json.",
@@ -39,12 +44,15 @@ def fetch_projects():
                 "url": f"{base_url}/{collection}/{proj_name}" if proj_name else project.get("url")
             })
 
-        return {
+        result = {
             "success": True,
             "count": len(projects),
             "projects": projects
         }
+        logger.info("[ProjectsService] ✓ Projects fetched successfully: %d projects", len(projects))
+        return result
     except Exception as e:
+        logger.error("[ProjectsService] ✗ Failed to fetch projects: %s", e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch projects: {str(e)}",

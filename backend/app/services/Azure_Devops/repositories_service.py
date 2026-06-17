@@ -1,3 +1,4 @@
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
@@ -13,9 +14,13 @@ from core.constants import API_VERSION, RESOURCE_REPOSITORY
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+logger = logging.getLogger(__name__)
+
 
 def fetch_repositories(project_name):
+    logger.info("[ReposService] Fetching repositories for project: %s", project_name)
     if not base_url or not collection or not pat:
+        logger.warning("[ReposService] Azure DevOps not configured — skipping repos fetch for '%s'", project_name)
         return {
             "success": False,
             "message": "Azure DevOps is not configured. Please check config.json.",
@@ -81,13 +86,16 @@ def fetch_repositories(project_name):
                 "remoteUrl": repo.get("remoteUrl")
             })
 
-        return {
+        result = {
             "success": True,
             "count": len(repos),
             "repositories": repos
         }
+        logger.info("[ReposService] ✓ Repositories fetched: %d repos for project '%s'", len(repos), project_name)
+        return result
 
     except Exception as e:
+        logger.error("[ReposService] ✗ Failed to fetch repositories for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch repositories: {str(e)}",

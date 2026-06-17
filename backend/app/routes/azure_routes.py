@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Query
 from core.data_cache import cache
 from core.azure_throttle import range_cache
@@ -18,6 +19,8 @@ from services.Azure.costs import (
     normalize_utc_date,
     build_dated_cache_key,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/azure", tags=["Azure"])
 

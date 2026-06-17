@@ -2,7 +2,8 @@
 <!-- PAGE HEADER                                                             -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <div class="tab-header" style="margin-bottom:20px;">
-  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+  <div
+    style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
     <div>
       <h1 class="page-title-centered" style="margin:0; font-size:22px;">Azure Resources &amp; Cost Analytics</h1>
       <div style="display:flex; align-items:center; gap:8px; margin-top:5px;">
@@ -31,8 +32,7 @@
     <div style="display:flex; align-items:center; gap:8px;">
       <label for="sub-select" style="font-size:13px; color:#475569; white-space:nowrap;">Subscription:</label>
       <select id="sub-select" class="month-dropdown" style="width:auto; padding:6px 12px; font-size:13px;"
-        [value]="selectedSubscriptionId" [disabled]="!selectedAzureProject"
-        (change)="onSubscriptionChange($event)">
+        [value]="selectedSubscriptionId" [disabled]="!selectedAzureProject" (change)="onSubscriptionChange($event)">
         <option value="">Select Subscription</option>
         @for (sub of subscriptions; track sub.subscriptionId || $index) {
         <option [value]="sub.subscriptionId">{{ sub.displayName }}</option>
@@ -47,45 +47,36 @@
         <div style="display:flex; align-items:center; gap:6px;">
           <label style="font-size:12px; color:#64748b;">From</label>
           <div style="display:flex; flex-direction:column;">
-            <input type="date" class="month-dropdown"
-              style="width:auto; font-size:13px; padding:5px 10px;"
+            <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
               [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="pendingFromDate"
-              [disabled]="!selectedSubscriptionId"
-              title="Date format: MM-DD-YYYY"
-              placeholder="MM-DD-YYYY"
+              [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
               (change)="pendingFromDate = $any($event.target).value; onCostTrendDateChange()">
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <label style="font-size:12px; color:#64748b;">To</label>
           <div style="display:flex; flex-direction:column;">
-            <input type="date" class="month-dropdown"
-              style="width:auto; font-size:13px; padding:5px 10px;"
+            <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
               [min]="pendingFromDate" [max]="costTrendMaxDate" [value]="pendingToDate"
-              [disabled]="!selectedSubscriptionId"
-              title="Date format: MM-DD-YYYY"
-              placeholder="MM-DD-YYYY"
+              [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
               (change)="pendingToDate = $any($event.target).value; onCostTrendDateChange()">
           </div>
         </div>
       </div>
-      <span class="date-fmt-hint" style="padding-left:80px;">Date format: MM-DD-YYYY &nbsp;·&nbsp; All dates in UTC</span>
+      <span class="date-fmt-hint" style="padding-left:80px;">Date format: MM-DD-YYYY</span>
     </div>
 
     <!-- Submit button (B – renamed from "Fetch Data") -->
-    <button
-      (click)="applyDateFilter()"
-      [disabled]="!isReadyToSubmit || isLoadingAzureRange"
-      style="padding:7px 22px; font-size:13px; background:#2563eb; color:white; border:none;
+    <button (click)="applyDateFilter()" [disabled]="!isReadyToSubmit || isLoadingAzureRange" style="padding:7px 22px; font-size:13px; background:#2563eb; color:white; border:none;
              border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:6px;
              white-space:nowrap; transition:background 0.2s, opacity 0.2s;"
       [style.opacity]="!isReadyToSubmit ? '0.5' : '1'">
       @if (isLoadingAzureRange) {
-        <span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;
+      <span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;
                      border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
-        Loading…
+      Loading…
       } @else {
-        Submit
+      Submit
       }
     </button>
 
@@ -165,17 +156,16 @@
       <svg viewBox="0 0 660 260" width="100%" height="260">
 
         @for (lbl of costTrendYLabels; track $index) {
-        <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)"
-              stroke="#e2e8f0" stroke-width="1"></line>
+        <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)" stroke="#e2e8f0"
+          stroke-width="1"></line>
         <!-- K – ₹ currency symbol on Y-axis -->
         <text x="55" [attr.y]="24 + ($index * 40)" text-anchor="end" fill="#64748b" font-size="11">{{ lbl }}</text>
         }
 
         @if (costTrendPolyline) {
-        <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'"
-                 fill="rgba(37,99,235,0.08)"></polygon>
+        <polygon [attr.points]="costTrendPolyline + ' 630,220 60,220'" fill="rgba(37,99,235,0.08)"></polygon>
         <polyline [attr.points]="costTrendPolyline" fill="none" stroke="#2563eb" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round"></polyline>
+          stroke-linecap="round" stroke-linejoin="round"></polyline>
         }
 
         @for (c of costTrendCircles; track c.dateUtc) {
@@ -183,12 +173,12 @@
           <title>{{ c.dateUtc }}: ₹{{ c.cost | number:'1.2-2' }}</title>
         </circle>
         <!-- K – Month/date label on X-axis -->
-        @if (costTrendPoints.length <= 14) {
-        <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b" font-size="10">
+        @if (costTrendPoints.length <= 14) { <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b"
+          font-size="10">
           {{ c.date.slice(5) }}
-        </text>
-        }
-        }
+          </text>
+          }
+          }
 
       </svg>
     </div>
@@ -255,8 +245,8 @@
       <div style="flex:1; padding-right:4px;">
         @for (s of topResourcesPieSlices; track s.name) {
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
-                    padding:4px 6px; border-radius:6px; cursor:default;"
-          (mouseenter)="hoveredTopResource = s" (mouseleave)="hoveredTopResource = null">
+                    padding:4px 6px; border-radius:6px; cursor:default;" (mouseenter)="hoveredTopResource = s"
+          (mouseleave)="hoveredTopResource = null">
           <span [style.background]="s.color"
             style="display:inline-block; width:12px; height:12px; border-radius:3px; flex-shrink:0;"></span>
           <span style="font-size:12px; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
@@ -315,8 +305,8 @@
       <div style="flex:1; padding-right:4px;">
         @for (s of serviceCostsPieSlices; track s.name) {
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
-                    padding:4px 6px; border-radius:6px; cursor:default;"
-          (mouseenter)="hoveredServiceCost = s" (mouseleave)="hoveredServiceCost = null">
+                    padding:4px 6px; border-radius:6px; cursor:default;" (mouseenter)="hoveredServiceCost = s"
+          (mouseleave)="hoveredServiceCost = null">
           <span [style.background]="s.color"
             style="display:inline-block; width:12px; height:12px; border-radius:3px; flex-shrink:0;"></span>
           <span style="font-size:12px; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>

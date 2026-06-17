@@ -1,3 +1,4 @@
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
@@ -10,6 +11,8 @@ from core.auth import auth
 from core.constants import API_VERSION, RESOURCE_WORKITEM
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+logger = logging.getLogger(__name__)
 
 
 def fetch_work_item_ids(project_name):
@@ -82,7 +85,9 @@ def get_sprint_sort_key(sprint_name, project_name):
 
 
 def fetch_work_items(project_name):
+    logger.info("[BoardsService] Fetching work items for project: %s", project_name)
     if not base_url or not collection or not pat:
+        logger.warning("[BoardsService] Azure DevOps not configured — skipping work items fetch for '%s'", project_name)
         return {
             "success": False,
             "message": "Azure DevOps is not configured. Please check config.json.",
@@ -197,6 +202,7 @@ def fetch_work_items(project_name):
         raw_items.sort(key=lambda x: get_sprint_sort_key(x["fields"]["_sprint"], project_name))
 
         sprints = sorted(list(sprint_set), key=lambda s: get_sprint_sort_key(s, project_name))
+        logger.info("[BoardsService] ✓ Work items fetched: %d items, %d sprints for project '%s'", len(raw_items), len(sprints), project_name)
 
         return {
             "success": True,
@@ -205,6 +211,7 @@ def fetch_work_items(project_name):
             "sprints": sprints,
         }
     except Exception as e:
+        logger.error("[BoardsService] ✗ Failed to fetch work items for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch work items: {str(e)}",
@@ -219,7 +226,9 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
     Returns work items whose state changed within the last `days` days,
     enriched with the previous state inferred from the update history.
     """
+    logger.info("[BoardsService] Fetching recent state changes for project '%s' (days=%d, limit=%d)", project_name, days, limit)
     if not base_url or not collection or not pat:
+        logger.warning("[BoardsService] Azure DevOps not configured — skipping recent state changes for '%s'", project_name)
         return {
             "success": False,
             "message": "Azure DevOps is not configured. Please check config.json.",
@@ -336,9 +345,11 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
             reverse=True,
         )
 
+        logger.info("[BoardsService] ✓ Recent state changes fetched: %d items for project '%s'", len(changes), project_name)
         return {"success": True, "count": len(changes), "changes": changes}
 
     except Exception as exc:
+        logger.error("[BoardsService] ✗ Failed to fetch recent state changes for '%s': %s", project_name, exc, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch recent state changes: {str(exc)}",

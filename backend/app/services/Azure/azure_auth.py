@@ -1,5 +1,8 @@
+import logging
 import requests
 from contextvars import ContextVar
+
+logger = logging.getLogger(__name__)
 
 azure_project_var = ContextVar("azure_project", default=None)
 
@@ -57,11 +60,13 @@ def get_azure_token(project_name: str = None):
             c_secret = config.get(f"{fallback_prefix}_CLIENT_SECRET")
 
     if not t_id or not c_id or not c_secret:
+        logger.error("[AzureAuth] Azure configuration is incomplete or missing in config.json for project '%s'", project_name)
         raise ValueError("Azure configuration is incomplete or missing in config.json")
 
-    # ── Token cache: avoid hammering login.microsoftonline.com ──────────── #
+    # ── Token cache: avoid hammering login.microsoftonline.com ──────────────────── #
     cached_token = token_cache.get(t_id, c_id)
     if cached_token:
+        logger.debug("[AzureAuth] Token cache hit for project '%s' (tenant=%s)", project_name, t_id)
         return cached_token
 
     url = f"https://login.microsoftonline.com/{t_id}/oauth2/v2.0/token"
@@ -78,4 +83,5 @@ def get_azure_token(project_name: str = None):
 
     token = response.json()["access_token"]
     token_cache.set(t_id, c_id, token)
+    logger.info("[AzureAuth] ✓ Acquired and cached new Azure AD token for project '%s' (tenant=%s)", project_name, t_id)
     return token

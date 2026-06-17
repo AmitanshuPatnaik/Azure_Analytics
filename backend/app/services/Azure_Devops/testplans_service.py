@@ -1,3 +1,4 @@
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
@@ -10,9 +11,13 @@ from core.constants import API_VERSION, RESOURCE_TESTPLAN
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+logger = logging.getLogger(__name__)
+
 
 def fetch_test_plans(project_name):
+    logger.info("[TestPlansService] Fetching test plans for project: %s", project_name)
     if not base_url or not collection or not pat:
+        logger.warning("[TestPlansService] Azure DevOps not configured — skipping test plans fetch for '%s'", project_name)
         return {
             "success": False,
             "message": "Azure DevOps is not configured. Please check config.json.",
@@ -44,12 +49,15 @@ def fetch_test_plans(project_name):
                 "endDate" : tp.get("endDate")
             })
 
-        return {
+        result = {
             "success" : True,
             "count" : len(tps),
             "test_plans" : tps
         }
+        logger.info("[TestPlansService] ✓ Test plans fetched: %d plans for project '%s'", len(tps), project_name)
+        return result
     except Exception as e:
+        logger.error("[TestPlansService] ✗ Failed to fetch test plans for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch test plans: {str(e)}",

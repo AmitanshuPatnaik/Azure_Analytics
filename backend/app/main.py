@@ -1,5 +1,8 @@
 from contextlib import asynccontextmanager
 import logging
+import os
+from core.logging_config import setup_logging
+setup_logging()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,17 +26,21 @@ _sync_worker: SyncWorker | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _sync_worker
+    logger.info("[Lifespan] ---- Application startup ----------------------")
     logger.info("[Lifespan] Booting Azure background synchronization worker engine...")
     _sync_worker = SyncWorker()
     _sync_worker.start()
-    logger.info("[Lifespan] Background worker spawned successfully.")
+    logger.info("[Lifespan] Background worker spawned successfully (daemon=True).")
+    logger.info("[Lifespan] Azure Analytics API is ready to accept requests.")
 
     yield
 
+    logger.info("[Lifespan] ---- Application shutdown ---------------------")
     logger.info("[Lifespan] Shutdown intercepted — stopping daemon sync execution loops...")
     if _sync_worker is not None:
         _sync_worker.stop()
-    logger.info("[Lifespan] Background daemon reaped safely.")
+        logger.info("[Lifespan] Stop event signalled to SyncWorker daemon.")
+    logger.info("[Lifespan] Background daemon reaped safely. Goodbye.")
 
 
 app = FastAPI(
@@ -51,20 +58,41 @@ allowed_origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=["*"],  # allowed_origins — restrict for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(projects_router, prefix="/api")
-app.include_router(repositories_router, prefix="/api")
-app.include_router(pipelines_router, prefix="/api")
-app.include_router(boards_router, prefix="/api")
-app.include_router(testplans_router, prefix="/api")
+# ── Router registration ──────────────────────────────────────────────────── #
+app.include_router(projects_router,      prefix="/api")
+app.include_router(repositories_router,  prefix="/api")
+app.include_router(pipelines_router,     prefix="/api")
+app.include_router(boards_router,        prefix="/api")
+app.include_router(testplans_router,     prefix="/api")
 app.include_router(auth_router)
-app.include_router(azure_router, prefix="/api")
-app.include_router(status_router, prefix="/api")
+app.include_router(azure_router,         prefix="/api")
+app.include_router(status_router,        prefix="/api")
+
+logger.info(
+    "[Main] Registered routers: projects, repositories, pipelines, boards, "
+    "testplans, auth, azure, status"
+)
+
+
+@app.get("/")
+async def default():
+    """Root health-check endpoint."""
+    logger.debug("[Main] Root health-check endpoint hit.")
+    return "Watcher API is running ..."
+
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.environ.get("SERVER_PORT", 80))
+    logger.info("[Main] Starting uvicorn on 0.0.0.0:%d", port)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False,
+    )

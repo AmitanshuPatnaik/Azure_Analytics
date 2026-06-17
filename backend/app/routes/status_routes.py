@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter
 from services.Azure_Devops.projects_service import fetch_projects
 from services.Azure_Devops.pipelines_service import fetch_pipelines
@@ -5,6 +6,8 @@ from services.Azure.azure_auth import get_azure_token
 from core.data_cache import cache
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/status", tags=["Status"])
 
@@ -25,6 +28,7 @@ def _check_azure_service(url: str, token: str) -> str:
 
 @router.get("/services")
 async def get_services_status(project: str = None):
+    logger.info("[StatusRoutes] Running service health check (project=%s)", project)
 
     # ── 1. Azure DevOps ──────────────────────────────────────────────────────
     devops_status = "Healthy"
@@ -37,6 +41,7 @@ async def get_services_status(project: str = None):
             devops_status = "Warning"
     except Exception:
         devops_status = "Warning"
+    logger.info("[StatusRoutes] Azure DevOps status: %s", devops_status)
 
     # ── 2. CI/CD Pipelines ───────────────────────────────────────────────────
     pipelines_status = "Healthy"

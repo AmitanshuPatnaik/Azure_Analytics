@@ -1,3 +1,4 @@
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import urllib3
@@ -10,9 +11,13 @@ from core.constants import API_VERSION, RESOURCE_PIPELINE
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+logger = logging.getLogger(__name__)
+
 
 def fetch_pipelines(project_name):
+    logger.info("[PipelinesService] Fetching pipelines for project: %s", project_name)
     if not base_url or not collection or not pat:
+        logger.warning("[PipelinesService] Azure DevOps not configured — skipping pipelines fetch for '%s'", project_name)
         return {
             "success": False,
             "message": "Azure DevOps is not configured. Please check config.json.",
@@ -38,12 +43,15 @@ def fetch_pipelines(project_name):
                 "url"    : f"{base_url}/{collection}/{project_name}/_build?definitionId={pipeline_id}" if pipeline_id else pipeline.get("url")
             })
 
-        return {
+        result = {
             "success" : True,
             "count" : len(pipelines),
             "pipelines" : pipelines
         }
+        logger.info("[PipelinesService] ✓ Pipelines fetched: %d pipelines for project '%s'", len(pipelines), project_name)
+        return result
     except Exception as e:
+        logger.error("[PipelinesService] ✗ Failed to fetch pipelines for '%s': %s", project_name, e, exc_info=True)
         return {
             "success": False,
             "message": f"Failed to fetch pipelines: {str(e)}",

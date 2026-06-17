@@ -10,3 +10,5 @@
 backend/config.json
 *.angular/
 *backend/cache/
+*backend/app/logs/
+*.log
