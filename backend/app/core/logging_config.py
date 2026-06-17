@@ -47,6 +47,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     try:
         file_handler = logging.handlers.RotatingFileHandler(
             _APP_LOG_FILE,
+            mode="w",
             maxBytes=10 * 1024 * 1024,  # 10 MB per file
             backupCount=5,
             encoding="utf-8",
@@ -60,6 +61,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     try:
         error_handler = logging.handlers.RotatingFileHandler(
             _ERROR_LOG_FILE,
+            mode="w",
             maxBytes=10 * 1024 * 1024,  # 10 MB per file
             backupCount=5,
             encoding="utf-8",
