@@ -30,6 +30,27 @@ export class AzureComponent implements OnInit {
   topResources: any[] = [];
   serviceCosts: any[] = [];
 
+  resourcesCurrentPage = 1;
+  servicesCurrentPage = 1;
+  pageSize = 10;
+  get Math() { return Math; }
+
+  get paginatedTopResources(): any[] {
+    const start = (this.resourcesCurrentPage - 1) * this.pageSize;
+    return this.topResourcesPieSlices.slice(start, start + this.pageSize);
+  }
+  get resourcesTotalPages(): number {
+    return Math.ceil(this.topResourcesPieSlices.length / this.pageSize);
+  }
+
+  get paginatedServiceCosts(): any[] {
+    const start = (this.servicesCurrentPage - 1) * this.pageSize;
+    return this.serviceCostsPieSlices.slice(start, start + this.pageSize);
+  }
+  get servicesTotalPages(): number {
+    return Math.ceil(this.serviceCostsPieSlices.length / this.pageSize);
+  }
+
   // Filter / loader states
   isLoadingAzure = false;
   isLoadingAzureRange = false;
@@ -319,6 +340,8 @@ export class AzureComponent implements OnInit {
     this.costTrendToDate = clamped.to;
     this.pendingFromDate = clamped.from;
     this.pendingToDate = clamped.to;
+    this.resourcesCurrentPage = 1;
+    this.servicesCurrentPage = 1;
     // Always reload — no short-circuit equality check
     this.loadSubscriptionMetrics(this.selectedSubscriptionId);
     this.loadAzureRangeMetrics(this.selectedSubscriptionId);
@@ -342,6 +365,8 @@ export class AzureComponent implements OnInit {
     const subId = select.value;
     this.selectedSubscriptionId = subId;
 
+    this.resourcesCurrentPage = 1;
+    this.servicesCurrentPage = 1;
     this.totalCost = 0;
     this.budgets = [];
     this.topResources = [];
@@ -357,6 +382,8 @@ export class AzureComponent implements OnInit {
     this.selectedAzureProject = proj;
     this.selectedSubscriptionId = '';
     this.subscriptions = [];
+    this.resourcesCurrentPage = 1;
+    this.servicesCurrentPage = 1;
     this.totalCost = 0;
     this.budgets = [];
     this.topResources = [];

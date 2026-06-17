@@ -19,6 +19,29 @@ export class TestplansComponent implements OnInit {
   testPlansError: string | null = null;
   testPlanSearch = '';
 
+  currentPage = 1;
+  projectsCurrentPage = 1;
+  pageSize = 10;
+  get Math() { return Math; }
+
+  get paginatedTestPlans(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredTestPlans.slice(start, start + this.pageSize);
+  }
+
+  get testPlansTotalPages(): number {
+    return Math.ceil(this.filteredTestPlans.length / this.pageSize);
+  }
+
+  get paginatedProjects(): any[] {
+    const start = (this.projectsCurrentPage - 1) * this.pageSize;
+    return this.projects.slice(start, start + this.pageSize);
+  }
+
+  get projectsTotalPages(): number {
+    return Math.ceil(this.projects.length / this.pageSize);
+  }
+
   get filteredTestPlans(): any[] {
     if (!this.testPlanSearch.trim()) return this.testPlans;
     const q = this.testPlanSearch.trim().toLowerCase();
@@ -86,11 +109,15 @@ export class TestplansComponent implements OnInit {
   }
 
   selectProject(project: any) {
+    this.currentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = project;
     this.loadTestPlans(project.name);
   }
 
   changeProject() {
+    this.currentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
     this.testPlans = [];
     this.testPlansError = null;

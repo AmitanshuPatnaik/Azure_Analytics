@@ -19,6 +19,29 @@ export class PipelinesComponent implements OnInit {
   pipelinesError: string | null = null;
   pipelineSearch = '';
 
+  currentPage = 1;
+  projectsCurrentPage = 1;
+  pageSize = 10;
+  get Math() { return Math; }
+
+  get paginatedPipelines(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredPipelines.slice(start, start + this.pageSize);
+  }
+
+  get pipelinesTotalPages(): number {
+    return Math.ceil(this.filteredPipelines.length / this.pageSize);
+  }
+
+  get paginatedProjects(): any[] {
+    const start = (this.projectsCurrentPage - 1) * this.pageSize;
+    return this.projects.slice(start, start + this.pageSize);
+  }
+
+  get projectsTotalPages(): number {
+    return Math.ceil(this.projects.length / this.pageSize);
+  }
+
   get filteredPipelines(): any[] {
     if (!this.pipelineSearch.trim()) return this.pipelines;
     const q = this.pipelineSearch.trim().toLowerCase();
@@ -85,11 +108,15 @@ export class PipelinesComponent implements OnInit {
   }
 
   selectProject(project: any) {
+    this.currentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = project;
     this.loadPipelines(project.name);
   }
 
   changeProject() {
+    this.currentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
     this.pipelines = [];
     this.pipelinesError = null;

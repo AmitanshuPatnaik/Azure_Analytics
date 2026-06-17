@@ -242,7 +242,7 @@
         }
       </svg>
       <div style="flex:1; padding-right:4px;">
-        @for (s of topResourcesPieSlices; track s.name) {
+        @for (s of paginatedTopResources; track s.name) {
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
                     padding:4px 6px; border-radius:6px; cursor:default;" (mouseenter)="hoveredTopResource = s"
           (mouseleave)="hoveredTopResource = null">
@@ -253,6 +253,17 @@
             &#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}
           </span>
           <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
+        </div>
+        }
+        @if (topResourcesPieSlices.length > 10) {
+        <div class="pagination-container standalone" style="padding: 6px 10px; border-radius: 8px;">
+          <div class="pagination-tracker" style="font-size: 11px;">
+            Page <strong>{{ resourcesCurrentPage }}</strong> of <strong>{{ resourcesTotalPages }}</strong>
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="resourcesCurrentPage = resourcesCurrentPage - 1" [disabled]="resourcesCurrentPage === 1">←</button>
+            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="resourcesCurrentPage = resourcesCurrentPage + 1" [disabled]="resourcesCurrentPage >= resourcesTotalPages">→</button>
+          </div>
         </div>
         }
       </div>
@@ -302,7 +313,7 @@
         }
       </svg>
       <div style="flex:1; padding-right:4px;">
-        @for (s of serviceCostsPieSlices; track s.name) {
+        @for (s of paginatedServiceCosts; track s.name) {
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
                     padding:4px 6px; border-radius:6px; cursor:default;" (mouseenter)="hoveredServiceCost = s"
           (mouseleave)="hoveredServiceCost = null">
@@ -313,6 +324,17 @@
             &#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}
           </span>
           <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
+        </div>
+        }
+        @if (serviceCostsPieSlices.length > 10) {
+        <div class="pagination-container standalone" style="padding: 6px 10px; border-radius: 8px;">
+          <div class="pagination-tracker" style="font-size: 11px;">
+            Page <strong>{{ servicesCurrentPage }}</strong> of <strong>{{ servicesTotalPages }}</strong>
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="servicesCurrentPage = servicesCurrentPage - 1" [disabled]="servicesCurrentPage === 1">←</button>
+            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="servicesCurrentPage = servicesCurrentPage + 1" [disabled]="servicesCurrentPage >= servicesTotalPages">→</button>
+          </div>
         </div>
         }
       </div>

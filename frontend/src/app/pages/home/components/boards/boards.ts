@@ -24,6 +24,47 @@ export class BoardsComponent implements OnInit {
   isLoadingChanges = false;
   changesError: string | null = null;
 
+  sprintPages = new Map<string, number>();
+  changesCurrentPage = 1;
+  projectsCurrentPage = 1;
+  get Math() { return Math; }
+
+  get paginatedProjects(): any[] {
+    const start = (this.projectsCurrentPage - 1) * 10;
+    return this.projects.slice(start, start + 10);
+  }
+
+  get projectsTotalPages(): number {
+    return Math.ceil(this.projects.length / 10);
+  }
+
+  getSprintPage(sprintName: string): number {
+    return this.sprintPages.get(sprintName) || 1;
+  }
+
+  setSprintPage(sprintName: string, page: number) {
+    this.sprintPages.set(sprintName, page);
+  }
+
+  getPaginatedSprintItems(sprintName: string, items: any[]): any[] {
+    const page = this.getSprintPage(sprintName);
+    const start = (page - 1) * 10;
+    return items.slice(start, start + 10);
+  }
+
+  getSprintTotalPages(items: any[]): number {
+    return Math.ceil(items.length / 10);
+  }
+
+  get paginatedRecentChanges(): any[] {
+    const start = (this.changesCurrentPage - 1) * 10;
+    return this.recentChanges.slice(start, start + 10);
+  }
+
+  get changesTotalPages(): number {
+    return Math.ceil(this.recentChanges.length / 10);
+  }
+
   boardFilterSprint = '';
   boardFilterType = '';
   boardFilterState = '';
@@ -133,12 +174,18 @@ export class BoardsComponent implements OnInit {
   }
 
   selectProject(project: any) {
+    this.sprintPages.clear();
+    this.changesCurrentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = project;
     this.loadWorkItems(project.name);
     this.loadRecentChanges(project.name);
   }
 
   changeProject() {
+    this.sprintPages.clear();
+    this.changesCurrentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
     this.workItems = [];
     this.workItemSprints = [];

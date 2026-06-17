@@ -16,6 +16,30 @@ export class ReposComponent implements OnInit {
   repositories: any[] = [];
   reposError: string | null = null;
 
+  currentPage = 1;
+  projectsCurrentPage = 1;
+  pageSize = 10;
+  get Math() { return Math; }
+
+  get paginatedRepositories() {
+    const repos = this.filteredRepositories;
+    const start = (this.currentPage - 1) * this.pageSize;
+    return repos.slice(start, start + this.pageSize);
+  }
+
+  get reposTotalPages(): number {
+    return Math.ceil(this.filteredRepositories.length / this.pageSize);
+  }
+
+  get paginatedProjects(): any[] {
+    const start = (this.projectsCurrentPage - 1) * this.pageSize;
+    return this.projects.slice(start, start + this.pageSize);
+  }
+
+  get projectsTotalPages(): number {
+    return Math.ceil(this.projects.length / this.pageSize);
+  }
+
   constructor(
     public dashboardService: DashboardService,
     private projectsApi: ProjectsApiService,
@@ -80,11 +104,15 @@ export class ReposComponent implements OnInit {
 
   selectProject(project: any) {
     this.selectedOwner = 'All';
+    this.currentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = project;
   }
 
   changeProject() {
     this.selectedOwner = 'All';
+    this.currentPage = 1;
+    this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;
     this.reposError = null;
   }

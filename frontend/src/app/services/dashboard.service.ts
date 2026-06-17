@@ -24,4 +24,5 @@ export class DashboardService {
   // Shared state for page-specific selections/coordination
   selectedProject: any = null;
   selectedRepoForDetails: any = null;
+  hasReloadedDashboard = false;
 }

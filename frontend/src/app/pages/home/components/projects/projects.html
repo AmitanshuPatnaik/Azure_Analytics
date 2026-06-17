@@ -7,7 +7,7 @@
 } @else {
 <div class="cards">
 
-  @for (project of projects; track project.id || $index) {
+  @for (project of paginatedProjects; track project.id || $index) {
   <div class="card">
     <h3>{{ project.name }}</h3>
     <hr>
@@ -22,4 +22,17 @@
   }
 
 </div>
+
+@if (projects.length > 10) {
+<div class="pagination-container standalone">
+  <div class="pagination-tracker">
+    Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(currentPage * pageSize, projects.length) }}</strong> of <strong>{{ projects.length }}</strong> projects
+  </div>
+  <div class="pagination-controls">
+    <button class="pagination-btn" (click)="currentPage = currentPage - 1" [disabled]="currentPage === 1">← Previous</button>
+    <span class="pagination-tracker">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+    <button class="pagination-btn" (click)="currentPage = currentPage + 1" [disabled]="currentPage >= totalPages">Next →</button>
+  </div>
+</div>
+}
 }

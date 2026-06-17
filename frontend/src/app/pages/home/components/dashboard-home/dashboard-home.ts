@@ -2,6 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { Router } from '@angular/router';
+import { DashboardService } from '../../../../services/dashboard.service';
 
 // API Services imports
 import { ProjectsApiService } from '../../../../services/api/projects-api.service';
@@ -84,13 +86,46 @@ export class DashboardHomeComponent implements OnInit {
   yearlyCostError: string | null = null;
   servicesStatusError: string | null = null;
 
+  modalCurrentPage = 1;
+  pageSize = 10;
+  get Math() { return Math; }
+
+  get paginatedModalDistribution(): any[] {
+    const start = (this.modalCurrentPage - 1) * this.pageSize;
+    return this.sortedProjectDistribution.slice(start, start + this.pageSize);
+  }
+  get modalTotalPages(): number {
+    return Math.ceil(this.sortedProjectDistribution.length / this.pageSize);
+  }
+
+  reposResolved = false;
+  servicesResolved = false;
+
+  checkAndReload() {
+    if (this.reposResolved && this.servicesResolved) {
+      this.calculateProjectDistribution();
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+      
+      if (!this.dashboardService.hasReloadedDashboard) {
+        this.dashboardService.hasReloadedDashboard = true;
+        const currentUrl = this.router.url;
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate([currentUrl]);
+        });
+      }
+    }
+  }
+
   constructor(
     private projectsApi: ProjectsApiService,
     private reposApi: RepositoriesApiService,
     private pipelinesApi: PipelinesApiService,
     private azureApi: AzureApiService,
     private statusApi: StatusApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+    public dashboardService: DashboardService
   ) {}
 
   ngOnInit() {
@@ -157,16 +192,16 @@ export class DashboardHomeComponent implements OnInit {
           this.reposError = 'No repositories found on backend.';
         }
         this.isLoadingRepos = false;
-        this.calculateProjectDistribution();
-        this.cdr.detectChanges();
+        this.reposResolved = true;
+        this.checkAndReload();
       },
       error: (err) => {
         console.warn('Could not fetch repositories from backend', err);
         this.repositories = [];
         this.reposError = err.error?.detail || err.error?.message || err.message || 'Failed to load repositories.';
         this.isLoadingRepos = false;
-        this.calculateProjectDistribution();
-        this.cdr.detectChanges();
+        this.reposResolved = true;
+        this.checkAndReload();
       }
     });
   }
@@ -326,13 +361,15 @@ export class DashboardHomeComponent implements OnInit {
           this.servicesStatus = [];
           this.servicesStatusError = 'No services status data found.';
         }
-        this.cdr.detectChanges();
+        this.servicesResolved = true;
+        this.checkAndReload();
       },
       error: (err) => {
         console.warn('Failed to load services status', err);
         this.servicesStatus = [];
         this.servicesStatusError = err.error?.detail || err.error?.message || err.message || 'Failed to load services status.';
-        this.cdr.detectChanges();
+        this.servicesResolved = true;
+        this.checkAndReload();
       }
     });
   }

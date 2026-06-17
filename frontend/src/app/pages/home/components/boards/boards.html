@@ -5,7 +5,7 @@
   </div>
 
   <div class="cards">
-    @for (project of projects; track project.id || $index) {
+    @for (project of paginatedProjects; track project.id || $index) {
       <div class="card">
         <h3>{{ project.name }}</h3>
         <hr>
@@ -19,6 +19,18 @@
       </div>
     }
   </div>
+  @if (projects.length > 10) {
+  <div class="pagination-container standalone">
+    <div class="pagination-tracker">
+      Showing <strong>{{ (projectsCurrentPage - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(projectsCurrentPage * 10, projects.length) }}</strong> of <strong>{{ projects.length }}</strong> projects
+    </div>
+    <div class="pagination-controls">
+      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage - 1" [disabled]="projectsCurrentPage === 1">← Previous</button>
+      <span class="pagination-tracker">Page <strong>{{ projectsCurrentPage }}</strong> of <strong>{{ projectsTotalPages }}</strong></span>
+      <button class="pagination-btn" (click)="projectsCurrentPage = projectsCurrentPage + 1" [disabled]="projectsCurrentPage >= projectsTotalPages">Next →</button>
+    </div>
+  </div>
+  }
 } @else {
   <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
     <button (click)="changeProject()"
@@ -133,7 +145,7 @@
           <th>State</th>
           <th>Assigned To</th>
         </tr>
-        @for (item of group.items; track item.id || $index) {
+        @for (item of getPaginatedSprintItems(group.sprint, group.items); track item.id || $index) {
         <tr>
           <td style="color: #6b7280;">{{ item.id }}</td>
           <td>{{ item.title }}</td>
@@ -157,6 +169,18 @@
         </tr>
         }
       </table>
+      @if (group.items.length > 10) {
+      <div class="pagination-container">
+        <div class="pagination-tracker">
+          Showing <strong>{{ (getSprintPage(group.sprint) - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(getSprintPage(group.sprint) * 10, group.items.length) }}</strong> of <strong>{{ group.items.length }}</strong> items
+        </div>
+        <div class="pagination-controls">
+          <button class="pagination-btn" (click)="setSprintPage(group.sprint, getSprintPage(group.sprint) - 1)" [disabled]="getSprintPage(group.sprint) === 1">← Previous</button>
+          <span class="pagination-tracker">Page <strong>{{ getSprintPage(group.sprint) }}</strong> of <strong>{{ getSprintTotalPages(group.items) }}</strong></span>
+          <button class="pagination-btn" (click)="setSprintPage(group.sprint, getSprintPage(group.sprint) + 1)" [disabled]="getSprintPage(group.sprint) >= getSprintTotalPages(group.items)">Next →</button>
+        </div>
+      </div>
+      }
       }
 
     </div>
@@ -201,7 +225,7 @@
         } @else {
 
         <!-- Timeline entries -->
-        @for (change of recentChanges; track change.id) {
+        @for (change of paginatedRecentChanges; track change.id) {
         <div style="display: flex; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #f1f5f9;
                     transition: background 0.15s ease;"
           onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
@@ -262,6 +286,18 @@
             </div>
           </div>
 
+        </div>
+        }
+        @if (recentChanges.length > 10) {
+        <div class="pagination-container standalone" style="margin: 10px; border-top: 1px solid #e2e8f0; border-radius: 8px;">
+          <div class="pagination-tracker">
+            Showing <strong>{{ (changesCurrentPage - 1) * 10 + 1 }}</strong> to <strong>{{ Math.min(changesCurrentPage * 10, recentChanges.length) }}</strong> of <strong>{{ recentChanges.length }}</strong> changes
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" (click)="changesCurrentPage = changesCurrentPage - 1" [disabled]="changesCurrentPage === 1">← Prev</button>
+            <span class="pagination-tracker">Page <strong>{{ changesCurrentPage }}</strong> of <strong>{{ changesTotalPages }}</strong></span>
+            <button class="pagination-btn" (click)="changesCurrentPage = changesCurrentPage + 1" [disabled]="changesCurrentPage >= changesTotalPages">Next →</button>
+          </div>
         </div>
         }
 

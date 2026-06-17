@@ -73,7 +73,7 @@
     <th>Default Branch</th>
     <th style="text-align: center;">Actions</th>
   </tr>
-  @for (repo of selectedProjectRepos; track repo.id || $index) {
+  @for (repo of paginatedRepos; track repo.id || $index) {
   <tr>
     <td>{{ repo.name }}</td>
     <td>{{ repo.defaultBranch || 'N/A' }}</td>
@@ -96,6 +96,18 @@
   </tr>
   }
 </table>
+@if (selectedProjectRepos.length > 10) {
+<div class="pagination-container">
+  <div class="pagination-tracker">
+    Showing <strong>{{ (reposCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(reposCurrentPage * pageSize, selectedProjectRepos.length) }}</strong> of <strong>{{ selectedProjectRepos.length }}</strong> repositories
+  </div>
+  <div class="pagination-controls">
+    <button class="pagination-btn" (click)="reposCurrentPage = reposCurrentPage - 1" [disabled]="reposCurrentPage === 1">← Previous</button>
+    <span class="pagination-tracker">Page <strong>{{ reposCurrentPage }}</strong> of <strong>{{ reposTotalPages }}</strong></span>
+    <button class="pagination-btn" (click)="reposCurrentPage = reposCurrentPage + 1" [disabled]="reposCurrentPage >= reposTotalPages">Next →</button>
+  </div>
+</div>
+}
 }
 
 <!-- Repository Dynamic Operations Sub-table -->
@@ -127,7 +139,7 @@
       <th>Date</th>
       <th>Comment</th>
     </tr>
-    @for (c of repoCommits; track c.commitId || $index) {
+    @for (c of paginatedCommits; track c.commitId || $index) {
     <tr>
       <td><code>{{ c.commitId?.substring(0, 8) }}</code></td>
       <td>{{ c.author }}</td>
@@ -140,6 +152,18 @@
     </tr>
     }
   </table>
+  @if (repoCommits.length > 10) {
+  <div class="pagination-container">
+    <div class="pagination-tracker">
+      Showing <strong>{{ (commitsCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(commitsCurrentPage * pageSize, repoCommits.length) }}</strong> of <strong>{{ repoCommits.length }}</strong> commits
+    </div>
+    <div class="pagination-controls">
+      <button class="pagination-btn" (click)="commitsCurrentPage = commitsCurrentPage - 1" [disabled]="commitsCurrentPage === 1">← Previous</button>
+      <span class="pagination-tracker">Page <strong>{{ commitsCurrentPage }}</strong> of <strong>{{ commitsTotalPages }}</strong></span>
+      <button class="pagination-btn" (click)="commitsCurrentPage = commitsCurrentPage + 1" [disabled]="commitsCurrentPage >= commitsTotalPages">Next →</button>
+    </div>
+  </div>
+  }
   }
 
   <!-- PRs sub-view -->
@@ -152,7 +176,7 @@
       <th>Date</th>
       <th>Status</th>
     </tr>
-    @for (pr of repoPRs; track pr.pullRequestId || $index) {
+    @for (pr of paginatedPRs; track pr.pullRequestId || $index) {
     <tr>
       <td>{{ pr.pullRequestId }}</td>
       <td>{{ pr.title }}</td>
@@ -166,6 +190,18 @@
     </tr>
     }
   </table>
+  @if (repoPRs.length > 10) {
+  <div class="pagination-container">
+    <div class="pagination-tracker">
+      Showing <strong>{{ (prsCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(prsCurrentPage * pageSize, repoPRs.length) }}</strong> of <strong>{{ repoPRs.length }}</strong> pull requests
+    </div>
+    <div class="pagination-controls">
+      <button class="pagination-btn" (click)="prsCurrentPage = prsCurrentPage - 1" [disabled]="prsCurrentPage === 1">← Previous</button>
+      <span class="pagination-tracker">Page <strong>{{ prsCurrentPage }}</strong> of <strong>{{ prsTotalPages }}</strong></span>
+      <button class="pagination-btn" (click)="prsCurrentPage = prsCurrentPage + 1" [disabled]="prsCurrentPage >= prsTotalPages">Next →</button>
+    </div>
+  </div>
+  }
   }
 
   <!-- Branches sub-view -->
@@ -178,7 +214,7 @@
       <th>Last Modified By</th>
       <th>Last Modified Date</th>
     </tr>
-    @for (b of repoBranches; track b.name || $index) {
+    @for (b of paginatedBranches; track b.name || $index) {
     <tr>
       <td>{{ b.name }}</td>
       <td>{{ b.owner || 'N/A' }}</td>
@@ -192,6 +228,18 @@
     </tr>
     }
   </table>
+  @if (repoBranches.length > 10) {
+  <div class="pagination-container">
+    <div class="pagination-tracker">
+      Showing <strong>{{ (branchesCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(branchesCurrentPage * pageSize, repoBranches.length) }}</strong> of <strong>{{ repoBranches.length }}</strong> branches
+    </div>
+    <div class="pagination-controls">
+      <button class="pagination-btn" (click)="branchesCurrentPage = branchesCurrentPage - 1" [disabled]="branchesCurrentPage === 1">← Previous</button>
+      <span class="pagination-tracker">Page <strong>{{ branchesCurrentPage }}</strong> of <strong>{{ branchesTotalPages }}</strong></span>
+      <button class="pagination-btn" (click)="branchesCurrentPage = branchesCurrentPage + 1" [disabled]="branchesCurrentPage >= branchesTotalPages">Next →</button>
+    </div>
+  </div>
+  }
   }
 
   <!-- Pushes sub-view -->
@@ -202,7 +250,7 @@
       <th>Date</th>
       <th>Pushed By</th>
     </tr>
-    @for (p of repoPushes; track p.pushId || $index) {
+    @for (p of paginatedPushes; track p.pushId || $index) {
     <tr>
       <td>{{ p.pushId }}</td>
       <td>{{ p.date | date:'short':'UTC' }}</td>
@@ -214,6 +262,18 @@
     </tr>
     }
   </table>
+  @if (repoPushes.length > 10) {
+  <div class="pagination-container">
+    <div class="pagination-tracker">
+      Showing <strong>{{ (pushesCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(pushesCurrentPage * pageSize, repoPushes.length) }}</strong> of <strong>{{ repoPushes.length }}</strong> pushes
+    </div>
+    <div class="pagination-controls">
+      <button class="pagination-btn" (click)="pushesCurrentPage = pushesCurrentPage - 1" [disabled]="pushesCurrentPage === 1">← Previous</button>
+      <span class="pagination-tracker">Page <strong>{{ pushesCurrentPage }}</strong> of <strong>{{ pushesTotalPages }}</strong></span>
+      <button class="pagination-btn" (click)="pushesCurrentPage = pushesCurrentPage + 1" [disabled]="pushesCurrentPage >= pushesTotalPages">Next →</button>
+    </div>
+  </div>
+  }
   }
 
   }

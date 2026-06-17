@@ -24,6 +24,55 @@ export class ProjectDetailComponent implements OnInit {
   reposError: string | null = null;
   repoDetailsError: string | null = null;
 
+  pageSize = 10;
+  get Math() { return Math; }
+
+  reposCurrentPage = 1;
+  commitsCurrentPage = 1;
+  prsCurrentPage = 1;
+  branchesCurrentPage = 1;
+  pushesCurrentPage = 1;
+
+  get paginatedRepos(): any[] {
+    const start = (this.reposCurrentPage - 1) * this.pageSize;
+    return this.selectedProjectRepos.slice(start, start + this.pageSize);
+  }
+  get reposTotalPages(): number {
+    return Math.ceil(this.selectedProjectRepos.length / this.pageSize);
+  }
+
+  get paginatedCommits(): any[] {
+    const start = (this.commitsCurrentPage - 1) * this.pageSize;
+    return this.repoCommits.slice(start, start + this.pageSize);
+  }
+  get commitsTotalPages(): number {
+    return Math.ceil(this.repoCommits.length / this.pageSize);
+  }
+
+  get paginatedPRs(): any[] {
+    const start = (this.prsCurrentPage - 1) * this.pageSize;
+    return this.repoPRs.slice(start, start + this.pageSize);
+  }
+  get prsTotalPages(): number {
+    return Math.ceil(this.repoPRs.length / this.pageSize);
+  }
+
+  get paginatedBranches(): any[] {
+    const start = (this.branchesCurrentPage - 1) * this.pageSize;
+    return this.repoBranches.slice(start, start + this.pageSize);
+  }
+  get branchesTotalPages(): number {
+    return Math.ceil(this.repoBranches.length / this.pageSize);
+  }
+
+  get paginatedPushes(): any[] {
+    const start = (this.pushesCurrentPage - 1) * this.pageSize;
+    return this.repoPushes.slice(start, start + this.pageSize);
+  }
+  get pushesTotalPages(): number {
+    return Math.ceil(this.repoPushes.length / this.pageSize);
+  }
+
   @ViewChild('repoDetailsAnchor') repoDetailsAnchor!: ElementRef;
 
   constructor(
@@ -43,6 +92,7 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   loadProjectRepos(projectName: string) {
+    this.reposCurrentPage = 1;
     this.reposError = null;
     this.reposApi.getRepositoriesByProject(projectName).subscribe({
       next: (res: any) => {
@@ -74,6 +124,7 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoCommits(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'commits';
+    this.commitsCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
     this.reposApi.getCommits(this.selectedProject.name, repo.name).subscribe({
@@ -102,6 +153,7 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoPRs(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'prs';
+    this.prsCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
     this.reposApi.getPullRequests(this.selectedProject.name, repo.name).subscribe({
@@ -130,6 +182,7 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoBranches(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'branches';
+    this.branchesCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
     this.reposApi.getBranches(this.selectedProject.name, repo.name).subscribe({
@@ -160,6 +213,7 @@ export class ProjectDetailComponent implements OnInit {
   viewRepoPushes(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'pushes';
+    this.pushesCurrentPage = 1;
     this.isLoadingRepoDetails = true;
     this.repoDetailsError = null;
     this.reposApi.getPushes(this.selectedProject.name, repo.name).subscribe({

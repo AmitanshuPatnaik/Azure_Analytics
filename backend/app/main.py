@@ -99,4 +99,4 @@ async def log(lines: int = Query(default=100, description="Number of log lines t
 if __name__ == "__main__":
     port = int(os.environ.get("SERVER_PORT", 80))
     logger.info("[Main] Starting uvicorn on 0.0.0.0:%d", port)
-    uvicorn.run("main:app",host="0.0.0.0",port=port,reload=False,)
+    uvicorn.run("main:app",host="0.0.0.0",port=port,reload=False)
