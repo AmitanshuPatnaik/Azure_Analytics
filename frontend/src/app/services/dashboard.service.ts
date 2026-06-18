@@ -1,14 +1,20 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
+const SESSION_KEY_MODULE = 'dashboard_selectedModule';
+const SESSION_KEY_PAGE   = 'dashboard_selectedPage';
+
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardService {
 
-  selectedModule = '';
+  // Restore module from sessionStorage so refresh keeps the user on the same section
+  selectedModule: string = sessionStorage.getItem(SESSION_KEY_MODULE) || '';
 
-  private selectedPageSubject = new BehaviorSubject<string>('home');
+  private selectedPageSubject = new BehaviorSubject<string>(
+    sessionStorage.getItem(SESSION_KEY_PAGE) || 'home'
+  );
   selectedPage$ = this.selectedPageSubject.asObservable();
 
   get selectedPage(): string {
@@ -16,7 +22,14 @@ export class DashboardService {
   }
 
   set selectedPage(page: string) {
+    sessionStorage.setItem(SESSION_KEY_PAGE, page);
     this.selectedPageSubject.next(page);
+  }
+
+  // Override selectedModule setter to also persist to sessionStorage
+  setModule(module: string): void {
+    this.selectedModule = module;
+    sessionStorage.setItem(SESSION_KEY_MODULE, module);
   }
 
   sidebarVisible = false;

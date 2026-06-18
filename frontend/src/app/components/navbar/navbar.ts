@@ -56,7 +56,7 @@ export class Navbar {
 
   selectDevOps() {
 
-    this.dashboardService.selectedModule = 'DevOps';
+    this.dashboardService.setModule('DevOps');
 
     this.dashboardService.selectedPage = 'projects';
 
@@ -70,7 +70,7 @@ export class Navbar {
 
   selectAzure() {
 
-    this.dashboardService.selectedModule = 'Azure';
+    this.dashboardService.setModule('Azure');
 
     this.dashboardService.selectedPage = 'azure';
 

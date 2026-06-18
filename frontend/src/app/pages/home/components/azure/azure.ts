@@ -134,10 +134,6 @@ export class AzureComponent implements OnInit {
       next: (res: any) => {
         if (res && res.projects) {
           this.azureProjects = res.projects;
-          if (this.azureProjects.length > 0 && !this.selectedAzureProject) {
-            this.selectedAzureProject = this.azureProjects[0];
-            this.loadSubscriptions();
-          }
           this.cdr.detectChanges();
         }
       },
@@ -161,12 +157,6 @@ export class AzureComponent implements OnInit {
         this.subscriptions = subs || [];
         if (this.subscriptions.length === 0) {
           this.subscriptionsError = 'No Azure subscriptions found.';
-        } else {
-          // D – Pre-cache: automatically load first subscription on init
-          if (!this.selectedSubscriptionId) {
-            this.selectedSubscriptionId = this.subscriptions[0].subscriptionId;
-            this.loadAzureSubscriptionData(this.selectedSubscriptionId);
-          }
         }
         this.cdr.detectChanges();
       },
