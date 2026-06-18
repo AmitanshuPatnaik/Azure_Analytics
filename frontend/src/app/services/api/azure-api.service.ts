@@ -11,12 +11,13 @@ import {
   AzureTopResourcesResponse,
   AzureTotalCostResponse,
 } from '../../models/azure-cost.models';
+import { API_BASE_URL } from '../../config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AzureApiService {
-  private baseUrl = 'http://127.0.0.1:8000/api/azure';
+  private baseUrl = `${API_BASE_URL}/api/azure`;
 
   constructor(
     private http: HttpClient,

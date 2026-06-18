@@ -3,13 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { FrontendCacheService } from './frontend-cache.service';
+import { API_BASE_URL } from '../config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PipelineService {
 
-  private apiUrl = 'http://localhost:8000/pipelines';
+  private apiUrl = `${API_BASE_URL}/pipelines`;
 
   constructor(
     private http: HttpClient,

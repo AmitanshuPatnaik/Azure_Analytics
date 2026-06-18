@@ -354,6 +354,12 @@ export class AzureComponent implements OnInit {
     return !!(this.selectedSubscriptionId && this.pendingFromDate && this.pendingToDate);
   }
 
+  get selectedSubscriptionName(): string {
+    if (!this.selectedSubscriptionId) return '';
+    const sub = this.subscriptions.find(s => s.subscriptionId === this.selectedSubscriptionId);
+    return sub ? (sub.displayName || sub.name || this.selectedSubscriptionId) : this.selectedSubscriptionId;
+  }
+
   get costTrendMaxDate(): string {
     return utcYesterdayDate();
   }

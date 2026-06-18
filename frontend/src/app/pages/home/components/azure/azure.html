@@ -90,6 +90,20 @@
 </div>
 } @else {
 
+<!-- ── Selected Project & Subscription strip ──────────────────────────── -->
+<div style="display:flex; align-items:center; justify-content:center; gap:24px; margin-bottom:16px; padding:12px 20px;
+            background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; flex-wrap:wrap; text-align:center;">
+  <span style="font-size:14px; color:#64748b; font-weight:500;">Project:&nbsp;
+    <strong style="font-size:16px; color:#1e293b; font-weight:700;">{{ selectedAzureProject }}</strong>
+  </span>
+  @if (selectedSubscriptionName) {
+  <span style="width:1px; height:20px; background:#cbd5e1; display:inline-block;"></span>
+  <span style="font-size:14px; color:#64748b; font-weight:500;">Subscription:&nbsp;
+    <strong style="font-size:16px; color:#1e293b; font-weight:700;">{{ selectedSubscriptionName }}</strong>
+  </span>
+  }
+</div>
+
 <!-- ── Metric summary cards ──────────────────────────────────────────── -->
 <div class="cards">
 
@@ -162,7 +176,7 @@
 
         @for (c of costTrendCircles; track c.dateUtc) {
         <circle [attr.cx]="c.x" [attr.cy]="c.y" r="5" fill="#2563eb" stroke="#fff" stroke-width="2">
-          <title>{{ c.dateUtc }}: ₹{{ c.cost | number:'1.2-2' }}</title>
+          <title>{{ c.date }}: ₹{{ c.cost | number:'1.2-2' }}</title>
         </circle>
         <!-- K – Month/date label on X-axis -->
         @if (costTrendPoints.length <= 14) { <text [attr.x]="c.x" y="250" text-anchor="middle" fill="#64748b"

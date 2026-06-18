@@ -156,7 +156,7 @@
     <tr>
       <th>Commit ID</th>
       <th>Author</th>
-      <th>Date</th>
+      <th>Date (MM/DD/YY)</th>
       <th>Comment</th>
     </tr>
     @for (c of repoCommits; track c.commitId || $index) {
@@ -193,7 +193,7 @@
       <th>ID</th>
       <th>Title</th>
       <th>Created By</th>
-      <th>Date</th>
+      <th>Date(MM/DD/YY)</th>
       <th>Status</th>
     </tr>
     @for (pr of repoPRs; track pr.pullRequestId || $index) {
@@ -267,7 +267,7 @@
   <table style="font-size: 13px;">
     <tr>
       <th>Push ID</th>
-      <th>Date</th>
+      <th>Date(MM/DD/YY)</th>
       <th>Pushed By</th>
     </tr>
     @for (p of repoPushes; track p.pushId || $index) {

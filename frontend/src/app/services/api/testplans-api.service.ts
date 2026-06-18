@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { FrontendCacheService } from '../frontend-cache.service';
+import { API_BASE_URL } from '../../config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TestPlansApiService {
-  private baseUrl = 'http://127.0.0.1:8000/api/projects';
+  private baseUrl = `${API_BASE_URL}/api/projects`;
 
   constructor(
     private http: HttpClient,
