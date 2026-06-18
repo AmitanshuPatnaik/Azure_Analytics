@@ -834,40 +834,62 @@ button:disabled {
 /* ── Horizontal sub-navigation tabs ───────────────────────────────────── */
 .horizontal-sub-nav {
   display: flex;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  width: 100%;
+  gap: 8px;
+  background: rgba(241, 245, 249, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 6px;
-  border-radius: 10px;
-  margin-bottom: 24px;
+  border-radius: 12px;
+  margin-bottom: 28px;
   border: 1px solid #e2e8f0;
-  width: fit-content;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .sub-nav-btn {
+  flex: 1;
   background: none;
   border: none;
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 10px 18px;
+  font-size: 14px;
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .sub-nav-btn:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.45);
   color: #0f172a;
 }
 
 .sub-nav-btn.active {
   background: white;
-  color: #0f172a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  color: #7c3aed;
+  box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.08), 0 2px 4px -1px rgba(124, 58, 237, 0.04), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
+
+.sub-nav-icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2.2px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sub-nav-btn:hover .sub-nav-icon {
+  transform: translateY(-0.5px);
+}
+
+.sub-nav-btn.active .sub-nav-icon {
+  transform: scale(1.08);
+}
+
 
 /* ── Professional Repo Action Buttons ───────────────────────────────── */
 .action-small-btn {
