@@ -15,6 +15,8 @@ export class ReposComponent implements OnInit {
   projects: any[] = [];
   repositories: any[] = [];
   reposError: string | null = null;
+  isLoadingProjects = false;
+  isLoadingRepos = false;
 
   currentPage = 1;
   projectsCurrentPage = 1;
@@ -48,6 +50,7 @@ export class ReposComponent implements OnInit {
   }
 
   loadProjects() {
+    this.isLoadingProjects = true;
     this.projectsApi.getProjects(this.projectsCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         let projs = [];
@@ -61,10 +64,13 @@ export class ReposComponent implements OnInit {
         }
         this.projects = projs || [];
         this.totalProjectsCount = total || this.projects.length;
+        this.isLoadingProjects = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.warn('Failed to load projects', err);
+        this.isLoadingProjects = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -73,6 +79,7 @@ export class ReposComponent implements OnInit {
     if (!this.dashboardService.selectedProject) return;
     const projName = this.dashboardService.selectedProject.name;
     this.reposError = null;
+    this.isLoadingRepos = true;
     this.reposApi.getRepositoriesByProject(projName, this.currentPage, this.pageSize, this.selectedOwner).subscribe({
       next: (res: any) => {
         if (res && res.success) {
@@ -84,6 +91,7 @@ export class ReposComponent implements OnInit {
           this.totalReposCount = 0;
           this.reposError = res?.message || 'No repositories found on backend.';
         }
+        this.isLoadingRepos = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -91,6 +99,7 @@ export class ReposComponent implements OnInit {
         this.repositories = [];
         this.totalReposCount = 0;
         this.reposError = err.error?.detail || err.error?.message || err.message || 'Failed to load repositories.';
+        this.isLoadingRepos = false;
         this.cdr.detectChanges();
       }
     });

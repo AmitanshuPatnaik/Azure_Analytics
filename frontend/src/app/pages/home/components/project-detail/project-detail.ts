@@ -21,6 +21,7 @@ export class ProjectDetailComponent implements OnInit {
   repoPushes: any[] = [];
   
   isLoadingRepoDetails = false;
+  isLoadingRepos = false;
   reposError: string | null = null;
   repoDetailsError: string | null = null;
 
@@ -79,6 +80,7 @@ export class ProjectDetailComponent implements OnInit {
 
   loadProjectRepos(projectName: string) {
     this.reposError = null;
+    this.isLoadingRepos = true;
     this.reposApi.getRepositoriesByProject(projectName, this.reposCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         if (res && res.success && res.repositories) {
@@ -92,6 +94,7 @@ export class ProjectDetailComponent implements OnInit {
           this.totalReposCount = 0;
           this.reposError = 'No repositories found in this project.';
         }
+        this.isLoadingRepos = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -99,6 +102,7 @@ export class ProjectDetailComponent implements OnInit {
         this.selectedProjectRepos = [];
         this.totalReposCount = 0;
         this.reposError = err.error?.detail || err.error?.message || err.message || 'Failed to load repositories.';
+        this.isLoadingRepos = false;
         this.cdr.detectChanges();
       }
     });

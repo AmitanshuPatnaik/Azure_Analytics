@@ -4,6 +4,19 @@
 <div class="error-banner">
   Could not load projects: {{ projectsError }}
 </div>
+} @else if (isLoadingProjects) {
+<div class="cards" style="position: relative; overflow: hidden; border-radius: 12px;">
+  <div class="sleek-progress-bar"></div>
+  @for (_ of [1, 2, 3]; track $index) {
+  <div class="card" style="min-height: 180px;">
+    <div class="skeleton" style="height: 18px; width: 60%; margin-bottom: 12px;"></div>
+    <hr style="opacity: 0.1; margin: 12px 0;">
+    <div class="skeleton" style="height: 14px; width: 80%; margin-bottom: 8px;"></div>
+    <div class="skeleton" style="height: 14px; width: 70%; margin-bottom: 16px;"></div>
+    <div class="skeleton" style="height: 36px; width: 100%; border-radius: 8px; margin-top: auto;"></div>
+  </div>
+  }
+</div>
 } @else {
 <div class="cards">
 

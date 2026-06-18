@@ -17,6 +17,7 @@ export class BoardsComponent implements OnInit {
   workItems: any[] = [];
   workItemSprints: string[] = [];
   isLoadingWorkItems = false;
+  isLoadingProjects = false;
   workItemsError: string | null = null;
 
   // Recent state-change activity feed
@@ -81,6 +82,7 @@ export class BoardsComponent implements OnInit {
   }
 
   loadProjects() {
+    this.isLoadingProjects = true;
     this.projectsApi.getProjects(this.projectsCurrentPage, 10).subscribe({
       next: (res: any) => {
         let projs = [];
@@ -94,10 +96,13 @@ export class BoardsComponent implements OnInit {
         }
         this.projects = projs || [];
         this.totalProjectsCount = total || this.projects.length;
+        this.isLoadingProjects = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.warn('Failed to load projects', err);
+        this.isLoadingProjects = false;
+        this.cdr.detectChanges();
       }
     });
   }

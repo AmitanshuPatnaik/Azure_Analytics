@@ -64,6 +64,13 @@
 
 @if (reposError) {
 <div class="error-banner">{{ reposError }}</div>
+} @else if (isLoadingRepos) {
+<div style="position: relative; overflow: hidden; border-radius: 12px; background: white; padding: 20px;">
+  <div class="sleek-progress-bar"></div>
+  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+  <div class="skeleton skeleton-row"></div>
+  }
+</div>
 } @else if (selectedProjectRepos.length === 0) {
 <p style="color: #6b7280; font-size: 14px;">No repositories found in this project.</p>
 } @else {
@@ -125,7 +132,12 @@
   </h3>
 
   @if (isLoadingRepoDetails) {
-  <p style="color: #6b7280;">Loading details...</p>
+  <div style="position: relative; overflow: hidden; border-radius: 12px; background: white; padding: 20px;">
+    <div class="sleek-progress-bar"></div>
+    @for (_ of [1, 2, 3, 4, 5]; track $index) {
+    <div class="skeleton skeleton-row"></div>
+    }
+  </div>
   } @else if (repoDetailsError) {
   <div class="error-banner">{{ repoDetailsError }}</div>
   } @else {

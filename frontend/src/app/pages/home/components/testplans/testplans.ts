@@ -16,6 +16,7 @@ export class TestplansComponent implements OnInit {
   projects: any[] = [];
   testPlans: any[] = [];
   isLoadingTestPlans = false;
+  isLoadingProjects = false;
   testPlansError: string | null = null;
   testPlanSearch = '';
 
@@ -49,6 +50,7 @@ export class TestplansComponent implements OnInit {
   }
 
   loadProjects() {
+    this.isLoadingProjects = true;
     this.projectsApi.getProjects(this.projectsCurrentPage, this.pageSize).subscribe({
       next: (res: any) => {
         let projs = [];
@@ -62,10 +64,13 @@ export class TestplansComponent implements OnInit {
         }
         this.projects = projs || [];
         this.totalProjectsCount = total || this.projects.length;
+        this.isLoadingProjects = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.warn('Failed to load projects', err);
+        this.isLoadingProjects = false;
+        this.cdr.detectChanges();
       }
     });
   }
