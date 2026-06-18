@@ -27,6 +27,8 @@ export class DashboardHomeComponent implements OnInit {
   azureProjects: string[] = [];
   servicesStatus: any[] = [];
   projectDistribution: any[] = [];
+  projectPieSlices: any[] = [];
+  hoveredProject: any = null;
 
   // Loader / States
   isLoadingProjects = false;
@@ -379,6 +381,7 @@ export class DashboardHomeComponent implements OnInit {
   calculateProjectDistribution() {
     if (!this.projects.length || !this.repositories.length) {
       this.projectDistribution = [];
+      this.projectPieSlices = [];
       this.pieChartStyle = '';
       return;
     }
@@ -439,7 +442,60 @@ export class DashboardHomeComponent implements OnInit {
     }
 
     this.projectDistribution = dist;
+    this.projectPieSlices = this.buildProjectPieSlices(dist);
     this.pieChartStyle = gradientParts.length > 0 ? `conic-gradient(${gradientParts.join(', ')})` : 'gray';
+  }
+
+  buildProjectPieSlices(distribution: any[]): any[] {
+    if (!distribution || !distribution.length) return [];
+    
+    const filtered = distribution.filter(p => (p.count || 0) > 0);
+    if (!filtered.length) return [];
+    
+    const total = filtered.reduce((sum, p) => sum + (p.count || 0), 0);
+    if (!total) return [];
+    
+    const cx = 110, cy = 110, radius = 100;
+    let angle = -Math.PI / 2;
+    
+    return filtered.map((p: any) => {
+      const count = p.count || 0;
+      const pct = count / total;
+      const sweep = pct * 2 * Math.PI;
+      const end = angle + sweep;
+      
+      const x1 = cx + radius * Math.cos(angle);
+      const y1 = cy + radius * Math.sin(angle);
+      const x2 = cx + radius * Math.cos(end);
+      const y2 = cy + radius * Math.sin(end);
+      
+      let path: string;
+      if (pct >= 0.999) {
+        const xMid = cx + radius * Math.cos(angle + Math.PI);
+        const yMid = cy + radius * Math.sin(angle + Math.PI);
+        path = [
+          `M ${cx} ${cy}`,
+          `L ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+          `A ${radius} ${radius} 0 1 1 ${xMid.toFixed(2)} ${yMid.toFixed(2)}`,
+          `A ${radius} ${radius} 0 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+          `Z`
+        ].join(' ');
+      } else {
+        const largeArc = pct > 0.5 ? 1 : 0;
+        path = `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${radius} ${radius} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+      }
+      
+      const slice = {
+        name: p.name,
+        count: count,
+        color: p.color,
+        path: path,
+        percentage: Math.round(pct * 100)
+      };
+      
+      angle = end;
+      return slice;
+    });
   }
 
   // Returns the subset of trends to display based on the selected project

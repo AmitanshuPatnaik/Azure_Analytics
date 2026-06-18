@@ -111,17 +111,44 @@
         Could not display distribution: {{ projectsError || reposError }}
       </div>
       } @else {
-      <div class="pie-wrapper">
-        <div class="project-pie-chart" [style.background]="pieChartStyle"></div>
+      <div class="pie-wrapper" style="position:relative; display:flex; flex-direction:row; align-items:center; gap:24px; padding:10px 0;">
+        <div style="position:relative; width: 200px; height: 200px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+          <svg viewBox="0 0 220 220" width="200" height="200" style="overflow:visible; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.12));">
+            @for (s of projectPieSlices; track s.name) {
+            <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="1.5"
+              style="cursor:pointer; transition:all 0.15s ease;"
+              [style.opacity]="hoveredProject && hoveredProject.name !== s.name ? '0.6' : '1'"
+              [style.transform]="hoveredProject?.name === s.name ? 'scale(1.03)' : 'none'"
+              [style.transform-origin]="'110px 110px'"
+              (mouseenter)="hoveredProject = s" (mouseleave)="hoveredProject = null">
+            </path>
+            }
+          </svg>
 
-        <div class="pie-legend" style="flex:1; min-width:0;">
+          @if (hoveredProject) {
+          <div style="position:absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background:#1e293b; color:#fff;
+                      padding:6px 10px; border-radius:6px; font-size:11px; z-index:20;
+                      pointer-events:none; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align: center; white-space: nowrap;">
+            <div style="display:flex; align-items:center; gap:6px; font-weight: 600;">
+              <span [style.background]="hoveredProject.color"
+                style="display:inline-block; width:6px; height:6px; border-radius:50%;"></span>
+              {{ hoveredProject.name }}: {{ hoveredProject.count }}
+            </div>
+          </div>
+          }
+        </div>
+
+        <div class="pie-legend" style="flex:1; min-width:0; display: flex; flex-direction: column; gap: 8px; font-size:13.5px;">
           <!-- Legend search box -->
-          <input class="filter-search" type="text" placeholder="Search projects…" [(ngModel)]="pieSearchQuery"
-            style="margin-bottom:10px;" />
+          <!-- <input class="filter-search" type="text" placeholder="Search projects…" [(ngModel)]="pieSearchQuery"
+            style="margin-bottom:10px;" /> -->
 
           @for (item of filteredProjectDistribution; track item.name) {
-          <div>
-            <span class="dot" [style.backgroundColor]="item.color"></span>
+          <div style="cursor:pointer; display:flex; align-items:center; padding:4px 6px; border-radius:6px; transition:all 0.2s; white-space: nowrap;"
+               [style.fontWeight]="hoveredProject?.name === item.name ? '700' : '500'"
+               [style.background]="hoveredProject?.name === item.name ? 'rgba(0,0,0,0.04)' : 'transparent'"
+               (mouseenter)="hoveredProject = item" (mouseleave)="hoveredProject = null">
+            <span class="dot" [style.backgroundColor]="item.color" style="width:12px; height:12px; min-width:12px; min-height:12px; margin-right:8px; border-radius:50%; flex-shrink:0;"></span>
             {{ item.name }} ({{ item.count }})
           </div>
           }

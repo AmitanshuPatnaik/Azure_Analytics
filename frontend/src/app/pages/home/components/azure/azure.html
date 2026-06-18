@@ -248,7 +248,7 @@
           <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
         </div>
         }
-        @if (topResourcesPieSlices.length > 10) {
+        @if (topResourcesPieSlices.length > 20) {
         <div class="pagination-container standalone" style="padding: 6px 10px; border-radius: 8px;">
           <div class="pagination-tracker" style="font-size: 11px;">
             Page <strong>{{ resourcesCurrentPage }}</strong> of <strong>{{ resourcesTotalPages }}</strong>
@@ -319,7 +319,7 @@
           <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
         </div>
         }
-        @if (serviceCostsPieSlices.length > 10) {
+        @if (serviceCostsPieSlices.length > 20) {
         <div class="pagination-container standalone" style="padding: 6px 10px; border-radius: 8px;">
           <div class="pagination-tracker" style="font-size: 11px;">
             Page <strong>{{ servicesCurrentPage }}</strong> of <strong>{{ servicesTotalPages }}</strong>

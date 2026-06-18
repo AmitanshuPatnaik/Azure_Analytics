@@ -493,10 +493,10 @@ circle:hover {
 
 .pie-wrapper{
   display:flex;
-  justify-content:center;
+  justify-content:flex-start;
   align-items:center;
-  gap:30px;
-  padding:20px;
+  gap:18px;
+  padding:10px 4px;
 }
 
 .fake-pie-chart{
@@ -515,16 +515,43 @@ circle:hover {
 .pie-legend{
   display:flex;
   flex-direction:column;
-  gap:12px;
-  font-weight:600;
+  gap:10px;
+  font-weight:500;
+  font-size:13.5px;
+  color:#334155;
+  min-width:0;
+}
+
+.pie-legend > div {
+  display:flex;
+  align-items:center;
+  white-space:nowrap;
+  gap:0;
 }
 
 .dot{
   display:inline-block;
-  width:14px;
-  height:14px;
+  width:12px;
+  height:12px;
   border-radius:50%;
-  margin-right:10px;
+  margin-right:8px;
+  flex-shrink:0;
+}
+
+.pie-tooltip {
+  position: fixed;
+  background: rgba(15, 23, 42, 0.92);
+  color: #fff;
+  padding: 8px 13px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 9999;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  transition: opacity 0.15s ease;
+  backdrop-filter: blur(4px);
 }
 
 .azure{background:#2563eb;}
