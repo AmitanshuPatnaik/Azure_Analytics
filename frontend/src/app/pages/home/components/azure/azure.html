@@ -36,38 +36,34 @@
       </select>
     </div>
 
-    <!-- Date range with format hint -->
-    <div style="display:flex; align-items:flex-start; gap:10px; flex-direction:column;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:13px; color:#475569; white-space:nowrap;">Date Range:</span>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <label style="font-size:12px; color:#64748b;">From</label>
-          <div style="display:flex; flex-direction:column;">
-            <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
-              [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="pendingFromDate"
-              [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
-              (change)="pendingFromDate = $any($event.target).value; onCostTrendDateChange()">
-          </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <label style="font-size:12px; color:#64748b;">To</label>
-          <div style="display:flex; flex-direction:column;">
-            <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
-              [min]="pendingFromDate" [max]="costTrendMaxDate" [value]="pendingToDate"
-              [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
-              (change)="pendingToDate = $any($event.target).value; onCostTrendDateChange()">
-          </div>
+    <!-- Date range selector -->
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:13px; color:#475569; white-space:nowrap;">Date Range:</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <label style="font-size:12px; color:#64748b;">From</label>
+        <div style="display:flex; flex-direction:column;">
+          <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
+            [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="pendingFromDate"
+            [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
+            (change)="pendingFromDate = $any($event.target).value; onCostTrendDateChange()">
         </div>
       </div>
-      <span class="date-fmt-hint" style="padding-left:80px;">Date format: MM-DD-YYYY</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <label style="font-size:12px; color:#64748b;">To</label>
+        <div style="display:flex; flex-direction:column;">
+          <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
+            [min]="pendingFromDate" [max]="costTrendMaxDate" [value]="pendingToDate"
+            [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
+            (change)="pendingToDate = $any($event.target).value; onCostTrendDateChange()">
+        </div>
+      </div>
     </div>
 
-    <!-- Submit button (B – renamed from "Fetch Data") -->
     <button (click)="applyDateFilter()" [disabled]="!isReadyToSubmit || isLoadingAzureRange" style="padding:7px 22px; font-size:13px; background:#2563eb; color:white; border:none;
              border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:6px;
              white-space:nowrap; transition:background 0.2s, opacity 0.2s;"
-      [style.opacity]="!isReadyToSubmit ? '0.5' : '1'">
-      @if (isLoadingAzureRange) {
+      [style.opacity]="!isReadyToSubmit || isLoadingAzureRange ? '0.5' : '1'">
+      @if (isSubmittingDateFilter) {
       <span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;
                      border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
       Loading…

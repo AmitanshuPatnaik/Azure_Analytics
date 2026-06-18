@@ -130,7 +130,7 @@
       }
     } @else {
       <div class="chart-header">
-        <h2 style="text-align:center; flex:1;">Work-Item Status Distribution</h2>
+        <h2 style="text-align:center; flex:1;">Work Item Status Distribution</h2>
       </div>
 
       @if (isLoadingWorkItemStates) {
@@ -146,8 +146,8 @@
         No work items found for this project.
       </div>
       } @else {
-      <div class="pie-wrapper">
-        <svg viewBox="0 0 220 220" width="220" height="220" style="flex-shrink:0; overflow:visible;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:16px; padding:10px 0;">
+        <svg viewBox="0 0 220 220" width="150" height="150" style="flex-shrink:0; overflow:visible;">
           @for (s of workItemPieSlices; track s.state) {
           <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
             style="cursor:pointer; transition:all 0.15s ease;"
@@ -159,14 +159,16 @@
           }
         </svg>
 
-        <div class="pie-legend" style="flex:1; min-width:0; display:flex; flex-direction:column; gap:8px;">
+        <div style="width:100%; display:flex; flex-direction:column; gap:6px;">
           @for (item of workItemPieSlices; track item.state) {
-          <div style="display:flex; align-items:center; gap:10px; padding:6px 10px; border-radius:8px; cursor:default; transition:all 0.2s;"
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 10px; border-radius:8px; cursor:default; transition:all 0.2s;"
                [style.fontWeight]="hoveredWorkItemState === item.state ? '700' : '500'"
                [style.background]="hoveredWorkItemState === item.state ? 'rgba(0, 0, 0, 0.04)' : 'transparent'"
                (mouseenter)="hoveredWorkItemState = item.state" (mouseleave)="hoveredWorkItemState = null">
-            <span class="dot" [style.backgroundColor]="item.color" style="margin-right:0; flex-shrink:0;"></span>
-            <span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#374151; font-size:13px;">{{ item.state }}</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="dot" [style.backgroundColor]="item.color" style="margin-right:0; flex-shrink:0;"></span>
+              <span style="color:#374151; font-size:13px;">{{ item.state }}</span>
+            </div>
             <span style="color:#64748b; font-size:12px; font-weight:600; white-space:nowrap;">{{ item.count }} ({{ item.percentage }}%)</span>
           </div>
           }

@@ -223,6 +223,32 @@ export class BoardsComponent implements OnInit {
     this.loadProjects();
   }
 
+  navigateBack() {
+    this.dashboardService.isNavigatingHistory = true;
+    const res = this.dashboardService.getPreviousProject();
+    if (res.found) {
+      if (res.project) {
+        this.selectProject(res.project);
+      } else {
+        this.changeProject();
+      }
+    }
+    this.dashboardService.isNavigatingHistory = false;
+  }
+
+  navigateForward() {
+    this.dashboardService.isNavigatingHistory = true;
+    const res = this.dashboardService.getNextProject();
+    if (res.found) {
+      if (res.project) {
+        this.selectProject(res.project);
+      } else {
+        this.changeProject();
+      }
+    }
+    this.dashboardService.isNavigatingHistory = false;
+  }
+
   onFilterChange() {
     this.currentPage = 1;
     if (this.dashboardService.selectedProject) {

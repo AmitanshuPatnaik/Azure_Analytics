@@ -549,24 +549,36 @@ export class DashboardHomeComponent implements OnInit {
     this.hoveredWorkItemState = null;
     this.cdr.detectChanges();
 
-    this.boardsApi.getWorkItemStatusSummary(project).subscribe({
+    this.boardsApi.getWorkItems(project, 1, 200).subscribe({
       next: (res: any) => {
-        if (res && res.success && res.states) {
-          this.workItemStates = res.states;
+        if (res && res.success && res.value) {
+          const counts: { [key: string]: number } = {};
+          res.value.forEach((item: any) => {
+            const state = item.fields?.['System.State'];
+            if (state) {
+              counts[state] = (counts[state] || 0) + 1;
+            }
+          });
+
+          this.workItemStates = Object.keys(counts).map(state => ({
+            state: state,
+            count: counts[state]
+          }));
+
           this.workItemPieSlices = this.buildWorkItemPieSlices(this.workItemStates);
         } else {
           this.workItemStates = [];
           this.workItemPieSlices = [];
-          this.workItemStatesError = res?.message || 'Failed to load work-item status distribution.';
+          this.workItemStatesError = res?.message || 'Failed to load work item status distribution.';
         }
         this.isLoadingWorkItemStates = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Failed to load work-item status distribution', err);
+        console.warn('Failed to load work item status distribution', err);
         this.workItemStates = [];
         this.workItemPieSlices = [];
-        this.workItemStatesError = err.error?.detail || err.error?.message || err.message || 'Failed to load work-item status distribution.';
+        this.workItemStatesError = err.error?.detail || err.error?.message || err.message || 'Failed to load work item status distribution.';
         this.isLoadingWorkItemStates = false;
         this.cdr.detectChanges();
       }

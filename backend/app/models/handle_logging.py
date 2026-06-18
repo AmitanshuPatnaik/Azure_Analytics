@@ -12,5 +12,4 @@ def get_logging_conf():
     logging.getLogger('schedule').propagate = False
     logging.getLogger('werkzeug').disabled = True
     
-    
     return logging

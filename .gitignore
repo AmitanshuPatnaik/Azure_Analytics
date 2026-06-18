@@ -7,7 +7,8 @@
 *.pyd
 *.env
 
-backend/config.json
+
+*backend/app/config.json
 *.angular/
 *backend/cache/
 *backend/app/logs/

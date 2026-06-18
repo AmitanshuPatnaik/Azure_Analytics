@@ -3,9 +3,13 @@ logging = get_logging_conf()
 import threading
 import time
 from datetime import datetime, timezone
+import json
+import os
+
+_config_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
 
 from core.data_cache import cache
-
+from services.Azure.azure_auth import azure_project_var
 from services.Azure_Devops.projects_service import fetch_projects
 from services.Azure_Devops.repositories_service import fetch_all_repositories
 from services.Azure.subscriptions import fetch_subscriptions
@@ -24,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 SYNC_INTERVAL_SECONDS: int = 7_200   # 2 hours
 
-
 def _sync_projects() -> None:
     try:
         result = fetch_projects()
@@ -33,7 +36,6 @@ def _sync_projects() -> None:
             logger.info("[SyncWorker] projects cached (%d entries)", len(result.get("projects", [])))
     except Exception as exc:
         logger.warning("[SyncWorker] projects sync failed: %s", exc)
-
 
 def _sync_repos() -> None:
     try:
@@ -46,30 +48,31 @@ def _sync_repos() -> None:
 
 
 def _sync_subscriptions() -> list:
-    import json
-    import os
-    _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
     try:
         with open(_config_path, "r") as f:
             config = json.load(f)
-    except Exception:
+    except Exception as e:
+        logger.error("JSON file not found at %s: %s", _config_path, e)
         config = {}
-    
+
     projects = []
+
     for key in config.keys():
         if key.endswith("_TENANT_ID"):
             prefix = key[:-10]
-            if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
+
+            if (f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config):
                 if prefix == "DOC_FLOW":
                     name = "AiDocFlo"
                 else:
                     words = prefix.lower().split("_")
                     name = "".join(word.capitalize() for word in words)
+
                 projects.append(name)
-                
+
     if not projects:
         projects = [None]
-        
+
     all_sub_ids = []
     all_subscriptions = []
     sub_project_map = {}
@@ -77,67 +80,81 @@ def _sync_subscriptions() -> list:
     for proj in projects:
         try:
             result = fetch_subscriptions(proj)
+
             if isinstance(result, dict) and not result.get("error"):
                 cache.set(f"subscriptions:{proj}", result)
+
                 subs = result.get("subscriptions", [])
                 all_subscriptions.extend(subs)
+
                 for s in subs:
                     sub_id = s.get("subscriptionId")
+
                     if sub_id:
                         all_sub_ids.append((sub_id, proj))
                         sub_project_map[sub_id] = proj
+
         except Exception as exc:
-            logger.warning("[SyncWorker] subscriptions sync failed for project %s: %s", proj, exc)
+            logger.warning("[SyncWorker] subscriptions sync failed for project %s: %s",proj,exc,)
 
     if all_subscriptions:
-        cache.set("subscriptions", {"success": True, "subscriptions": all_subscriptions})
-        logger.info("[SyncWorker] all subscriptions cached (%d entries)", len(all_subscriptions))
+        cache.set(
+            "subscriptions",
+            {
+                "success": True,
+                "subscriptions": all_subscriptions,
+            },
+        )
+
+        logger.info("[SyncWorker] all subscriptions cached (%d entries)",len(all_subscriptions),)
 
     if sub_project_map:
         cache.set("sub_project_map", sub_project_map)
-        logger.info("[SyncWorker] sub_project_map cached (%d entries)", len(sub_project_map))
+        logger.info("[SyncWorker] sub_project_map cached (%d entries)",len(sub_project_map),)
 
     return all_sub_ids
 
-
 def _sync_cost_trend() -> None:
-    import json
-    import os
-    _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
     try:
         with open(_config_path, "r") as f:
             config = json.load(f)
-    except Exception:
+    except Exception as e:
+        logger.error("JSON file not found at %s: %s", _config_path, e)
         config = {}
-    
+
     projects = []
+
     for key in config.keys():
         if key.endswith("_TENANT_ID"):
             prefix = key[:-10]
-            if f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config:
+
+            if (f"{prefix}_CLIENT_ID" in config and f"{prefix}_CLIENT_SECRET" in config):
                 if prefix == "DOC_FLOW":
                     name = "AiDocFlo"
                 else:
                     words = prefix.lower().split("_")
                     name = "".join(word.capitalize() for word in words)
+
                 projects.append(name)
-                
+
     if not projects:
         projects = [None]
-        
+
     for proj in projects:
         try:
-            from services.Azure.azure_auth import azure_project_var
             azure_project_var.set(proj)
             result = fetch_aggregated_monthly_costs(proj)
+
             if isinstance(result, dict) and result.get("success"):
                 cache.set(f"costs:trend:{proj}", result)
+
                 if proj == projects[0]:
                     cache.set("costs:trend", result)
-                logger.info("[SyncWorker] cost trend analytics timeline cached successfully for project %s", proj)
-        except Exception as exc:
-            logger.warning("[SyncWorker] cost trend sync failed for project %s: %s", proj, exc)
 
+                logger.info("[SyncWorker] cost trend analytics timeline cached successfully for project %s",proj,)
+
+        except Exception as exc:
+            logger.warning("[SyncWorker] cost trend sync failed for project %s: %s",proj,exc,)
 
 def _sync_costs_for_subscription(sub_id: str, from_date: str = None, to_date: str = None) -> None:
     try:
@@ -211,7 +228,6 @@ def run_sync() -> None:
 
         if sub_ids:
             for sub_id, proj in sub_ids:
-                from services.Azure.azure_auth import azure_project_var
                 azure_project_var.set(proj)
                 _sync_costs_for_subscription(sub_id)
             _sync_cost_trend()

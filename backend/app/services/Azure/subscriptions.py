@@ -25,7 +25,6 @@ def _fetch_subscriptions_live(project_name: str = None):
     response.raise_for_status()
 
     data = response.json()
-    # Azure returns {"value": [...]} — normalize to {"subscriptions": [...]}
     raw_subs = data.get("value", [])
     subscriptions = []
     for sub in raw_subs:

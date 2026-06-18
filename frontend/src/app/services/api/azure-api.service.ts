@@ -31,11 +31,16 @@ export class AzureApiService {
     return `${this.baseUrl}/${path}`;
   }
 
-  /** Build a dated query string using normalized UTC YYYY-MM-DD values. */
   private datedQuery(fromDate: string, toDate: string): string {
     const from = normalizeUtcDate(fromDate);
     const to = normalizeUtcDate(toDate);
     return `from_date=${encodeURIComponent(from)}&to_date=${encodeURIComponent(to)}`;
+  }
+
+  private setCacheIfSuccess(key: string, data: any): void {
+    if (data && data.success !== false) {
+      this.cache.set(key, data);
+    }
   }
 
   getSubscriptions(project?: string): Observable<any> {
@@ -44,7 +49,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl('subscriptions', project)).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -56,7 +61,7 @@ export class AzureApiService {
     return this.http.get<AzureTotalCostResponse>(
       this.getUrl(`costs/${subscriptionId}/total`, project)
     ).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -66,7 +71,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/daily`, project)).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -86,7 +91,7 @@ export class AzureApiService {
     return this.http.get<AzureDailyRangeResponse>(
       this.getUrl(`costs/${subscriptionId}/daily-range?${qs}`, project)
     ).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -96,7 +101,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/monthly`, project)).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -106,7 +111,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/yearly`, project)).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -116,7 +121,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/resourcegroups`, project)).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -136,7 +141,7 @@ export class AzureApiService {
     return this.http.get<AzureServiceCostsResponse>(
       this.getUrl(`costs/${subscriptionId}/services?${qs}`, project)
     ).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -146,7 +151,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl(`costs/${subscriptionId}/resources`, project)).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -166,7 +171,7 @@ export class AzureApiService {
     return this.http.get<AzureTopResourcesResponse>(
       this.getUrl(`costs/${subscriptionId}/top-resources?${qs}`, project)
     ).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -178,7 +183,7 @@ export class AzureApiService {
     return this.http.get<AzureBudgetsResponse>(
       this.getUrl(`costs/${subscriptionId}/budgets`, project)
     ).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -188,7 +193,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl('costs/trend', project)).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -198,7 +203,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl('projects')).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 
@@ -208,7 +213,7 @@ export class AzureApiService {
     if (cached) return of(cached);
 
     return this.http.get<any>(this.getUrl('costs/combined-yearly')).pipe(
-      tap(data => this.cache.set(cacheKey, data))
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
 }

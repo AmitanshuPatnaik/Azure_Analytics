@@ -114,6 +114,36 @@ export class ProjectDetailComponent implements OnInit {
     this.dashboardService.selectedPage = 'projects';
   }
 
+  navigateBack() {
+    this.dashboardService.isNavigatingHistory = true;
+    const res = this.dashboardService.getPreviousProject();
+    if (res.found) {
+      if (res.project) {
+        this.dashboardService.selectedProject = res.project;
+        this.dashboardService.selectedPage = 'project-detail';
+        this.loadProjectRepos(res.project.name);
+      } else {
+        this.goBackToProjects();
+      }
+    }
+    this.dashboardService.isNavigatingHistory = false;
+  }
+
+  navigateForward() {
+    this.dashboardService.isNavigatingHistory = true;
+    const res = this.dashboardService.getNextProject();
+    if (res.found) {
+      if (res.project) {
+        this.dashboardService.selectedProject = res.project;
+        this.dashboardService.selectedPage = 'project-detail';
+        this.loadProjectRepos(res.project.name);
+      } else {
+        this.goBackToProjects();
+      }
+    }
+    this.dashboardService.isNavigatingHistory = false;
+  }
+
   viewRepoCommits(repo: any) {
     this.selectedRepoForDetails = repo;
     this.activeRepoDetailsTab = 'commits';

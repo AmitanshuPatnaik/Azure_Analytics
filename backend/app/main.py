@@ -68,10 +68,7 @@ app.include_router(auth_router)
 app.include_router(azure_router, prefix="/api")
 app.include_router(status_router, prefix="/api")
 
-logger.info(
-    "[Main] Registered routers: projects, repositories, pipelines, boards, "
-    "testplans, auth, azure, status"
-)
+logger.info("[Main] Registered routers: projects, repositories, pipelines, boards, testplans, auth, azure, status")
 
 
 @app.get("/")

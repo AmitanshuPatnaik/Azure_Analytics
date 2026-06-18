@@ -6,20 +6,19 @@ import hashlib
 import time
 import threading
 from datetime import datetime, timezone
-from azure.storage.blob import BlobServiceClient
 
 logger = logging.getLogger(__name__)
 
+# Resolve absolute config.json path relative to this file
+_config_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
 
-_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
 try:
-    with open(_CONFIG_PATH, "r") as f:
-        _config = json.load(f)
-except Exception:
-    _config = {}
+    with open(_config_path, "r") as f:
+        config = json.load(f)
+except Exception as e:
+    logger.error("JSON file not found at %s: %s", _config_path, e)
+    config = {}
 
-CONNECTION_STRING = _config.get("AZURE_STORAGE_CONNECTION_STRING", "")
-CONTAINER_NAME = "azure-cost-cache"
 
 # Create a local cache folder inside the backend workspace directory
 LOCAL_CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "cache")
@@ -29,29 +28,6 @@ except Exception as exc:
     logger.warning("[AzureCache] Failed to create local cache dir %s: %s", LOCAL_CACHE_DIR, exc)
 
 _cache_lock = threading.RLock()
-
-_container_client = None
-
-def get_blob_container():
-    global _container_client
-    if _container_client is not None:
-        return _container_client
-    if not CONNECTION_STRING:
-        logger.warning("[AzureCache] Shared caching disabled: AZURE_STORAGE_CONNECTION_STRING is missing.")
-        return None
-    try:
-        service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-        container_client = service_client.get_container_client(CONTAINER_NAME)
-        if not container_client.exists():
-            container_client.create_container()
-            logger.info("[AzureCache] Created Azure Blob container: %s", CONTAINER_NAME)
-        _container_client = container_client
-        return _container_client
-    except Exception as exc:
-        logger.warning("[AzureCache] Shared caching disabled: failed to init Azure Blob client: %s", exc)
-        return None
-
-
 
 def get_cache_key(prefix: str, identifier: str, payload: dict | None = None) -> str:
     clean_id = str(identifier).strip().replace("/", "_").replace("\\", "_")
@@ -100,29 +76,6 @@ def _read_cache_entry(key: str) -> dict | None:
         except Exception as exc:
             logger.warning("[AzureCache] Error reading local file cache: %s", exc)
 
-    # 2. Try Shared Azure Blob Storage Cache
-    container = get_blob_container()
-    if container:
-        try:
-            blob_client = container.get_blob_client(f"{key}.json")
-            if blob_client.exists():
-                content = blob_client.download_blob().readall().decode("utf-8")
-                entry = json.loads(content)
-                if isinstance(entry, dict) and "data" in entry:
-                    logger.info("[AzureCache] Shared Blob cache hit for key: %s", key)
-                    # Sync to local cache so next reads are instant
-                    try:
-                        with open(local_path, "w", encoding="utf-8") as f:
-                            json.dump(entry, f)
-                    except Exception:
-                        pass
-                    return entry
-        except Exception as exc:
-            logger.warning("[AzureCache] Error reading from Azure Blob cache: %s", exc)
-
-    return None
-
-
 def _write_cache_entry(key: str, data: dict, ttl: int) -> None:
     now = time.time()
     entry = {
@@ -139,18 +92,6 @@ def _write_cache_entry(key: str, data: dict, ttl: int) -> None:
         logger.debug("[AzureCache] Wrote local cache for key: %s (TTL=%ds)", key, ttl)
     except Exception as exc:
         logger.warning("[AzureCache] Failed to write local cache: %s", exc)
-
-    # 2. Write to Shared Azure Blob Storage Cache
-    container = get_blob_container()
-    if container:
-        try:
-            blob_client = container.get_blob_client(f"{key}.json")
-            content = json.dumps(entry)
-            blob_client.upload_blob(content, overwrite=True)
-            logger.info("[AzureCache] Wrote shared Azure Blob cache for key: %s (TTL=%ds)", key, ttl)
-        except Exception as exc:
-            logger.warning("[AzureCache] Failed to upload to Azure Blob cache: %s", exc)
-
 
 def get_cached_azure_data(key: str, fetch_fn, ttl: int) -> dict:
     with _cache_lock:
@@ -172,8 +113,10 @@ def get_cached_azure_data(key: str, fetch_fn, ttl: int) -> dict:
             # Check for API query success
             is_success = False
             if isinstance(live_data, dict):
+                if live_data.get("success") is False:
+                    is_success = False
                 # Cost Management API query success metrics
-                if live_data.get("success") is True or "properties" in live_data:
+                elif live_data.get("success") is True or "properties" in live_data:
                     is_success = True
                 # Budgets / Subscriptions listing endpoint success criteria
                 elif "budgets" in live_data and live_data.get("success") is True:

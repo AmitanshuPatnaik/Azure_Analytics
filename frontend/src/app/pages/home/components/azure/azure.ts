@@ -55,6 +55,7 @@ export class AzureComponent implements OnInit {
   isLoadingAzure = false;
   isLoadingAzureRange = false;
   isLoadingCostTrend = false;
+  isSubmittingDateFilter = false;
   private azureRangeLoadSeq = 0;
 
   // Cost Trend page date bounds & selected dates
@@ -267,6 +268,7 @@ export class AzureComponent implements OnInit {
       finalize(() => {
         if (seq !== this.azureRangeLoadSeq) return;
         this.isLoadingAzureRange = false;
+        this.isSubmittingDateFilter = false;
         this.isLoadingCostTrend = false;
         this.cdr.detectChanges();
       })
@@ -342,6 +344,7 @@ export class AzureComponent implements OnInit {
     this.pendingToDate = clamped.to;
     this.resourcesCurrentPage = 1;
     this.servicesCurrentPage = 1;
+    this.isSubmittingDateFilter = true;
     // Always reload — no short-circuit equality check
     this.loadSubscriptionMetrics(this.selectedSubscriptionId);
     this.loadAzureRangeMetrics(this.selectedSubscriptionId);

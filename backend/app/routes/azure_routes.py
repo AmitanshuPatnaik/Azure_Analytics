@@ -1,12 +1,12 @@
 from models.handle_logging import get_logging_conf
 logging = get_logging_conf()
+import os
 from fastapi import APIRouter, Query
 from core.data_cache import cache
 from core.azure_throttle import range_cache
 from services.Azure.azure_auth import azure_project_var
 from services.Azure.subscriptions import fetch_subscriptions
 import json
-import os
 from services.Azure.costs import (
     fetch_total_cost,
     fetch_daily_costs,
@@ -20,7 +20,6 @@ from services.Azure.costs import (
     fetch_budgets,
     fetch_aggregated_monthly_costs,
     normalize_utc_date,
-    build_dated_cache_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,14 +71,13 @@ def _cache_query(cache_key: str, fetch_fn, cold_default: dict):
 
 @router.get("/projects")
 def get_azure_projects():
-    import json
-    import os
-    _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
     try:
+        # Resolve config path
+        _config_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
         with open(_config_path, "r") as f:
             config = json.load(f)
     except Exception as e:
-        logger.error("[AzureRoutes] Failed to load config.json: %s", str(e))
+        logger.error("[AzureRoutes] Failed to load config.json at %s: %s", _config_path, str(e))
         config = {}
 
     projects = []
@@ -144,16 +142,13 @@ def get_subscriptions(project: str = Query(None)):
 
 @router.get("/costs/combined-yearly")
 def get_combined_yearly_costs():
-    """
-    Calculate the cumulative yearly costs across all available projects.
-    """
     try:
-        _config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
         try:
+            _config_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
             with open(_config_path, "r") as f:
                 config = json.load(f)
         except Exception as e:
-            logger.error("[AzureRoutes] Failed to load config.json: %s", str(e))
+            logger.error("[AzureRoutes] Failed to load config.json at %s: %s", _config_path, str(e))
             config = {}
 
         projects = []

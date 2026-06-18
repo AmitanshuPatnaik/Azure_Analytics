@@ -1,15 +1,19 @@
 import json
 import os
+from models.handle_logging import get_logging_conf
+logging = get_logging_conf()
 
-# Resolve config.json relative to this file's directory (backend/app/core/),
-# going two levels up to backend/ regardless of the working directory.
-_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "config.json")
+logger = logging.getLogger(__name__)
+
+# Resolve absolute config.json path relative to this file
+_config_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
 
 try:
-    with open(_CONFIG_PATH, "r") as f:
+    with open(_config_path, "r") as f:
         content = f.read().strip()
         config = json.loads(content) if content else {}
-except Exception:
+except Exception as e:
+    logger.error("JSON file not found at %s: %s", _config_path, e)
     config = {}
 
 base_url = config.get("azure_devops_url", "")

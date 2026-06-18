@@ -35,11 +35,35 @@ def fetch_repositories(project_name):
         if response.status_code != 200:
             return handle_error_response(response,RESOURCE_REPOSITORY)
 
-        repos = []
+        from concurrent.futures import ThreadPoolExecutor
 
-        for repo in response.json().get("value", []):
+        def process_repo(repo):
             if not isinstance(repo, dict):
-                continue
+                return None
+
+            repo_name = repo.get("name")
+            default_branch = repo.get("defaultBranch")
+
+            owner = None
+            created_date = None
+
+            if default_branch:
+                try:
+                    branch_name = default_branch.replace("refs/heads/","")
+                    commits_url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/commits?searchCriteria.itemVersion.version={branch_name}&api-version={API_VERSION}"
+                    commits_response = requests.get(url=commits_url,auth=auth,verify=False,timeout=10)
+
+                    if commits_response.status_code == 200:
+                        commits = commits_response.json().get("value", [])
+
+                        if commits:
+                            oldest_commit = commits[-1]
+                            owner = oldest_commit.get("author", {}).get("name")
+                            raw_date = oldest_commit.get("author", {}).get("date")
+                            if raw_date:
+                                created_date = _fmt_date(raw_date)
+                except Exception as e:
+                    logger.warning("[ReposService] Failed to process default branch commits for repo %s: %s", repo_name, e)
 
             proj_info = repo.get("project")
             proj_name = (
@@ -48,32 +72,7 @@ def fetch_repositories(project_name):
                 else "Unknown"
             )
 
-            repo_name = repo.get("name")
-
-            default_branch = repo.get("defaultBranch")
-
-            owner = None
-            created_date = None
-
-            if default_branch:
-                branch_name = (default_branch.replace("refs/heads/",""))
-
-                commits_url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/commits?searchCriteria.itemVersion.version={branch_name}&api-version={API_VERSION}"
-                commits_response = requests.get(url=commits_url,auth=auth,verify=False,timeout=10)
-
-                if commits_response.status_code == 200:
-                    commits = commits_response.json().get("value", [])
-
-                    if commits:
-                        oldest_commit = commits[-1]
-                        owner = oldest_commit.get("author", {}).get("name")
-
-                        raw_date = oldest_commit.get("author", {}).get("date")
-
-                        if raw_date:
-                            created_date = _fmt_date(raw_date)
-
-            repos.append({
+            return {
                 "id": repo.get("id"),
                 "name": repo_name,
                 "project": proj_name,
@@ -85,7 +84,13 @@ def fetch_repositories(project_name):
                     else None
                 ),
                 "remoteUrl": repo.get("remoteUrl")
-            })
+            }
+
+        repo_list = response.json().get("value", [])
+        with ThreadPoolExecutor(max_workers=min(len(repo_list) or 1, 15)) as executor:
+            results = executor.map(process_repo, repo_list)
+
+        repos = [r for r in results if r is not None]
 
         result = {
             "success": True,
@@ -280,16 +285,14 @@ def fetch_branches(project_name, repo_name):
         if response.status_code != 200:
             return handle_error_response(response, f"Repository '{repo_name}'")
 
-        branches = []
+        from concurrent.futures import ThreadPoolExecutor
 
-        for branch in response.json().get("value", []):
+        def process_branch(branch):
             if not isinstance(branch, dict):
-                continue
+                return None
 
             full_branch_name = branch.get("name", "")
-
             branch_name = full_branch_name.replace("refs/heads/", "")
-
             encoded_branch = quote(branch_name)
 
             owner = None
@@ -297,47 +300,51 @@ def fetch_branches(project_name, repo_name):
             last_modified_by = None
             last_modified_date = None
 
-            latest_commit_url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/commits?searchCriteria.itemVersion.version={encoded_branch}&$top=1&api-version={API_VERSION}"
+            # Fetch latest commit info
+            try:
+                latest_commit_url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/commits?searchCriteria.itemVersion.version={encoded_branch}&$top=1&api-version={API_VERSION}"
+                latest_response = requests.get(url=latest_commit_url,auth=auth,verify=False,timeout=10)
 
-            latest_response = requests.get(url=latest_commit_url,auth=auth,verify=False,timeout=10)
+                if latest_response.status_code == 200:
+                    commits = latest_response.json().get("value",[])
+                    if commits:
+                        latest_commit = commits[-1]
+                        last_modified_by = latest_commit.get("author", {}).get("name")
+                        raw_date = latest_commit.get("author", {}).get("date")
+                        if raw_date:
+                            last_modified_date = _fmt_date(raw_date)
+            except Exception as e:
+                logger.warning("[ReposService] Failed to fetch branch %s latest commit: %s", branch_name, e)
 
-            if latest_response.status_code == 200:
-                commits = latest_response.json().get("value",[])
+            # Fetch first push info
+            try:
+                pushes_url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/pushes?searchCriteria.refName=refs/heads/{encoded_branch}&searchCriteria.order=asc&$top=1&api-version={API_VERSION}"
+                pushes_response = requests.get(url=pushes_url,auth=auth,verify=False,timeout=10)
 
-                if commits:
-                    latest_commit = commits[-1]
+                if pushes_response.status_code == 200:
+                    pushes = pushes_response.json().get("value",[])
+                    if pushes:
+                        first_push = pushes[0]
+                        owner = first_push.get("pushedBy", {}).get("displayName")
+                        raw_date = first_push.get("date")
+                        if raw_date:
+                            created_date = _fmt_date(raw_date)
+            except Exception as e:
+                logger.warning("[ReposService] Failed to fetch branch %s pushes: %s", branch_name, e)
 
-                    last_modified_by = latest_commit.get("author", {}).get("name")
-
-                    raw_date = latest_commit.get("author", {}).get("date")
-
-                    if raw_date:
-                        last_modified_date = _fmt_date(raw_date)
-
-            pushes_url = f"{base_url}/{collection}/{project_name}/_apis/git/repositories/{repo_name}/pushes?searchCriteria.refName=refs/heads/{encoded_branch}&searchCriteria.order=asc&$top=1&api-version={API_VERSION}"
-
-            pushes_response = requests.get(url=pushes_url,auth=auth,verify=False,timeout=10)
-
-            if pushes_response.status_code == 200:
-                pushes = pushes_response.json().get("value",[])
-
-                if pushes:
-                    first_push = pushes[0]
-
-                    owner = first_push.get("pushedBy", {}).get("displayName")
-
-                    raw_date = first_push.get("date")
-
-                    if raw_date:
-                        created_date = _fmt_date(raw_date)
-
-            branches.append({
+            return {
                 "name": branch_name,
                 "owner": last_modified_by,
                 "createdDate": last_modified_date,
                 "lastModifiedBy": owner,
                 "lastModifiedDate": created_date
-            })
+            }
+
+        branch_list = response.json().get("value", [])
+        with ThreadPoolExecutor(max_workers=min(len(branch_list) or 1, 15)) as executor:
+            results = executor.map(process_branch, branch_list)
+
+        branches = [r for r in results if r is not None]
 
         return {
             "success": True,

@@ -86,9 +86,7 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
         for attempt in range(MAX_ATTEMPTS):
             try:
                 token = get_azure_token()
-                url = (f"{azure_cost_base_url}/{subscription_id}"
-                       f"/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
-                )
+                url = f"{azure_cost_base_url}/{subscription_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
                 headers = {
                     "Authorization": f"Bearer {token}",
                     "Content-Type": "application/json",
@@ -100,10 +98,7 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
                     return response.json()
 
                 if response.status_code == 429:
-                    logger.warning(
-                        "[AzureQuery] 429 rate-limited sub=%s. Aborting retry loop to protect request timer.",
-                        subscription_id
-                    )
+                    logger.warning("[AzureQuery] 429 rate-limited sub=%s. Aborting retry loop to protect request timer.",subscription_id)
                     return {
                         "success": False,
                         "status_code": 429,
@@ -112,10 +107,7 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
 
                 if response.status_code >= 500 and attempt < MAX_ATTEMPTS - 1:
                     sleep_time = random.uniform(0, min(MAX_DELAY, BASE_DELAY * (2 ** attempt)))
-                    logger.warning(
-                        "[AzureQuery] HTTP %d sub=%s attempt=%d/%d sleeping=%.1fs",
-                        response.status_code, subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,
-                    )
+                    logger.warning("[AzureQuery] HTTP %d sub=%s attempt=%d/%d sleeping=%.1fs",response.status_code, subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,)
                     time.sleep(sleep_time)
                     continue
 
@@ -129,10 +121,7 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
             except requests.exceptions.Timeout:
                 sleep_time = random.uniform(0, min(MAX_DELAY, BASE_DELAY * (2 ** attempt)))
                 if attempt < MAX_ATTEMPTS - 1:
-                    logger.warning(
-                        "[AzureQuery] timeout sub=%s attempt=%d/%d sleeping=%.1fs",
-                        subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,
-                    )
+                    logger.warning("[AzureQuery] timeout sub=%s attempt=%d/%d sleeping=%.1fs",subscription_id, attempt + 1, MAX_ATTEMPTS, sleep_time,)
                     time.sleep(sleep_time)
                     continue
                 return {
@@ -142,6 +131,7 @@ def _execute_azure_query_live(subscription_id: str, payload: dict):
                 }
 
             except Exception as e:
+                logger.exception("[AzureQuery] Unexpected query execution error for sub=%s", subscription_id)
                 return {
                     "success": False,
                     "error": "Azure Integration is not configured or offline",

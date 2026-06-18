@@ -105,7 +105,6 @@ def fetch_work_items(project_name):
 
         ids_string = ",".join(map(str, ids[:200]))
 
-        # Fetch all fields required by the sample JSON response format
         fields_param = (
             "System.Id,System.WorkItemType,System.Title,System.State,"
             "System.BoardColumn,System.AssignedTo,"
@@ -120,12 +119,8 @@ def fetch_work_items(project_name):
             "System.IterationPath"
         )
 
-        url = (
-            f"{base_url}/{collection}/_apis/wit/workitems"
-            f"?ids={ids_string}"
-            f"&fields={fields_param}"
-            f"&api-version={API_VERSION}"
-        )
+        url = f"{base_url}/{collection}/_apis/wit/workitems?ids={ids_string}&fields={fields_param}&api-version={API_VERSION}"
+
         auth_basic = HTTPBasicAuth("", pat)
 
         response = requests.get(url, auth=auth_basic, verify=False, timeout=10)
@@ -150,7 +145,6 @@ def fetch_work_items(project_name):
             if sprint:
                 sprint_set.add(sprint)
 
-            # Build the fields object matching the sample JSON format
             assigned_to_raw = fields.get("System.AssignedTo")
             assigned_to = (
                 {
@@ -161,7 +155,6 @@ def fetch_work_items(project_name):
                 else None
             )
 
-            # Only include optional fields when they are present
             out_fields = {
                 "System.Id": fields.get("System.Id"),
                 "System.WorkItemType": fields.get("System.WorkItemType"),
@@ -171,11 +164,9 @@ def fetch_work_items(project_name):
                 "System.AssignedTo": assigned_to,
                 "Microsoft.VSTS.Common.Priority": fields.get("Microsoft.VSTS.Common.Priority"),
                 "Microsoft.VSTS.Common.StateChangeDate": fields.get("Microsoft.VSTS.Common.StateChangeDate"),
-                # Sprint stored internally for frontend grouping
                 "_sprint": sprint,
             }
 
-            # Optional fields — only add when non-null
             for opt_key in (
                 "Microsoft.VSTS.Common.Severity",
                 "Microsoft.VSTS.Scheduling.StartDate",
@@ -231,10 +222,8 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
     try:
         since_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
 
-        wiql_url = (
-            f"{base_url}/{collection}/{project_name}/_apis/wit/wiql"
-            f"?api-version={API_VERSION}"
-        )
+        wiql_url = f"{base_url}/{collection}/{project_name}/_apis/wit/wiql?api-version={API_VERSION}"
+
         query = {
             "query": f"""
             SELECT [System.Id]
@@ -267,10 +256,8 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
             "System.Id,System.Title,System.WorkItemType,System.State,"
             "System.AssignedTo,Microsoft.VSTS.Common.StateChangeDate"
         )
-        bulk_url = (
-            f"{base_url}/{collection}/_apis/wit/workitems"
-            f"?ids={ids_str}&fields={fields_param}&api-version={API_VERSION}"
-        )
+
+        bulk_url = f"{base_url}/{collection}/_apis/wit/workitems?ids={ids_str}&fields={fields_param}&api-version={API_VERSION}"
 
         bulk_resp = requests.get(bulk_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=10)
         if bulk_resp.status_code != 200:
@@ -303,10 +290,7 @@ def fetch_recent_state_changes(project_name: str, days: int = 30, limit: int = 2
 
         for wid in ids:
             try:
-                upd_url = (
-                    f"{base_url}/{collection}/_apis/wit/workitems/{wid}/updates"
-                    f"?api-version={API_VERSION}"
-                )
+                upd_url = f"{base_url}/{collection}/_apis/wit/workitems/{wid}/updates?api-version={API_VERSION}"
 
                 upd_resp = requests.get(upd_url, auth=HTTPBasicAuth("", pat), verify=False, timeout=8)
                 if upd_resp.status_code != 200:
