@@ -11,6 +11,7 @@ import { RepositoriesApiService } from '../../../../services/api/repositories-ap
 import { PipelinesApiService } from '../../../../services/api/pipelines-api.service';
 import { AzureApiService } from '../../../../services/api/azure-api.service';
 import { StatusApiService } from '../../../../services/api/status-api.service';
+import { BoardsApiService } from '../../../../services/api/boards-api.service';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -123,6 +124,7 @@ export class DashboardHomeComponent implements OnInit {
     private pipelinesApi: PipelinesApiService,
     private azureApi: AzureApiService,
     private statusApi: StatusApiService,
+    private boardsApi: BoardsApiService,
     private cdr: ChangeDetectorRef,
     private router: Router,
     public dashboardService: DashboardService
@@ -532,6 +534,111 @@ export class DashboardHomeComponent implements OnInit {
     return Math.round(value).toString();
   }
 
+  // Work-Item Status Breakdown properties
+  isLoadingWorkItemStates = false;
+  workItemStatesError: string | null = null;
+  workItemStates: any[] = [];
+  workItemPieSlices: any[] = [];
+  hoveredWorkItemState: string | null = null;
+
+  loadWorkItemStatusDistribution(project: string) {
+    this.isLoadingWorkItemStates = true;
+    this.workItemStatesError = null;
+    this.workItemStates = [];
+    this.workItemPieSlices = [];
+    this.hoveredWorkItemState = null;
+    this.cdr.detectChanges();
+
+    this.boardsApi.getWorkItemStatusSummary(project).subscribe({
+      next: (res: any) => {
+        if (res && res.success && res.states) {
+          this.workItemStates = res.states;
+          this.workItemPieSlices = this.buildWorkItemPieSlices(this.workItemStates);
+        } else {
+          this.workItemStates = [];
+          this.workItemPieSlices = [];
+          this.workItemStatesError = res?.message || 'Failed to load work-item status distribution.';
+        }
+        this.isLoadingWorkItemStates = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn('Failed to load work-item status distribution', err);
+        this.workItemStates = [];
+        this.workItemPieSlices = [];
+        this.workItemStatesError = err.error?.detail || err.error?.message || err.message || 'Failed to load work-item status distribution.';
+        this.isLoadingWorkItemStates = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  buildWorkItemPieSlices(states: any[]): any[] {
+    if (!states || !states.length) return [];
+    
+    const filtered = states.filter(s => (s.count || 0) > 0);
+    if (!filtered.length) return [];
+    
+    const total = filtered.reduce((sum, s) => sum + (s.count || 0), 0);
+    if (!total) return [];
+    
+    const cx = 110, cy = 110, radius = 90;
+    let angle = -Math.PI / 2;
+    
+    const stateColors: { [key: string]: string } = {
+      'New': '#94a3b8',
+      'Proposed': '#94a3b8',
+      'To Do': '#94a3b8',
+      'Active': '#2563eb',
+      'In Progress': '#2563eb',
+      'Doing': '#2563eb',
+      'Closed': '#10b981',
+      'Done': '#10b981',
+      'Resolved': '#f59e0b',
+      'Removed': '#ef4444'
+    };
+    const defaultColors = ['#94a3b8', '#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
+    
+    return filtered.map((s: any, i: number) => {
+      const count = s.count || 0;
+      const pct = count / total;
+      const sweep = pct * 2 * Math.PI;
+      const end = angle + sweep;
+      
+      const x1 = cx + radius * Math.cos(angle);
+      const y1 = cy + radius * Math.sin(angle);
+      const x2 = cx + radius * Math.cos(end);
+      const y2 = cy + radius * Math.sin(end);
+      
+      let path: string;
+      if (pct >= 1) {
+        const xMid = cx + radius * Math.cos(angle + Math.PI);
+        const yMid = cy + radius * Math.sin(angle + Math.PI);
+        path = [
+          `M ${cx} ${cy}`,
+          `L ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+          `A ${radius} ${radius} 0 1 1 ${xMid.toFixed(2)} ${yMid.toFixed(2)}`,
+          `A ${radius} ${radius} 0 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+          `Z`
+        ].join(' ');
+      } else {
+        const largeArc = pct > 0.5 ? 1 : 0;
+        path = `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${radius} ${radius} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+      }
+      
+      const color = stateColors[s.state] || defaultColors[i % defaultColors.length];
+      
+      angle = end;
+      return {
+        state: s.state,
+        count: count,
+        color: color,
+        path: path,
+        percentage: Math.round(pct * 100)
+      };
+    });
+  }
+
   onHomeAzureProjectChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     const proj = select.value;
@@ -544,11 +651,14 @@ export class DashboardHomeComponent implements OnInit {
     if (!proj) {
       this.yearlyCost = 0;
       this.servicesStatus = [];
+      this.workItemStates = [];
+      this.workItemPieSlices = [];
       this.loadServicesStatus();
       return;
     }
     this.loadHomeSubscriptions(proj);
     this.loadServicesStatus(proj);
+    this.loadWorkItemStatusDistribution(proj);
   }
 
   getProjectDescription(projName: string): string {

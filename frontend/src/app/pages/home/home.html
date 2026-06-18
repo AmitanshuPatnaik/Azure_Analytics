@@ -1,6 +1,9 @@
 <div class="home-container">
 
   <div class="dashboard-content">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; margin-top: -10px;">
+      <span class="utc-badge">All timings are in UTC</span>
+    </div>
     <!-- Horizontal sub-nav tabs for DevOps sub-pages -->
     @if (dashboardService.selectedModule === 'DevOps' && dashboardService.selectedPage !== 'home') {
       <div class="horizontal-sub-nav">

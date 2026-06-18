@@ -44,4 +44,17 @@ export class BoardsApiService {
       tap(data => this.cache.set(cacheKey, data, 3 * 60 * 1000)) // 3-min TTL for activity feed
     );
   }
+
+  getWorkItemStatusSummary(projectName: string): Observable<any> {
+    const cacheKey = `boards:status-summary:${projectName}`;
+    const cachedData = this.cache.get(cacheKey);
+    if (cachedData) {
+      return of(cachedData);
+    }
+    return this.http.get<any>(
+      `${this.boardsUrl}/${projectName}/status-summary`
+    ).pipe(
+      tap(data => this.cache.set(cacheKey, data, 5 * 60 * 1000)) // 5-min TTL
+    );
+  }
 }
