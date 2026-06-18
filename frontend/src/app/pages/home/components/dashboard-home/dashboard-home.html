@@ -103,8 +103,9 @@
       </div>
 
       @if (isLoadingProjects || isLoadingRepos) {
-      <div style="padding:20px 0;">
-        <div class="skeleton skeleton-chart"></div>
+      <div class="loading-container" style="padding: 20px 0;">
+        <div class="spinner"></div>
+        <span class="loading-text">Loading repository distribution...</span>
       </div>
       } @else if (projectsError || reposError) {
       <div style="color:#dc2626; padding:16px; font-size:13px;">
@@ -161,8 +162,9 @@
       </div>
 
       @if (isLoadingWorkItemStates) {
-      <div style="padding:20px 0;">
-        <div class="skeleton skeleton-chart"></div>
+      <div class="loading-container" style="padding: 20px 0;">
+        <div class="spinner"></div>
+        <span class="loading-text">Loading work item states...</span>
       </div>
       } @else if (workItemStatesError) {
       <div style="color:#dc2626; padding:16px; font-size:13px; text-align:center;">
@@ -223,9 +225,9 @@
     </div>
 
     @if (isLoadingMultiTrend) {
-    <div style="padding:20px 0;">
-      <div class="skeleton skeleton-chart"></div>
-      <div class="skeleton skeleton-line" style="width:40%; margin-top:10px;"></div>
+    <div class="loading-container" style="padding: 40px 0;">
+      <div class="spinner"></div>
+      <span class="loading-text">Loading cost trend...</span>
     </div>
     } @else if (multiTrendError) {
     <div style="color:#dc2626; padding:16px; font-size:13px;">{{ multiTrendError }}</div>
@@ -313,10 +315,9 @@
   <h2 style="text-align:center; margin-bottom:16px;">DevOps Service Status</h2>
 
   @if (isLoadingRepos || isLoadingProjects) {
-  <div>
-    @for (_ of [1,2,3,4,5]; track $index) {
-    <div class="skeleton skeleton-row"></div>
-    }
+  <div class="loading-container" style="padding: 40px 0;">
+    <div class="spinner"></div>
+    <span class="loading-text">Loading service status...</span>
   </div>
   } @else if (servicesStatusError) {
   <div style="color:#dc2626; font-size:13px;">{{ servicesStatusError }}</div>

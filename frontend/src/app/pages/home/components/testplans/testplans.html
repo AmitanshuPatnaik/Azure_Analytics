@@ -4,17 +4,9 @@
   </div>
 
   @if (isLoadingProjects) {
-  <div class="cards" style="position: relative; overflow: hidden; border-radius: 12px;">
-    <div class="sleek-progress-bar"></div>
-    @for (_ of [1, 2, 3]; track $index) {
-    <div class="card" style="min-height: 180px;">
-      <div class="skeleton" style="height: 18px; width: 60%; margin-bottom: 12px;"></div>
-      <hr style="opacity: 0.1; margin: 12px 0;">
-      <div class="skeleton" style="height: 14px; width: 80%; margin-bottom: 8px;"></div>
-      <div class="skeleton" style="height: 14px; width: 70%; margin-bottom: 16px;"></div>
-      <div class="skeleton" style="height: 36px; width: 100%; border-radius: 8px; margin-top: auto;"></div>
-    </div>
-    }
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <span class="loading-text">Loading projects...</span>
   </div>
   } @else {
   <div class="cards">
@@ -68,10 +60,9 @@
   @if (testPlansError) {
     <div class="error-banner">Could not load test plans: {{ testPlansError }}</div>
   } @else if (isLoadingTestPlans) {
-    <div class="material-card">
-      @for (_ of [1,2,3,4,5]; track $index) {
-        <div class="skeleton skeleton-row"></div>
-      }
+    <div class="loading-container" style="padding: 40px 0;">
+      <div class="spinner"></div>
+      <span class="loading-text">Loading test plans...</span>
     </div>
   } @else {
     <div class="material-card" style="padding:0; overflow:hidden;">

@@ -142,13 +142,9 @@
   </div>
 
   @if (isLoadingCostTrend || isLoadingAzureRange) {
-  <!-- Skeleton overlay while loading -->
-  <div style="padding:20px 0;">
-    <div class="skeleton skeleton-chart" style="height:220px;"></div>
-    <div style="display:flex; gap:10px; margin-top:10px;">
-      <div class="skeleton skeleton-line" style="width:30%;"></div>
-      <div class="skeleton skeleton-line" style="width:20%;"></div>
-    </div>
+  <div class="loading-container" style="padding: 40px 0;">
+    <div class="spinner"></div>
+    <span class="loading-text">Loading daily costs...</span>
   </div>
   } @else if (costTrendError) {
   <div class="error-inline">{{ costTrendError }}</div>
@@ -214,8 +210,9 @@
     </div>
 
     @if (isLoadingAzureRange) {
-    <div style="padding:20px 0;">
-      <div class="skeleton skeleton-chart" style="height:200px;"></div>
+    <div class="loading-container" style="padding: 40px 0;">
+      <div class="spinner"></div>
+      <span class="loading-text">Loading resources...</span>
     </div>
     } @else if (topResourcesError) {
     <div class="error-inline" style="padding:20px; text-align:center;">{{ topResourcesError }}</div>
@@ -285,8 +282,9 @@
     </div>
 
     @if (isLoadingAzureRange) {
-    <div style="padding:20px 0;">
-      <div class="skeleton skeleton-chart" style="height:200px;"></div>
+    <div class="loading-container" style="padding: 40px 0;">
+      <div class="spinner"></div>
+      <span class="loading-text">Loading services...</span>
     </div>
     } @else if (serviceCostsError) {
     <div class="error-inline" style="padding:20px; text-align:center;">{{ serviceCostsError }}</div>

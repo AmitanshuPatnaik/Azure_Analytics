@@ -1,3 +1,9 @@
+@if (isLoadingRepoDetails) {
+<div class="loading-container" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+  <div class="spinner"></div>
+  <span class="loading-text">Loading repository details...</span>
+</div>
+} @else {
 <!-- Page Header -->
 <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
   <div class="nav-controls">
@@ -73,11 +79,9 @@
 @if (reposError) {
 <div class="error-banner">{{ reposError }}</div>
 } @else if (isLoadingRepos) {
-<div style="position: relative; overflow: hidden; border-radius: 12px; background: white; padding: 20px;">
-  <div class="sleek-progress-bar"></div>
-  @for (_ of [1, 2, 3, 4, 5]; track $index) {
-  <div class="skeleton skeleton-row"></div>
-  }
+<div class="loading-container" style="padding: 40px 0;">
+  <div class="spinner"></div>
+  <span class="loading-text">Loading repositories...</span>
 </div>
 } @else if (selectedProjectRepos.length === 0) {
 <p style="color: #6b7280; font-size: 14px;">No repositories found in this project.</p>
@@ -299,3 +303,5 @@
   }
 </div>
 }
+
+  }
