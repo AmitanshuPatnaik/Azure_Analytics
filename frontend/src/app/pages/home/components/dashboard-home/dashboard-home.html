@@ -63,7 +63,8 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- RELOCATED AZURE PROJECT DROPDOWN & PROJECT METADATA                    -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div style="background:white; border:1.0px solid #e2e8f0; padding:1rem 1.5rem; border-radius:0.75rem;
+<div
+  style="background:white; border:1.0px solid #e2e8f0; padding:1rem 1.5rem; border-radius:0.75rem;
             box-shadow:0 0.125rem 0.5rem rgba(0,0,0,0.04); margin-top:1.25rem; display:flex; align-items:center; gap:0.75rem;">
   <span style="font-size:0.875rem; font-weight:600; color:#334155;">Project:</span>
   <select id="home-azure-proj-select" class="month-dropdown"
@@ -94,118 +95,129 @@
   <!-- PIE CHART CARD (legend filter) -->
   <div class="chart-card">
     @if (!selectedHomeAzureProject) {
-      <div class="chart-header">
-        <h2 style="text-align:center; flex:1;">Repository Distribution</h2>
-        <button class="details-btn" (click)="openProjectDistributionDetailsModal()"
-          [disabled]="!!(projectsError || reposError)">
-          View Details
-        </button>
-      </div>
+    <div class="chart-header">
+      <h2 style="text-align:center; flex:1;">Repository Distribution</h2>
+      <button class="details-btn" (click)="openProjectDistributionDetailsModal()"
+        [disabled]="!!(projectsError || reposError)">
+        View Details
+      </button>
+    </div>
 
-      @if (isLoadingProjects || isLoadingRepos) {
-      <div class="loading-container" style="padding: 1.25rem 0;">
-        <div class="spinner"></div>
-        <span class="loading-text">Loading repository distribution...</span>
-      </div>
-      } @else if (projectsError || reposError) {
-      <div style="color:#dc2626; padding:1rem; font-size:0.8125rem;">
-        Could not display distribution: {{ projectsError || reposError }}
-      </div>
-      } @else {
-      <div class="pie-chart-grid" style="position:relative; padding:0.625rem 0;">
-        <div style="position:relative; width: 12.5rem; height: 12.5rem; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
-          <svg viewBox="0 0 220 220" style="overflow:visible; display:block; width:100%; height:100%; filter: drop-shadow(0.0px 0.25rem 0.5rem rgba(0,0,0,0.12));">
-            @for (s of projectPieSlices; track s.name) {
-            <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="1.5"
-              style="cursor:pointer; transition:all 0.15s ease;"
-              [style.opacity]="hoveredProject && hoveredProject.name !== s.name ? '0.6' : '1'"
-              [style.transform]="hoveredProject?.name === s.name ? 'scale(1.03)' : 'none'"
-              [style.transform-origin]="'110px 110px'"
-              (mouseenter)="hoveredProject = s" (mouseleave)="hoveredProject = null">
-            </path>
-            }
-          </svg>
+    @if (isLoadingProjects || isLoadingRepos) {
+    <div class="loading-container" style="padding: 1.25rem 0;">
+      <div class="spinner"></div>
+      <span class="loading-text">Loading repository distribution...</span>
+    </div>
+    } @else if (projectsError || reposError) {
+    <div style="color:#dc2626; padding:1rem; font-size:0.8125rem;">
+      Could not display distribution: {{ projectsError || reposError }}
+    </div>
+    } @else {
+    <div class="pie-chart-grid" style="position:relative; padding:0.625rem 0;">
+      <div
+        style="position:relative; width: 12.5rem; height: 12.5rem; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+        <svg viewBox="0 0 220 220"
+          style="overflow:visible; display:block; width:100%; height:100%; filter: drop-shadow(0.0px 0.25rem 0.5rem rgba(0,0,0,0.12));">
+          @for (s of projectPieSlices; track s.name) {
+          <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="1.5"
+            style="cursor:pointer; transition:all 0.15s ease;"
+            [style.opacity]="hoveredProject && hoveredProject.name !== s.name ? '0.6' : '1'"
+            [style.transform]="hoveredProject?.name === s.name ? 'scale(1.03)' : 'none'"
+            [style.transform-origin]="'110px 110px'" (mouseenter)="hoveredProject = s"
+            (mouseleave)="hoveredProject = null">
+          </path>
+          }
+        </svg>
 
-          @if (hoveredProject) {
-          <div style="position:absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background:#1e293b; color:#fff;
+        @if (hoveredProject) {
+        <div
+          style="position:absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background:#1e293b; color:#fff;
                       padding:0.375rem 0.625rem; border-radius:0.375rem; font-size:0.6875rem; z-index:20;
                       pointer-events:none; box-shadow:0 0.25rem 0.75rem rgba(0,0,0,0.15); text-align: center; white-space: nowrap;">
-            <div style="display:flex; align-items:center; gap:0.375rem; font-weight: 600;">
-              <span [style.background]="hoveredProject.color"
-                style="display:inline-block; width:0.375rem; height:0.375rem; border-radius:50%;"></span>
-              {{ hoveredProject.name }}: {{ hoveredProject.count }}
-            </div>
+          <div style="display:flex; align-items:center; gap:0.375rem; font-weight: 600;">
+            <span [style.background]="hoveredProject.color"
+              style="display:inline-block; width:0.375rem; height:0.375rem; border-radius:50%;"></span>
+            {{ hoveredProject.name }}: {{ hoveredProject.count }}
           </div>
-          }
         </div>
+        }
+      </div>
 
-        <div class="pie-legend" style="flex:1; min-width:0; display: flex; flex-direction: column; gap: 0.5rem; font-size:0.84375rem;">
-          <!-- Legend search box -->
-          <!-- <input class="filter-search" type="text" placeholder="Search projects…" [(ngModel)]="pieSearchQuery"
+      <div class="pie-legend"
+        style="flex:1; min-width:0; display: flex; flex-direction: column; gap: 0.5rem; font-size:0.84375rem;">
+        <!-- Legend search box -->
+        <!-- <input class="filter-search" type="text" placeholder="Search projects…" [(ngModel)]="pieSearchQuery"
             style="margin-bottom:0.625rem;" /> -->
 
-          @for (item of filteredProjectDistribution; track item.name) {
-          <div style="cursor:pointer; display:flex; align-items:center; padding:0.25rem 0.375rem; border-radius:0.375rem; transition:all 0.2s; white-space: nowrap;"
-               [style.fontWeight]="hoveredProject?.name === item.name ? '700' : '500'"
-               [style.background]="hoveredProject?.name === item.name ? 'rgba(0,0,0,0.04)' : 'transparent'"
-               (mouseenter)="hoveredProject = item" (mouseleave)="hoveredProject = null">
-            <span class="dot" [style.backgroundColor]="item.color" style="width:0.75rem; height:0.75rem; min-width:0.75rem; min-height:0.75rem; margin-right:0.5rem; border-radius:50%; flex-shrink:0;"></span>
-            {{ item.name }} ({{ item.count }})
-          </div>
-          }
+        @for (item of filteredProjectDistribution; track item.name) {
+        <div
+          style="cursor:pointer; display:flex; align-items:center; padding:0.25rem 0.375rem; border-radius:0.375rem; transition:all 0.2s; white-space: nowrap;"
+          [style.fontWeight]="hoveredProject?.name === item.name ? '700' : '500'"
+          [style.background]="hoveredProject?.name === item.name ? 'rgba(0,0,0,0.04)' : 'transparent'"
+          (mouseenter)="hoveredProject = item" (mouseleave)="hoveredProject = null">
+          <span class="dot" [style.backgroundColor]="item.color"
+            style="width:0.75rem; height:0.75rem; min-width:0.75rem; min-height:0.75rem; margin-right:0.5rem; border-radius:50%; flex-shrink:0;"></span>
+          {{ item.name }} ({{ item.count }})
         </div>
+        }
       </div>
-      }
+    </div>
+    }
     } @else {
-      <div class="chart-header">
-        <h2 style="text-align:center; flex:1;">Work Item Status Distribution</h2>
-      </div>
+    <div class="chart-header">
+      <h2 style="text-align:center; flex:1;">Work Item Status Distribution</h2>
+    </div>
 
-      @if (isLoadingWorkItemStates) {
-      <div class="loading-container" style="padding: 1.25rem 0;">
-        <div class="spinner"></div>
-        <span class="loading-text">Loading work item states...</span>
-      </div>
-      } @else if (workItemStatesError) {
-      <div style="color:gray; padding:1rem; font-size:0.8125rem; text-align:center;">
-        {{ workItemStatesError }}
-      </div>
-      } @else if (workItemStates.length === 0) {
-      <div style="text-align:center; padding:2.5rem; color:gray;">
-        No work items found for this project.
-      </div>
-      } @else {
-      <div style="display:flex; flex-direction:column; align-items:center; gap:1rem; padding:0.625rem 0; width:100%; max-width:18.75rem; margin:0 auto;">
-        <div style="width:9.375rem; height:9.375rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <svg viewBox="0 15 220 220" style="overflow:visible; display:block; width:150%; height:150%;">
-            @for (s of workItemPieSlices; track s.state) {
-            <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
-              style="cursor:pointer; transition:all 0.15s ease;"
-              [style.opacity]="hoveredWorkItemState && hoveredWorkItemState !== s.state ? '0.55' : '1'"
-              [style.transform]="hoveredWorkItemState === s.state ? 'scale(1.02)' : 'none'"
-              [style.transform-origin]="'110px 110px'"
-              (mouseenter)="hoveredWorkItemState = s.state" (mouseleave)="hoveredWorkItemState = null">
-            </path>
-            }
-          </svg>
-        </div>
-
-        <div style="width:100%; display:flex; flex-direction:column; gap:0.375rem;">
-          @for (item of workItemPieSlices; track item.state) {
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:0.375rem 0.625rem; border-radius:0.5rem; cursor:default; transition:all 0.2s;"
-               [style.fontWeight]="hoveredWorkItemState === item.state ? '700' : '500'"
-               [style.background]="hoveredWorkItemState === item.state ? 'rgba(0, 0, 0, 0.04)' : 'transparent'"
-               (mouseenter)="hoveredWorkItemState = item.state" (mouseleave)="hoveredWorkItemState = null">
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <span class="dot" [style.backgroundColor]="item.color" style="margin-right:0; flex-shrink:0;"></span>
-              <span style="color:#374151; font-size:0.8125rem;">{{ item.state }}</span>
-            </div>
-            <span style="color:#64748b; font-size:0.75rem; font-weight:600; white-space:nowrap;">{{ item.count }} ({{ item.percentage }}%)</span>
-          </div>
+    @if (isLoadingWorkItemStates) {
+    <div class="loading-container" style="padding: 1.25rem 0;">
+      <div class="spinner"></div>
+      <span class="loading-text">Loading work item states...</span>
+    </div>
+    } @else if (workItemStatesError) {
+    <div style="color:gray; padding:1rem; font-size:0.8125rem; text-align:center;">
+      {{ workItemStatesError }}
+    </div>
+    } @else if (workItemStates.length === 0) {
+    <div
+      style="height: 14rem; display: flex; align-items: center; justify-content: center; color: gray; font-size: 14px;">
+      No work items found
+    </div>
+    } @else {
+    <div
+      style="display:flex; flex-direction:column; align-items:center; gap:1rem; padding:0.625rem 0; width:100%; max-width:18.75rem; margin:0 auto;">
+      <div
+        style="width:9.375rem; height:9.375rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <svg viewBox="0 15 220 220" style="overflow:visible; display:block; width:150%; height:150%;">
+          @for (s of workItemPieSlices; track s.state) {
+          <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
+            style="cursor:pointer; transition:all 0.15s ease;"
+            [style.opacity]="hoveredWorkItemState && hoveredWorkItemState !== s.state ? '0.55' : '1'"
+            [style.transform]="hoveredWorkItemState === s.state ? 'scale(1.02)' : 'none'"
+            [style.transform-origin]="'110px 110px'" (mouseenter)="hoveredWorkItemState = s.state"
+            (mouseleave)="hoveredWorkItemState = null">
+          </path>
           }
-        </div>
+        </svg>
       </div>
-      }
+
+      <div style="width:100%; display:flex; flex-direction:column; gap:0.375rem;">
+        @for (item of workItemPieSlices; track item.state) {
+        <div
+          style="display:flex; align-items:center; justify-content:space-between; padding:0.375rem 0.625rem; border-radius:0.5rem; cursor:default; transition:all 0.2s;"
+          [style.fontWeight]="hoveredWorkItemState === item.state ? '700' : '500'"
+          [style.background]="hoveredWorkItemState === item.state ? 'rgba(0, 0, 0, 0.04)' : 'transparent'"
+          (mouseenter)="hoveredWorkItemState = item.state" (mouseleave)="hoveredWorkItemState = null">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="dot" [style.backgroundColor]="item.color" style="margin-right:0; flex-shrink:0;"></span>
+            <span style="color:#374151; font-size:0.8125rem;">{{ item.state }}</span>
+          </div>
+          <span style="color:#64748b; font-size:0.75rem; font-weight:600; white-space:nowrap;">{{ item.count }} ({{
+            item.percentage }}%)</span>
+        </div>
+        }
+      </div>
+    </div>
+    }
     }
   </div>
 
@@ -216,7 +228,8 @@
     </div>
 
     <!-- Chart legend -->
-    <div style="display:flex; justify-content:center; gap:1.25rem; font-size:0.75rem; margin-bottom:0.75rem;">
+    @if (visibleTrends.length > 0) {
+    <div style="display:flex; justify-content:center; gap:20px; font-size:12px; margin-bottom:12px;">
       @for (trend of visibleTrends; track trend.projectName) {
       <div>
         <span [style.background]="trend.color"
@@ -225,6 +238,7 @@
       </div>
       }
     </div>
+    }
 
     @if (isLoadingMultiTrend) {
     <div class="loading-container" style="padding: 2.5rem 0;">
@@ -234,7 +248,8 @@
     } @else if (multiTrendError) {
     <div style="color:#dc2626; padding:1rem; font-size:0.8125rem;">{{ multiTrendError }}</div>
     } @else if (selectedHomeAzureProject && visibleTrends.length === 0) {
-    <div style="text-align:center; padding:80px 40px; color: gray; font-size:14px;">
+    <div
+      style="height: 14rem; display: flex; align-items: center; justify-content: center; color: gray; font-size: 14px;">
       Project not deployed to Azure.
     </div>
     } @else {
@@ -282,20 +297,12 @@
         </text>
         }
 
-        <text x="-140" y="5" 
-              transform="rotate(-90)" 
-              text-anchor="middle" 
-              fill="#475569" 
-              font-size="12" 
-              font-weight="600">
+        <text x="-140" y="5" transform="rotate(-90)" text-anchor="middle" fill="#475569" font-size="12"
+          font-weight="600">
           Cost(INR)
         </text>
 
-        <text x="320" y="298" 
-              text-anchor="middle" 
-              fill="#475569" 
-              font-size="12" 
-              font-weight="600">
+        <text x="320" y="298" text-anchor="middle" fill="#475569" font-size="12" font-weight="600">
           Months
         </text>
 
@@ -317,16 +324,17 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- DEVOPS SERVICES SUMMARY (J – semantic status colours)                  -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="section" style="margin-top:1.25rem;">
-  <h2 style="text-align:center; margin-bottom:1rem;">DevOps Service Status</h2>
+<div class="section" style="margin-top:20px;">
+  <h2 style="text-align:center; margin-bottom:16px;">DevOps Service Status</h2>
 
+  @if (!selectedHomeAzureProject || visibleTrends.length > 0) {
   @if (isLoadingRepos || isLoadingProjects) {
-  <div class="loading-container" style="padding: 2.5rem 0;">
+  <div class="loading-container" style="padding: 40px 0;">
     <div class="spinner"></div>
     <span class="loading-text">Loading service status...</span>
   </div>
   } @else if (servicesStatusError) {
-  <div style="color:#dc2626; font-size:0.8125rem;">{{ servicesStatusError }}</div>
+  <div style="color:#dc2626; font-size:13px;">{{ servicesStatusError }}</div>
   } @else {
   <table>
     <tr>
@@ -338,13 +346,14 @@
       <td>{{ srv.service }}</td>
       <td>
         <span [class]="srv.status === 'Healthy' || srv.status === 'healthy'
-                       ? 'status-badge-healthy' : 'status-badge-alert'">
+                         ? 'status-badge-healthy' : 'status-badge-alert'">
           {{ srv.status || 'Unknown' }}
         </span>
       </td>
     </tr>
     }
   </table>
+  }
   }
 </div>
 
@@ -358,10 +367,13 @@
       <h2 style="text-align:center; flex:1;">Project Repository Distribution Details</h2>
       <button class="close-btn" (click)="closeProjectDistributionDetailsModal()">✕</button>
     </div>
-    
-    <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.5rem; margin-top:0.625rem; margin-bottom:0.625rem; padding-right:0.625rem;">
-      <label for="repo-sort-select" style="font-size:0.8125rem; color:#475569; font-weight:600;">Sort by Repository Count:</label>
-      <select id="repo-sort-select" class="month-dropdown" style="padding:0.375rem 0.75rem; font-size:0.8125rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
+
+    <div
+      style="display:flex; justify-content:flex-end; align-items:center; gap:0.5rem; margin-top:0.625rem; margin-bottom:0.625rem; padding-right:0.625rem;">
+      <label for="repo-sort-select" style="font-size:0.8125rem; color:#475569; font-weight:600;">Sort by Repository
+        Count:</label>
+      <select id="repo-sort-select" class="month-dropdown"
+        style="padding:0.375rem 0.75rem; font-size:0.8125rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
         [(ngModel)]="repoSortOrder" (change)="modalCurrentPage = 1">
         <option value="default">Default</option>
         <option value="desc">Decreasing</option>
@@ -400,12 +412,17 @@
     @if (sortedProjectDistribution.length > 10) {
     <div class="pagination-container standalone">
       <div class="pagination-tracker">
-        Showing <strong>{{ (modalCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(modalCurrentPage * pageSize, sortedProjectDistribution.length) }}</strong> of <strong>{{ sortedProjectDistribution.length }}</strong> projects
+        Showing <strong>{{ (modalCurrentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(modalCurrentPage *
+          pageSize, sortedProjectDistribution.length) }}</strong> of <strong>{{ sortedProjectDistribution.length
+          }}</strong> projects
       </div>
       <div class="pagination-controls">
-        <button class="pagination-btn" (click)="modalCurrentPage = modalCurrentPage - 1" [disabled]="modalCurrentPage === 1">← Previous</button>
-        <span class="pagination-tracker">Page <strong>{{ modalCurrentPage }}</strong> of <strong>{{ modalTotalPages }}</strong></span>
-        <button class="pagination-btn" (click)="modalCurrentPage = modalCurrentPage + 1" [disabled]="modalCurrentPage >= modalTotalPages">Next →</button>
+        <button class="pagination-btn" (click)="modalCurrentPage = modalCurrentPage - 1"
+          [disabled]="modalCurrentPage === 1">← Previous</button>
+        <span class="pagination-tracker">Page <strong>{{ modalCurrentPage }}</strong> of <strong>{{ modalTotalPages
+            }}</strong></span>
+        <button class="pagination-btn" (click)="modalCurrentPage = modalCurrentPage + 1"
+          [disabled]="modalCurrentPage >= modalTotalPages">Next →</button>
       </div>
     </div>
     }
