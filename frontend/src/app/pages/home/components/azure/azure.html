@@ -252,7 +252,7 @@
   } @else {
   <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:2.5rem; width:100%;">
     <div class="graph-container" style="flex:1 1 41.25rem; width:100%; min-width:20rem;">
-      <svg viewBox="0 0 660 260" style="overflow:visible; display:block; width:100%; height:auto; max-height:220px;">
+      <svg viewBox="0 0 660 260" style="overflow:visible; display:block; width:100%; height:auto; max-height:40vh;">
 
         @for (lbl of costTrendYLabels; track $index) {
         <line x1="60" [attr.y1]="20 + ($index * 40)" x2="630" [attr.y2]="20 + ($index * 40)" stroke="#e2e8f0"
