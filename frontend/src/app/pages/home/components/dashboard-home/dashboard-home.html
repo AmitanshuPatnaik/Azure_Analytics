@@ -65,11 +65,11 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <div style="background:white; border:1.0px solid #e2e8f0; padding:1rem 1.5rem; border-radius:0.75rem;
             box-shadow:0 0.125rem 0.5rem rgba(0,0,0,0.04); margin-top:1.25rem; display:flex; align-items:center; gap:0.75rem;">
-  <span style="font-size:0.875rem; font-weight:600; color:#334155;">Select Project:</span>
+  <span style="font-size:0.875rem; font-weight:600; color:#334155;">Project:</span>
   <select id="home-azure-proj-select" class="month-dropdown"
     style="width:15rem; font-size:0.84375rem; padding:0.5rem 0.75rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
     [value]="selectedHomeAzureProject" (change)="onHomeAzureProjectChange($event)">
-    <option value="">Select Azure Project</option>
+    <option value="">All Projects</option>
     @for (proj of azureProjects; track proj) {
     <option [value]="proj">{{ proj }}</option>
     }
