@@ -217,4 +217,14 @@ export class AzureApiService {
       tap(data => this.setCacheIfSuccess(cacheKey, data))
     );
   }
+
+  getGlobalOverview(): Observable<any> {
+    const cacheKey = `azure:globaloverview`;
+    const cached = this.cache.get(cacheKey);
+    if (cached) return of(cached);
+
+    return this.http.get<any>(`${API_BASE_URL}/api/azure/costs/global-overview`).pipe(
+      tap(data => this.setCacheIfSuccess(cacheKey, data))
+    );
+  }
 }

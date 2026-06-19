@@ -194,6 +194,51 @@ def get_combined_yearly_costs():
         return {"success": False, "yearly_cost": 0.0}
 
 
+@router.get("/costs/global-overview")
+def get_global_overview():
+    try:
+        # Get active projects
+        projects_res = get_azure_projects()
+        projects = projects_res.get("projects", [])
+        
+        overview = []
+        for proj in projects:
+            proj_data = {
+                "project": proj,
+                "devTest": 0.0,
+                "production": 0.0
+            }
+            # Fetch subscriptions for this project
+            subs_res = fetch_subscriptions(proj)
+            subs = subs_res.get("subscriptions", []) if isinstance(subs_res, dict) else []
+            for sub in subs:
+                sub_id = sub.get("subscriptionId")
+                display_name = sub.get("displayName", "").lower()
+                
+                # Check environment environment
+                is_prod = "prod" in display_name
+                is_dev_test = "dev" in display_name or "test" in display_name
+                
+                # Fallback matching
+                if not is_prod and not is_dev_test:
+                    is_dev_test = True
+                
+                # Fetch total cost (month-to-date)
+                cost_res = fetch_total_cost(sub_id)
+                cost = cost_res.get("total_cost", 0.0) if isinstance(cost_res, dict) else 0.0
+                
+                if is_prod:
+                    proj_data["production"] += cost
+                else:
+                    proj_data["devTest"] += cost
+            overview.append(proj_data)
+            
+        return {"success": True, "overview": overview}
+    except Exception as e:
+        logger.error("[AzureRoutes] Failed executing get_global_overview: %s", str(e))
+        return {"success": False, "error": str(e), "overview": []}
+
+
 @router.get("/costs/{subscription_id}")
 def get_costs(subscription_id: str, project: str = Query(None)):
     try:
@@ -419,3 +464,4 @@ def get_resource_costs(subscription_id: str, project: str = Query(None)):
     except Exception as e:
         logger.error("[AzureRoutes] Failed executing get_resource_costs: %s", str(e))
         return {"success": True, "resources": [], "rows": []}
+

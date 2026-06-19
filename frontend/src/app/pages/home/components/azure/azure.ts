@@ -30,6 +30,12 @@ export class AzureComponent implements OnInit {
   topResources: any[] = [];
   serviceCosts: any[] = [];
 
+  // Global overview states
+  isLoadingOverview = false;
+  overviewData: any[] = [];
+  overviewError: string | null = null;
+  hoveredOverviewBar: any = null;
+
   resourcesCurrentPage = 1;
   servicesCurrentPage = 1;
   pageSize = 10;
@@ -95,6 +101,7 @@ export class AzureComponent implements OnInit {
   ngOnInit() {
     this.initCostTrendDates();
     this.loadAzureProjects();
+    this.loadGlobalOverview();
   }
 
   private initCostTrendDates(): void {
@@ -397,7 +404,10 @@ export class AzureComponent implements OnInit {
     this.costTrendRangeLabelUtc = '';
     this.azureRangeLoadSeq++;
 
-    if (!proj) return;
+    if (!proj) {
+      this.loadGlobalOverview();
+      return;
+    }
     this.loadSubscriptions();
   }
 
@@ -544,4 +554,119 @@ export class AzureComponent implements OnInit {
     const sorted = [...this.serviceCosts].sort((a, b) => (b[0] || 0) - (a[0] || 0));
     return this.buildPieSlices(sorted);
   }
-}
+
+  loadGlobalOverview() {
+    this.isLoadingOverview = true;
+    this.overviewError = null;
+    this.azureApi.getGlobalOverview().subscribe({
+      next: (res: any) => {
+        if (res && res.success && Array.isArray(res.overview)) {
+          this.overviewData = res.overview;
+        } else {
+          this.overviewError = 'Failed to load enterprise overview data.';
+        }
+        this.isLoadingOverview = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn('Could not fetch global overview', err);
+        this.overviewError = err.error?.detail || err.error?.message || err.message || 'Failed to load enterprise overview data.';
+        this.isLoadingOverview = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  get overviewMaxCost(): number {
+    if (!this.overviewData || this.overviewData.length === 0) return 100000;
+    const vals = this.overviewData.map(d => Math.max(d.devTest || 0, d.production || 0));
+    const maxVal = Math.max(...vals);
+    return maxVal > 0 ? maxVal : 100000;
+  }
+
+  get overviewYMax(): number {
+    return this.niceCeil(this.overviewMaxCost * 1.15);
+  }
+
+  get overviewYLabels(): string[] {
+    const yMax = this.overviewYMax;
+    const steps = 5;
+    return Array.from({ length: steps + 1 }, (_, i) => {
+      const val = yMax - (yMax / steps) * i;
+      return '₹' + Math.round(val).toLocaleString();
+    });
+  }
+
+  getOverviewBarPath(x: number, y: number, w: number, h: number, r: number = 6): string {
+    if (h <= 0) return '';
+    if (h < r) r = h;
+    return `M ${x},${y + h} L ${x},${y + r} A ${r},${r} 0 0 1 ${x + r},${y} L ${x + w - r},${y} A ${r},${r} 0 0 1 ${x + w},${y + r} L ${x + w},${y + h} Z`;
+  }
+
+  getOverviewBars(): any[] {
+    if (!this.overviewData || this.overviewData.length === 0) return [];
+    
+    const W = 520; const H = 200; const LEFT = 80; const TOP = 20;
+    const yMax = this.overviewYMax;
+    
+    const categoryWidth = W / this.overviewData.length;
+    const barWidth = categoryWidth * 0.28;
+    const gapBetweenBars = categoryWidth * 0.08;
+    
+    const bars: any[] = [];
+    this.overviewData.forEach((d, i) => {
+      const categoryX = LEFT + i * categoryWidth;
+      
+      // devTest bar (Left)
+      const devTestCost = d.devTest || 0;
+      const devTestHeight = (devTestCost / yMax) * H;
+      const devTestX = categoryX + (categoryWidth - (barWidth * 2 + gapBetweenBars)) / 2;
+      const devTestY = TOP + H - devTestHeight;
+      
+      // production bar (Right)
+      const prodCost = d.production || 0;
+      const prodHeight = (prodCost / yMax) * H;
+      const prodX = devTestX + barWidth + gapBetweenBars;
+      const prodY = TOP + H - prodHeight;
+      
+      bars.push({
+        project: d.project,
+        env: 'Dev/Test',
+        cost: devTestCost,
+        x: devTestX,
+        y: devTestY,
+        w: barWidth,
+        h: devTestHeight,
+        path: this.getOverviewBarPath(devTestX, devTestY, barWidth, devTestHeight),
+        color: 'url(#devTestGrad)',
+        rawColor: '#0ea5e9',
+        gradientId: 'devTestGrad'
+      });
+      
+      bars.push({
+        project: d.project,
+        env: 'Production',
+        cost: prodCost,
+        x: prodX,
+        y: prodY,
+        w: barWidth,
+        h: prodHeight,
+        path: this.getOverviewBarPath(prodX, prodY, barWidth, prodHeight),
+        color: 'url(#prodGrad)',
+        rawColor: '#1e3a8a',
+        gradientId: 'prodGrad'
+      });
+    });
+    return bars;
+  }
+  
+  getOverviewXLabels(): any[] {
+    if (!this.overviewData || this.overviewData.length === 0) return [];
+    const W = 520; const LEFT = 80;
+    const categoryWidth = W / this.overviewData.length;
+    return this.overviewData.map((d, i) => ({
+      text: d.project,
+      x: LEFT + i * categoryWidth + categoryWidth / 2
+    }));
+  }
+}
