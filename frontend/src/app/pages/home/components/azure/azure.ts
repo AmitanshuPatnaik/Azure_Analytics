@@ -577,6 +577,11 @@ export class AzureComponent implements OnInit {
     });
   }
 
+  get globalOverviewTotalCost(): number {
+    if (!this.overviewData || this.overviewData.length === 0) return 0;
+    return this.overviewData.reduce((sum, d) => sum + (d.devTest || 0) + (d.production || 0), 0);
+  }
+
   get overviewMaxCost(): number {
     if (!this.overviewData || this.overviewData.length === 0) return 100000;
     const vals = this.overviewData.map(d => Math.max(d.devTest || 0, d.production || 0));
@@ -597,7 +602,7 @@ export class AzureComponent implements OnInit {
     });
   }
 
-  getOverviewBarPath(x: number, y: number, w: number, h: number, r: number = 6): string {
+  getOverviewBarPath(x: number, y: number, w: number, h: number, r: number = 4): string {
     if (h <= 0) return '';
     if (h < r) r = h;
     return `M ${x},${y + h} L ${x},${y + r} A ${r},${r} 0 0 1 ${x + r},${y} L ${x + w - r},${y} A ${r},${r} 0 0 1 ${x + w},${y + r} L ${x + w},${y + h} Z`;
@@ -639,7 +644,7 @@ export class AzureComponent implements OnInit {
         h: devTestHeight,
         path: this.getOverviewBarPath(devTestX, devTestY, barWidth, devTestHeight),
         color: 'url(#devTestGrad)',
-        rawColor: '#0ea5e9',
+        rawColor: '#64748b',
         gradientId: 'devTestGrad'
       });
       
@@ -653,7 +658,7 @@ export class AzureComponent implements OnInit {
         h: prodHeight,
         path: this.getOverviewBarPath(prodX, prodY, barWidth, prodHeight),
         color: 'url(#prodGrad)',
-        rawColor: '#1e3a8a',
+        rawColor: '#3b82f6',
         gradientId: 'prodGrad'
       });
     });

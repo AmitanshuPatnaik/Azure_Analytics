@@ -389,6 +389,8 @@ hr{
   border: 1.0px solid #e2e8f0;
   box-shadow: 0 1.0px 0.1875rem 0 rgba(0, 0, 0, 0.05);
   transition: border-color 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-card:hover {
@@ -497,6 +499,23 @@ circle:hover {
   align-items:center;
   gap:1.125rem;
   padding:0.625rem 0.25rem;
+}
+
+.pie-chart-grid {
+  display: grid;
+  grid-template-columns: 12.5rem 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  width: 100%;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .pie-chart-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 1.5rem;
+  }
 }
 
 .fake-pie-chart{
