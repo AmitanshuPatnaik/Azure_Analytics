@@ -324,10 +324,10 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- DEVOPS SERVICES SUMMARY (J – semantic status colours)                  -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
+@if (!selectedHomeAzureProject || visibleTrends.length > 0) {
 <div class="section" style="margin-top:20px;">
-  <h2 style="text-align:center; margin-bottom:16px;">DevOps Service Status</h2>
+  <h2 style="text-align:center; margin-bottom:16px;">Azure Service Status</h2>
 
-  @if (!selectedHomeAzureProject || visibleTrends.length > 0) {
   @if (isLoadingRepos || isLoadingProjects) {
   <div class="loading-container" style="padding: 40px 0;">
     <div class="spinner"></div>
@@ -354,8 +354,8 @@
     }
   </table>
   }
-  }
 </div>
+}
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- PROJECT DISTRIBUTION DETAILS MODAL                                    -->
