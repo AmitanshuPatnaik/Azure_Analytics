@@ -1,7 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { DashboardService } from '../../../../services/dashboard.service';
 
@@ -143,12 +144,40 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   loadAzureProjects() {
-    this.azureApi.getAzureProjects().subscribe({
+    forkJoin({
+      azureRes: this.azureApi.getAzureProjects().pipe(catchError(() => of({ projects: [] }))),
+      devopsRes: this.projectsApi.getProjects().pipe(catchError(() => of({ projects: [] })))
+    }).subscribe({
       next: (res: any) => {
-        if (res && res.projects) {
-          this.azureProjects = res.projects;
-          this.cdr.detectChanges();
+        let azureNames: string[] = [];
+        if (res.azureRes && res.azureRes.projects) {
+          azureNames = res.azureRes.projects;
         }
+
+        let devopsNames: string[] = [];
+        if (res.devopsRes && res.devopsRes.projects) {
+          devopsNames = res.devopsRes.projects.map((p: any) => p.name || p);
+        } else if (res.devopsRes && Array.isArray(res.devopsRes)) {
+          devopsNames = res.devopsRes.map((p: any) => p.name || p);
+        }
+
+        const seenNormal = new Set<string>();
+        const combined: string[] = [];
+
+        const addProject = (name: string) => {
+          if (!name) return;
+          const normalized = name.toLowerCase().trim().replace(/[-_\s]/g, '');
+          if (!seenNormal.has(normalized)) {
+            seenNormal.add(normalized);
+            combined.push(name);
+          }
+        };
+
+        azureNames.forEach(name => addProject(name));
+        devopsNames.forEach(name => addProject(name));
+
+        this.azureProjects = combined;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.warn('Failed to load Azure projects', err);
@@ -503,9 +532,7 @@ export class DashboardHomeComponent implements OnInit {
     if (!this.selectedHomeAzureProject) {
       return this.projectTrends;
     }
-    const filtered = this.projectTrends.filter(t => t.projectName === this.selectedHomeAzureProject);
-    // If the selected project is not among the tracked trend projects, show all
-    return filtered.length > 0 ? filtered : this.projectTrends;
+    return this.projectTrends.filter(t => t.projectName === this.selectedHomeAzureProject);
   }
 
   generateMultiLineChartPoints(): void {

@@ -1,21 +1,21 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- PAGE HEADER                                                             -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="tab-header" style="margin-bottom:20px;">
-  <div style="text-align:center; margin-bottom:20px;">
-    <h1 class="page-title-centered" style="margin:0; font-size:36px; color:#1e293b; font-weight:700;">
+<div class="tab-header" style="margin-bottom:1.25rem;">
+  <div style="text-align:center; margin-bottom:1.25rem;">
+    <h1 class="page-title-centered" style="margin:0; font-size:2.25rem; color:#1e293b; font-weight:700;">
       Azure Resources &amp; Cost Analytics
     </h1>
   </div>
 
   <!-- Control bar -->
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; background:#f8fafc;
-              border:1px solid #e2e8f0; padding:12px 18px; border-radius:10px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; background:#f8fafc;
+              border:1.0px solid #e2e8f0; padding:0.75rem 1.125rem; border-radius:0.625rem;">
 
     <!-- Project selector -->
-    <div style="display:flex; align-items:center; gap:8px;">
-      <label for="azure-proj-select" style="font-size:13px; color:#475569; white-space:nowrap;">Azure Project:</label>
-      <select id="azure-proj-select" class="month-dropdown" style="width:auto; padding:6px 12px; font-size:13px;"
+    <div style="display:flex; align-items:center; gap:0.5rem;">
+      <label for="azure-proj-select" style="font-size:0.8125rem; color:#475569; white-space:nowrap;">Azure Project:</label>
+      <select id="azure-proj-select" class="month-dropdown" style="width:auto; padding:0.375rem 0.75rem; font-size:0.8125rem;"
         [value]="selectedAzureProject" (change)="onAzureProjectChange($event)">
         <option value="">Select Azure Project</option>
         @for (proj of azureProjects; track proj) {
@@ -25,9 +25,9 @@
     </div>
 
     <!-- Subscription selector -->
-    <div style="display:flex; align-items:center; gap:8px;">
-      <label for="sub-select" style="font-size:13px; color:#475569; white-space:nowrap;">Subscription:</label>
-      <select id="sub-select" class="month-dropdown" style="width:auto; padding:6px 12px; font-size:13px;"
+    <div style="display:flex; align-items:center; gap:0.5rem;">
+      <label for="sub-select" style="font-size:0.8125rem; color:#475569; white-space:nowrap;">Subscription:</label>
+      <select id="sub-select" class="month-dropdown" style="width:auto; padding:0.375rem 0.75rem; font-size:0.8125rem;"
         [value]="selectedSubscriptionId" [disabled]="!selectedAzureProject" (change)="onSubscriptionChange($event)">
         <option value="">Select Subscription</option>
         @for (sub of subscriptions; track sub.subscriptionId || $index) {
@@ -37,21 +37,21 @@
     </div>
 
     <!-- Date range selector -->
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span style="font-size:13px; color:#475569; white-space:nowrap;">Date Range:</span>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <label style="font-size:12px; color:#64748b;">From</label>
+    <div style="display:flex; align-items:center; gap:0.625rem;">
+      <span style="font-size:0.8125rem; color:#475569; white-space:nowrap;">Date Range:</span>
+      <div style="display:flex; align-items:center; gap:0.375rem;">
+        <label style="font-size:0.75rem; color:#64748b;">From</label>
         <div style="display:flex; flex-direction:column;">
-          <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
+          <input type="date" class="month-dropdown" style="width:auto; font-size:0.8125rem; padding:0.3125rem 0.625rem;"
             [min]="costTrendMinDate" [max]="costTrendMaxDate" [value]="pendingFromDate"
             [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
             (change)="pendingFromDate = $any($event.target).value; onCostTrendDateChange()">
         </div>
       </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <label style="font-size:12px; color:#64748b;">To</label>
+      <div style="display:flex; align-items:center; gap:0.375rem;">
+        <label style="font-size:0.75rem; color:#64748b;">To</label>
         <div style="display:flex; flex-direction:column;">
-          <input type="date" class="month-dropdown" style="width:auto; font-size:13px; padding:5px 10px;"
+          <input type="date" class="month-dropdown" style="width:auto; font-size:0.8125rem; padding:0.3125rem 0.625rem;"
             [min]="pendingFromDate" [max]="costTrendMaxDate" [value]="pendingToDate"
             [disabled]="!selectedSubscriptionId" title="Date format: MM-DD-YYYY" placeholder="MM-DD-YYYY"
             (change)="pendingToDate = $any($event.target).value; onCostTrendDateChange()">
@@ -59,12 +59,12 @@
       </div>
     </div>
 
-    <button (click)="applyDateFilter()" [disabled]="!isReadyToSubmit || isLoadingAzureRange" style="padding:7px 22px; font-size:13px; background:#2563eb; color:white; border:none;
-             border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:6px;
+    <button (click)="applyDateFilter()" [disabled]="!isReadyToSubmit || isLoadingAzureRange" style="padding:0.4375rem 1.375rem; font-size:0.8125rem; background:#2563eb; color:white; border:none;
+             border-radius:0.5rem; cursor:pointer; display:flex; align-items:center; gap:0.375rem;
              white-space:nowrap; transition:background 0.2s, opacity 0.2s;"
       [style.opacity]="!isReadyToSubmit || isLoadingAzureRange ? '0.5' : '1'">
       @if (isSubmittingDateFilter) {
-      <span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;
+      <span style="display:inline-block;width:0.75rem;height:0.75rem;border:0.125rem solid #fff;
                      border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
       Loading…
       } @else {
@@ -76,14 +76,14 @@
 </div>
 
 <!-- ── Selected Project & Subscription strip ──────────────────────────── -->
-<div style="display:flex; align-items:center; justify-content:center; gap:24px; margin-bottom:16px; padding:12px 20px;
-            background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; flex-wrap:wrap; text-align:center;">
-  <span style="font-size:14px; color:#64748b; font-weight:500;">Project:&nbsp;
-    <strong style="font-size:16px; color:#1e293b; font-weight:700;">{{ selectedAzureProject || 'N/A' }}</strong>
+<div style="display:flex; align-items:center; justify-content:center; gap:1.5rem; margin-bottom:1rem; padding:0.75rem 1.25rem;
+            background:#f8fafc; border:1.0px solid #e2e8f0; border-radius:0.625rem; flex-wrap:wrap; text-align:center;">
+  <span style="font-size:0.875rem; color:#64748b; font-weight:500;">Project:&nbsp;
+    <strong style="font-size:1rem; color:#1e293b; font-weight:700;">{{ selectedAzureProject || 'N/A' }}</strong>
   </span>
-  <span style="width:1px; height:20px; background:#cbd5e1; display:inline-block;"></span>
-  <span style="font-size:14px; color:#64748b; font-weight:500;">Subscription:&nbsp;
-    <strong style="font-size:16px; color:#1e293b; font-weight:700;">{{ selectedSubscriptionName || 'N/A' }}</strong>
+  <span style="width:1.0px; height:1.25rem; background:#cbd5e1; display:inline-block;"></span>
+  <span style="font-size:0.875rem; color:#64748b; font-weight:500;">Subscription:&nbsp;
+    <strong style="font-size:1rem; color:#1e293b; font-weight:700;">{{ selectedSubscriptionName || 'N/A' }}</strong>
   </span>
 </div>
 
@@ -93,12 +93,12 @@
 } @else if (azureError) {
 <div class="error-banner">Could not load subscription details: {{ azureError }}</div>
 } @else if (!selectedAzureProject) {
-<div style="text-align:center; padding:40px; background:var(--bg-card); border-radius:8px;">
-  <p style="color:#6b7280; font-size:16px;">Please select an Azure project to view cost metrics.</p>
+<div style="text-align:center; padding:2.5rem; background:var(--bg-card); border-radius:0.5rem;">
+  <p style="color:#6b7280; font-size:1rem;">Please select an Azure project to view cost metrics.</p>
 </div>
 } @else if (!selectedSubscriptionId) {
-<div style="text-align:center; padding:40px; background:var(--bg-card); border-radius:8px;">
-  <p style="color:#6b7280; font-size:16px;">Please select an Azure subscription to view cost metrics.</p>
+<div style="text-align:center; padding:2.5rem; background:var(--bg-card); border-radius:0.5rem;">
+  <p style="color:#6b7280; font-size:1rem;">Please select an Azure subscription to view cost metrics.</p>
 </div>
 } @else {
 
@@ -131,29 +131,29 @@
 </div>
 
 <!-- ── Daily Cost Trend (A – stripped "UTC" from title) ──────────────── -->
-<div class="chart-card" style="margin-top:20px; position:relative;">
+<div class="chart-card" style="margin-top:1.25rem; position:relative;">
   <div class="chart-header"
-    style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+    style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
     <h2 style="margin:0; text-align:center; flex:1;">Daily Cost Trend</h2>
     @if (costTrendPoints.length) {
-    <span style="font-size:12px; color:#6b7280;">{{ costTrendPoints.length }} day(s)</span>
+    <span style="font-size:0.75rem; color:#6b7280;">{{ costTrendPoints.length }} day(s)</span>
     }
   </div>
 
   @if (isLoadingCostTrend || isLoadingAzureRange) {
-  <div class="loading-container" style="padding: 40px 0;">
+  <div class="loading-container" style="padding: 2.5rem 0;">
     <div class="spinner"></div>
     <span class="loading-text">Loading daily costs...</span>
   </div>
   } @else if (costTrendError) {
   <div class="error-inline">{{ costTrendError }}</div>
   } @else if (!costTrendPoints.length) {
-  <div style="text-align:center; padding:40px;">
-    <p style="color:#6b7280; font-size:14px;">No cost data found for the selected date range. Click Submit to load.</p>
+  <div style="text-align:center; padding:2.5rem;">
+    <p style="color:#6b7280; font-size:0.875rem;">No cost data found for the selected date range. Click Submit to load.</p>
   </div>
   } @else {
-  <div style="display:flex; justify-content:space-evenly; align-items:center; flex-wrap:wrap; gap:20px;">
-    <div class="graph-container" style="flex:0 1 660px; min-width:320px;">
+  <div style="display:flex; justify-content:space-evenly; align-items:center; flex-wrap:wrap; gap:1.25rem;">
+    <div class="graph-container" style="flex:0 1 41.25rem; min-width:20rem;">
       <svg viewBox="0 0 660 260" width="100%" height="260">
 
         @for (lbl of costTrendYLabels; track $index) {
@@ -185,22 +185,22 @@
     </div>
 
     <!-- Range Total Cost Card -->
-    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:22px 28px;
-                min-width:200px; text-align:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-      <div style="font-size:11px; color:#64748b; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em;">
+    <div style="background:#f8fafc; border:1.0px solid #e2e8f0; border-radius:0.75rem; padding:1.375rem 1.75rem;
+                min-width:12.5rem; text-align:center; box-shadow:0 0.25rem 0.375rem -1px rgba(0,0,0,0.05);">
+      <div style="font-size:0.6875rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.08em;">
         Range Total Cost
       </div>
-      <div style="font-size:28px; color:#2563eb;">
+      <div style="font-size:1.75rem; color:#2563eb;">
         ₹{{ costTrendRangeTotal | number:'1.2-2' }}
       </div>
-      <div style="font-size:11px; color:#94a3b8; margin-top:6px;">Cumulative for selected range</div>
+      <div style="font-size:0.6875rem; color:#94a3b8; margin-top:0.375rem;">Cumulative for selected range</div>
     </div>
   </div>
   }
 </div>
 
 <!-- ── PIE CHARTS ROW ──────────────────────────────────────────────── -->
-<div class="dashboard-row" style="margin-top:20px; display:flex; gap:20px;">
+<div class="dashboard-row" style="margin-top:1.25rem; display:flex; gap:1.25rem;">
 
   <!-- Top High-Spending Resources -->
   <div class="chart-card" style="flex:1; position:relative;">
@@ -209,32 +209,32 @@
     </div>
 
     @if (isLoadingAzureRange) {
-    <div class="loading-container" style="padding: 40px 0;">
+    <div class="loading-container" style="padding: 2.5rem 0;">
       <div class="spinner"></div>
       <span class="loading-text">Loading resources...</span>
     </div>
     } @else if (topResourcesError) {
-    <div class="error-inline" style="padding:20px; text-align:center;">{{ topResourcesError }}</div>
+    <div class="error-inline" style="padding:1.25rem; text-align:center;">{{ topResourcesError }}</div>
     } @else if (!topResourcesPieSlices.length) {
-    <div style="text-align:center; padding:40px; color:#6b7280;">
+    <div style="text-align:center; padding:2.5rem; color:#6b7280;">
       No data available for the selected date range.<br>
-      <span style="font-size:12px;">Click Submit to fetch data.</span>
+      <span style="font-size:0.75rem;">Click Submit to fetch data.</span>
     </div>
     } @else {
     @if (hoveredTopResource) {
-    <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff;
-                padding:10px 16px; border-radius:10px; font-size:13px; z-index:20;
-                pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+    <div style="position:absolute; top:3.5rem; right:1.25rem; background:#1e293b; color:#fff;
+                padding:0.625rem 1rem; border-radius:0.625rem; font-size:0.8125rem; z-index:20;
+                pointer-events:none; box-shadow:0 0.25rem 1rem rgba(0,0,0,0.25); min-width:10rem;">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
         <span [style.background]="hoveredTopResource.color"
-          style="display:inline-block; width:10px; height:10px; border-radius:50%;"></span>
+          style="display:inline-block; width:0.625rem; height:0.625rem; border-radius:50%;"></span>
         {{ hoveredTopResource.name }}
       </div>
-      <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredTopResource.cost | number:'1.2-2' }}</div>
-      <div style="color:#64748b; font-size:11px;">{{ hoveredTopResource.percentage }}% of total</div>
+      <div style="color:#94a3b8; font-size:0.75rem;">₹{{ hoveredTopResource.cost | number:'1.2-2' }}</div>
+      <div style="color:#64748b; font-size:0.6875rem;">{{ hoveredTopResource.percentage }}% of total</div>
     </div>
     }
-    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:12px 0;">
+    <div style="display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap; padding:0.75rem 0;">
       <svg viewBox="0 0 300 300" width="200" height="200" style="flex-shrink:0; overflow:visible;">
         @for (s of topResourcesPieSlices; track s.name) {
         <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
@@ -244,28 +244,28 @@
         </path>
         }
       </svg>
-      <div style="flex:1; padding-right:4px;">
+      <div style="flex:1; padding-right:0.25rem;">
         @for (s of paginatedTopResources; track s.name) {
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
-                    padding:4px 6px; border-radius:6px; cursor:default;" (mouseenter)="hoveredTopResource = s"
+        <div style="display:flex; align-items:center; gap:0.625rem; margin-bottom:0.625rem;
+                    padding:0.25rem 0.375rem; border-radius:0.375rem; cursor:default;" (mouseenter)="hoveredTopResource = s"
           (mouseleave)="hoveredTopResource = null">
           <span [style.background]="s.color"
-            style="display:inline-block; width:12px; height:12px; border-radius:3px; flex-shrink:0;"></span>
-          <span style="font-size:12px; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
-          <span style="font-size:11px; color:#6b7280; white-space:nowrap;">
+            style="display:inline-block; width:0.75rem; height:0.75rem; border-radius:0.1875rem; flex-shrink:0;"></span>
+          <span style="font-size:0.75rem; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
+          <span style="font-size:0.6875rem; color:#6b7280; white-space:nowrap;">
             &#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}
           </span>
           <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
         </div>
         }
         @if (topResourcesPieSlices.length > 20) {
-        <div class="pagination-container standalone" style="padding: 6px 10px; border-radius: 8px;">
-          <div class="pagination-tracker" style="font-size: 11px;">
+        <div class="pagination-container standalone" style="padding: 0.375rem 0.625rem; border-radius: 0.5rem;">
+          <div class="pagination-tracker" style="font-size: 0.6875rem;">
             Page <strong>{{ resourcesCurrentPage }}</strong> of <strong>{{ resourcesTotalPages }}</strong>
           </div>
           <div class="pagination-controls">
-            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="resourcesCurrentPage = resourcesCurrentPage - 1" [disabled]="resourcesCurrentPage === 1">←</button>
-            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="resourcesCurrentPage = resourcesCurrentPage + 1" [disabled]="resourcesCurrentPage >= resourcesTotalPages">→</button>
+            <button class="pagination-btn" style="padding: 0.1875rem 0.5rem; font-size: 0.6875rem;" (click)="resourcesCurrentPage = resourcesCurrentPage - 1" [disabled]="resourcesCurrentPage === 1">←</button>
+            <button class="pagination-btn" style="padding: 0.1875rem 0.5rem; font-size: 0.6875rem;" (click)="resourcesCurrentPage = resourcesCurrentPage + 1" [disabled]="resourcesCurrentPage >= resourcesTotalPages">→</button>
           </div>
         </div>
         }
@@ -281,32 +281,32 @@
     </div>
 
     @if (isLoadingAzureRange) {
-    <div class="loading-container" style="padding: 40px 0;">
+    <div class="loading-container" style="padding: 2.5rem 0;">
       <div class="spinner"></div>
       <span class="loading-text">Loading services...</span>
     </div>
     } @else if (serviceCostsError) {
-    <div class="error-inline" style="padding:20px; text-align:center;">{{ serviceCostsError }}</div>
+    <div class="error-inline" style="padding:1.25rem; text-align:center;">{{ serviceCostsError }}</div>
     } @else if (!serviceCostsPieSlices.length) {
-    <div style="text-align:center; padding:40px; color:#6b7280;">
+    <div style="text-align:center; padding:2.5rem; color:#6b7280;">
       No data available for the selected date range.<br>
-      <span style="font-size:12px;">Click Submit to fetch data.</span>
+      <span style="font-size:0.75rem;">Click Submit to fetch data.</span>
     </div>
     } @else {
     @if (hoveredServiceCost) {
-    <div style="position:absolute; top:56px; right:20px; background:#1e293b; color:#fff;
-                padding:10px 16px; border-radius:10px; font-size:13px; z-index:20;
-                pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.25); min-width:160px;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+    <div style="position:absolute; top:3.5rem; right:1.25rem; background:#1e293b; color:#fff;
+                padding:0.625rem 1rem; border-radius:0.625rem; font-size:0.8125rem; z-index:20;
+                pointer-events:none; box-shadow:0 0.25rem 1rem rgba(0,0,0,0.25); min-width:10rem;">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
         <span [style.background]="hoveredServiceCost.color"
-          style="display:inline-block; width:10px; height:10px; border-radius:50%;"></span>
+          style="display:inline-block; width:0.625rem; height:0.625rem; border-radius:50%;"></span>
         {{ hoveredServiceCost.name }}
       </div>
-      <div style="color:#94a3b8; font-size:12px;">₹{{ hoveredServiceCost.cost | number:'1.2-2' }}</div>
-      <div style="color:#64748b; font-size:11px;">{{ hoveredServiceCost.percentage }}% of total</div>
+      <div style="color:#94a3b8; font-size:0.75rem;">₹{{ hoveredServiceCost.cost | number:'1.2-2' }}</div>
+      <div style="color:#64748b; font-size:0.6875rem;">{{ hoveredServiceCost.percentage }}% of total</div>
     </div>
     }
-    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:12px 0;">
+    <div style="display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap; padding:0.75rem 0;">
       <svg viewBox="0 0 300 300" width="200" height="200" style="flex-shrink:0; overflow:visible;">
         @for (s of serviceCostsPieSlices; track s.name) {
         <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
@@ -316,28 +316,28 @@
         </path>
         }
       </svg>
-      <div style="flex:1; padding-right:4px;">
+      <div style="flex:1; padding-right:0.25rem;">
         @for (s of paginatedServiceCosts; track s.name) {
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;
-                    padding:4px 6px; border-radius:6px; cursor:default;" (mouseenter)="hoveredServiceCost = s"
+        <div style="display:flex; align-items:center; gap:0.625rem; margin-bottom:0.625rem;
+                    padding:0.25rem 0.375rem; border-radius:0.375rem; cursor:default;" (mouseenter)="hoveredServiceCost = s"
           (mouseleave)="hoveredServiceCost = null">
           <span [style.background]="s.color"
-            style="display:inline-block; width:12px; height:12px; border-radius:3px; flex-shrink:0;"></span>
-          <span style="font-size:12px; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
-          <span style="font-size:11px; color:#6b7280; white-space:nowrap;">
+            style="display:inline-block; width:0.75rem; height:0.75rem; border-radius:0.1875rem; flex-shrink:0;"></span>
+          <span style="font-size:0.75rem; color:#374151; flex:1; min-width:0; word-break:break-word;">{{ s.name }}</span>
+          <span style="font-size:0.6875rem; color:#6b7280; white-space:nowrap;">
             &#8377;{{ s.cost.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) }}
           </span>
           <span class="badge-blue" style="white-space:nowrap;">{{ s.percentage }}%</span>
         </div>
         }
         @if (serviceCostsPieSlices.length > 20) {
-        <div class="pagination-container standalone" style="padding: 6px 10px; border-radius: 8px;">
-          <div class="pagination-tracker" style="font-size: 11px;">
+        <div class="pagination-container standalone" style="padding: 0.375rem 0.625rem; border-radius: 0.5rem;">
+          <div class="pagination-tracker" style="font-size: 0.6875rem;">
             Page <strong>{{ servicesCurrentPage }}</strong> of <strong>{{ servicesTotalPages }}</strong>
           </div>
           <div class="pagination-controls">
-            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="servicesCurrentPage = servicesCurrentPage - 1" [disabled]="servicesCurrentPage === 1">←</button>
-            <button class="pagination-btn" style="padding: 3px 8px; font-size: 11px;" (click)="servicesCurrentPage = servicesCurrentPage + 1" [disabled]="servicesCurrentPage >= servicesTotalPages">→</button>
+            <button class="pagination-btn" style="padding: 0.1875rem 0.5rem; font-size: 0.6875rem;" (click)="servicesCurrentPage = servicesCurrentPage - 1" [disabled]="servicesCurrentPage === 1">←</button>
+            <button class="pagination-btn" style="padding: 0.1875rem 0.5rem; font-size: 0.6875rem;" (click)="servicesCurrentPage = servicesCurrentPage + 1" [disabled]="servicesCurrentPage >= servicesTotalPages">→</button>
           </div>
         </div>
         }

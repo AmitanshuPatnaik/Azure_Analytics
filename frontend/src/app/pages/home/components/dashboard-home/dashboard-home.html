@@ -1,8 +1,8 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- PAGE HEADER                                                             -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div style="text-align:center; margin-bottom:20px;">
-  <h1 class="page-title-centered" style="margin:0; font-size:36px; color:#1e293b; font-weight:700;">
+<div style="text-align:center; margin-bottom:1.25rem;">
+  <h1 class="page-title-centered" style="margin:0; font-size:2.25rem; color:#1e293b; font-weight:700;">
     Watcher Analytics Dashboard
   </h1>
 </div>
@@ -10,7 +10,7 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- TOP METRIC CARDS                                                        -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="cards" style="margin-top:16px;">
+<div class="cards" style="margin-top:1rem;">
 
   <!-- Total Repositories -->
   <div class="card">
@@ -18,7 +18,7 @@
     @if (isLoadingRepos) {
     <div class="skeleton skeleton-value"></div>
     } @else if (reposError) {
-    <div style="color:#dc2626; font-size:13px;">{{ reposError }}</div>
+    <div style="color:#dc2626; font-size:0.8125rem;">{{ reposError }}</div>
     } @else {
     <h2>{{ repositories.length }}</h2>
     }
@@ -30,7 +30,7 @@
     @if (isLoadingProjects) {
     <div class="skeleton skeleton-value"></div>
     } @else if (projectsError) {
-    <div style="color:#dc2626; font-size:13px;">{{ projectsError }}</div>
+    <div style="color:#dc2626; font-size:0.8125rem;">{{ projectsError }}</div>
     } @else {
     <h2>{{ projects.length }}</h2>
     }
@@ -40,7 +40,7 @@
   <div class="card">
     <h3>Pipelines</h3>
     @if (activePipelinesError) {
-    <div style="color:#dc2626; font-size:13px;">{{ activePipelinesError }}</div>
+    <div style="color:#dc2626; font-size:0.8125rem;">{{ activePipelinesError }}</div>
     } @else {
     <h2>{{ activePipelinesCount }}</h2>
     }
@@ -52,7 +52,7 @@
     @if (isLoadingCombinedCost) {
     <div class="skeleton skeleton-value"></div>
     } @else if (combinedCostError) {
-    <div style="color:#dc2626; font-size:13px;">{{ combinedCostError }}</div>
+    <div style="color:#dc2626; font-size:0.8125rem;">{{ combinedCostError }}</div>
     } @else {
     <h2>₹{{ combinedYearlyCost | number:'1.2-2' }}</h2>
     }
@@ -63,11 +63,11 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- RELOCATED AZURE PROJECT DROPDOWN & PROJECT METADATA                    -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div style="background:white; border:1px solid #e2e8f0; padding:16px 24px; border-radius:12px;
-            box-shadow:0 2px 8px rgba(0,0,0,0.04); margin-top:20px; display:flex; align-items:center; gap:12px;">
-  <span style="font-size:14px; font-weight:600; color:#334155;">Select Azure Project to inspect details:</span>
+<div style="background:white; border:1.0px solid #e2e8f0; padding:1rem 1.5rem; border-radius:0.75rem;
+            box-shadow:0 0.125rem 0.5rem rgba(0,0,0,0.04); margin-top:1.25rem; display:flex; align-items:center; gap:0.75rem;">
+  <span style="font-size:0.875rem; font-weight:600; color:#334155;">Select Azure Project to inspect details:</span>
   <select id="home-azure-proj-select" class="month-dropdown"
-    style="width:240px; font-size:13.5px; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;"
+    style="width:15rem; font-size:0.84375rem; padding:0.5rem 0.75rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
     [value]="selectedHomeAzureProject" (change)="onHomeAzureProjectChange($event)">
     <option value="">Select Azure Project</option>
     @for (proj of azureProjects; track proj) {
@@ -78,10 +78,10 @@
 
 <!-- PROJECT STATUS BADGES — shown when a project is selected -->
 @if (selectedHomeAzureProject) {
-<div style="display:flex; align-items:center; justify-content:center; gap:12px; margin:12px 0 0 0; padding:12px 20px;
-            background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; flex-wrap:wrap;">
-  <span style="font-size:18px; color:#64748b;">
-    <strong style="font-size:22px; color:#1e293b; font-weight:700;">{{ selectedHomeAzureProject }}</strong>
+<div style="display:flex; align-items:center; justify-content:center; gap:0.75rem; margin:0.75rem 0 0 0; padding:0.75rem 1.25rem;
+            background:#f8fafc; border:1.0px solid #e2e8f0; border-radius:0.625rem; flex-wrap:wrap;">
+  <span style="font-size:1.125rem; color:#64748b;">
+    <strong style="font-size:1.375rem; color:#1e293b; font-weight:700;">{{ selectedHomeAzureProject }}</strong>
   </span>
 </div>
 }
@@ -89,7 +89,7 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- PIE CHART + COST TREND ROW                                             -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="dashboard-row" style="margin-top:20px;">
+<div class="dashboard-row" style="margin-top:1.25rem;">
 
   <!-- PIE CHART CARD (legend filter) -->
   <div class="chart-card">
@@ -103,18 +103,18 @@
       </div>
 
       @if (isLoadingProjects || isLoadingRepos) {
-      <div class="loading-container" style="padding: 20px 0;">
+      <div class="loading-container" style="padding: 1.25rem 0;">
         <div class="spinner"></div>
         <span class="loading-text">Loading repository distribution...</span>
       </div>
       } @else if (projectsError || reposError) {
-      <div style="color:#dc2626; padding:16px; font-size:13px;">
+      <div style="color:#dc2626; padding:1rem; font-size:0.8125rem;">
         Could not display distribution: {{ projectsError || reposError }}
       </div>
       } @else {
-      <div class="pie-wrapper" style="position:relative; display:flex; flex-direction:row; align-items:center; gap:24px; padding:10px 0;">
-        <div style="position:relative; width: 200px; height: 200px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
-          <svg viewBox="0 0 220 220" width="200" height="200" style="overflow:visible; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.12));">
+      <div class="pie-wrapper" style="position:relative; display:flex; flex-direction:row; align-items:center; gap:1.5rem; padding:0.625rem 0;">
+        <div style="position:relative; width: 12.5rem; height: 12.5rem; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+          <svg viewBox="0 0 220 220" width="200" height="200" style="overflow:visible; filter: drop-shadow(0.0px 0.25rem 0.5rem rgba(0,0,0,0.12));">
             @for (s of projectPieSlices; track s.name) {
             <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="1.5"
               style="cursor:pointer; transition:all 0.15s ease;"
@@ -128,28 +128,28 @@
 
           @if (hoveredProject) {
           <div style="position:absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background:#1e293b; color:#fff;
-                      padding:6px 10px; border-radius:6px; font-size:11px; z-index:20;
-                      pointer-events:none; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align: center; white-space: nowrap;">
-            <div style="display:flex; align-items:center; gap:6px; font-weight: 600;">
+                      padding:0.375rem 0.625rem; border-radius:0.375rem; font-size:0.6875rem; z-index:20;
+                      pointer-events:none; box-shadow:0 0.25rem 0.75rem rgba(0,0,0,0.15); text-align: center; white-space: nowrap;">
+            <div style="display:flex; align-items:center; gap:0.375rem; font-weight: 600;">
               <span [style.background]="hoveredProject.color"
-                style="display:inline-block; width:6px; height:6px; border-radius:50%;"></span>
+                style="display:inline-block; width:0.375rem; height:0.375rem; border-radius:50%;"></span>
               {{ hoveredProject.name }}: {{ hoveredProject.count }}
             </div>
           </div>
           }
         </div>
 
-        <div class="pie-legend" style="flex:1; min-width:0; display: flex; flex-direction: column; gap: 8px; font-size:13.5px;">
+        <div class="pie-legend" style="flex:1; min-width:0; display: flex; flex-direction: column; gap: 0.5rem; font-size:0.84375rem;">
           <!-- Legend search box -->
           <!-- <input class="filter-search" type="text" placeholder="Search projects…" [(ngModel)]="pieSearchQuery"
-            style="margin-bottom:10px;" /> -->
+            style="margin-bottom:0.625rem;" /> -->
 
           @for (item of filteredProjectDistribution; track item.name) {
-          <div style="cursor:pointer; display:flex; align-items:center; padding:4px 6px; border-radius:6px; transition:all 0.2s; white-space: nowrap;"
+          <div style="cursor:pointer; display:flex; align-items:center; padding:0.25rem 0.375rem; border-radius:0.375rem; transition:all 0.2s; white-space: nowrap;"
                [style.fontWeight]="hoveredProject?.name === item.name ? '700' : '500'"
                [style.background]="hoveredProject?.name === item.name ? 'rgba(0,0,0,0.04)' : 'transparent'"
                (mouseenter)="hoveredProject = item" (mouseleave)="hoveredProject = null">
-            <span class="dot" [style.backgroundColor]="item.color" style="width:12px; height:12px; min-width:12px; min-height:12px; margin-right:8px; border-radius:50%; flex-shrink:0;"></span>
+            <span class="dot" [style.backgroundColor]="item.color" style="width:0.75rem; height:0.75rem; min-width:0.75rem; min-height:0.75rem; margin-right:0.5rem; border-radius:50%; flex-shrink:0;"></span>
             {{ item.name }} ({{ item.count }})
           </div>
           }
@@ -162,20 +162,20 @@
       </div>
 
       @if (isLoadingWorkItemStates) {
-      <div class="loading-container" style="padding: 20px 0;">
+      <div class="loading-container" style="padding: 1.25rem 0;">
         <div class="spinner"></div>
         <span class="loading-text">Loading work item states...</span>
       </div>
       } @else if (workItemStatesError) {
-      <div style="color:#dc2626; padding:16px; font-size:13px; text-align:center;">
+      <div style="color:gray; padding:1rem; font-size:0.8125rem; text-align:center;">
         {{ workItemStatesError }}
       </div>
       } @else if (workItemStates.length === 0) {
-      <div style="text-align:center; padding:40px; color:#64748b;">
+      <div style="text-align:center; padding:2.5rem; color:gray;">
         No work items found for this project.
       </div>
       } @else {
-      <div style="display:flex; flex-direction:column; align-items:center; gap:16px; padding:10px 0;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:1rem; padding:0.625rem 0;">
         <svg viewBox="0 0 220 220" width="150" height="150" style="flex-shrink:0; overflow:visible;">
           @for (s of workItemPieSlices; track s.state) {
           <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#fff" stroke-width="2"
@@ -188,17 +188,17 @@
           }
         </svg>
 
-        <div style="width:100%; display:flex; flex-direction:column; gap:6px;">
+        <div style="width:100%; display:flex; flex-direction:column; gap:0.375rem;">
           @for (item of workItemPieSlices; track item.state) {
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 10px; border-radius:8px; cursor:default; transition:all 0.2s;"
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:0.375rem 0.625rem; border-radius:0.5rem; cursor:default; transition:all 0.2s;"
                [style.fontWeight]="hoveredWorkItemState === item.state ? '700' : '500'"
                [style.background]="hoveredWorkItemState === item.state ? 'rgba(0, 0, 0, 0.04)' : 'transparent'"
                (mouseenter)="hoveredWorkItemState = item.state" (mouseleave)="hoveredWorkItemState = null">
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
               <span class="dot" [style.backgroundColor]="item.color" style="margin-right:0; flex-shrink:0;"></span>
-              <span style="color:#374151; font-size:13px;">{{ item.state }}</span>
+              <span style="color:#374151; font-size:0.8125rem;">{{ item.state }}</span>
             </div>
-            <span style="color:#64748b; font-size:12px; font-weight:600; white-space:nowrap;">{{ item.count }} ({{ item.percentage }}%)</span>
+            <span style="color:#64748b; font-size:0.75rem; font-weight:600; white-space:nowrap;">{{ item.count }} ({{ item.percentage }}%)</span>
           </div>
           }
         </div>
@@ -214,23 +214,27 @@
     </div>
 
     <!-- Chart legend -->
-    <div style="display:flex; justify-content:center; gap:20px; font-size:12px; margin-bottom:12px;">
+    <div style="display:flex; justify-content:center; gap:1.25rem; font-size:0.75rem; margin-bottom:0.75rem;">
       @for (trend of visibleTrends; track trend.projectName) {
       <div>
         <span [style.background]="trend.color"
-          style="display:inline-block; width:12px; height:12px; margin-right:6px; border-radius:2px;"></span>
+          style="display:inline-block; width:0.75rem; height:0.75rem; margin-right:0.375rem; border-radius:0.125rem;"></span>
         {{ trend.projectName }}
       </div>
       }
     </div>
 
     @if (isLoadingMultiTrend) {
-    <div class="loading-container" style="padding: 40px 0;">
+    <div class="loading-container" style="padding: 2.5rem 0;">
       <div class="spinner"></div>
       <span class="loading-text">Loading cost trend...</span>
     </div>
     } @else if (multiTrendError) {
-    <div style="color:#dc2626; padding:16px; font-size:13px;">{{ multiTrendError }}</div>
+    <div style="color:#dc2626; padding:1rem; font-size:0.8125rem;">{{ multiTrendError }}</div>
+    } @else if (selectedHomeAzureProject && visibleTrends.length === 0) {
+    <div style="text-align:center; padding:80px 40px; color: gray; font-size:14px;">
+      No cloud cost trend found.
+    </div>
     } @else {
     <div class="graph-container">
       <svg viewBox="0 0 620 305" width="100%" height="305">
@@ -298,9 +302,9 @@
     }
 
     <!-- Project Based Total Cost inside the box -->
-    @if (selectedHomeAzureProject && yearlyCost > 0) {
+    @if (selectedHomeAzureProject && yearlyCost > 0 && visibleTrends.length > 0) {
     <div
-      style="text-align:center; margin-top:12px; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; font-size:14px; color:#475569;">
+      style="text-align:center; margin-top:0.75rem; padding:0.625rem; background:#f8fafc; border-radius:0.5rem; border:1.0px solid #e2e8f0; font-size:0.875rem; color:#475569;">
       Total Cost ({{ selectedHomeAzureProject }}): <strong style="color:#2563eb;">₹{{ yearlyCost | number:'1.2-2'
         }}</strong>
     </div>
@@ -311,16 +315,16 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- DEVOPS SERVICES SUMMARY (J – semantic status colours)                  -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="section" style="margin-top:20px;">
-  <h2 style="text-align:center; margin-bottom:16px;">DevOps Service Status</h2>
+<div class="section" style="margin-top:1.25rem;">
+  <h2 style="text-align:center; margin-bottom:1rem;">DevOps Service Status</h2>
 
   @if (isLoadingRepos || isLoadingProjects) {
-  <div class="loading-container" style="padding: 40px 0;">
+  <div class="loading-container" style="padding: 2.5rem 0;">
     <div class="spinner"></div>
     <span class="loading-text">Loading service status...</span>
   </div>
   } @else if (servicesStatusError) {
-  <div style="color:#dc2626; font-size:13px;">{{ servicesStatusError }}</div>
+  <div style="color:#dc2626; font-size:0.8125rem;">{{ servicesStatusError }}</div>
   } @else {
   <table>
     <tr>
@@ -347,15 +351,15 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 @if(showProjectDistributionDetails){
 <div class="modal-overlay">
-  <div class="modal-card" style="max-height:85vh; overflow-y:auto; width:800px; max-width:95%;">
+  <div class="modal-card" style="max-height:85vh; overflow-y:auto; width:50rem; max-width:95%;">
     <div class="modal-header">
       <h2 style="text-align:center; flex:1;">Project Repository Distribution Details</h2>
       <button class="close-btn" (click)="closeProjectDistributionDetailsModal()">✕</button>
     </div>
     
-    <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:10px; margin-bottom:10px; padding-right:10px;">
-      <label for="repo-sort-select" style="font-size:13px; color:#475569; font-weight:600;">Sort by Repository Count:</label>
-      <select id="repo-sort-select" class="month-dropdown" style="padding:6px 12px; font-size:13px; border:1px solid #cbd5e1; border-radius:8px; outline:none;"
+    <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.5rem; margin-top:0.625rem; margin-bottom:0.625rem; padding-right:0.625rem;">
+      <label for="repo-sort-select" style="font-size:0.8125rem; color:#475569; font-weight:600;">Sort by Repository Count:</label>
+      <select id="repo-sort-select" class="month-dropdown" style="padding:0.375rem 0.75rem; font-size:0.8125rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
         [(ngModel)]="repoSortOrder" (change)="modalCurrentPage = 1">
         <option value="default">Default</option>
         <option value="desc">Decreasing</option>
@@ -363,7 +367,7 @@
       </select>
     </div>
 
-    <table style="margin-top:10px;">
+    <table style="margin-top:0.625rem;">
       <tr>
         <th>Project Name</th>
         <th>Description</th>
@@ -374,7 +378,7 @@
       @for (item of paginatedModalDistribution; track item.name) {
       <tr>
         <td>{{ item.name }}</td>
-        <td style="font-size:12px; color:#64748b;">{{ getProjectDescription(item.name) }}</td>
+        <td style="font-size:0.75rem; color:#64748b;">{{ getProjectDescription(item.name) }}</td>
         <td>
           <span [class]="getProjectState(item.name) === 'wellFormed' || getProjectState(item.name) === 'Active'
                          ? 'status-badge-healthy' : 'status-badge-alert'">

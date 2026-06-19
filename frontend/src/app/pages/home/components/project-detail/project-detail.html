@@ -1,11 +1,11 @@
 @if (isLoadingRepoDetails) {
-<div class="loading-container" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+<div class="loading-container" style="min-height: 25rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
   <div class="spinner"></div>
   <span class="loading-text">Loading repository details...</span>
 </div>
 } @else {
 <!-- Page Header -->
-<div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
+<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem;">
   <div class="nav-controls">
     <button (click)="navigateBack()" [disabled]="!dashboardService.canGoBack()" class="nav-controls-btn btn-back" title="Back">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -18,73 +18,73 @@
       </svg>
     </button>
   </div>
-  <h1 style="margin: 0; font-size: 24px; color: #1e293b;">{{ selectedProject?.name }}</h1>
+  <h1 style="margin: 0; font-size: 1.5rem; color: #1e293b;">{{ selectedProject?.name }}</h1>
 </div>
 
 <!-- Project Info Cards -->
 <div
-  style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+  style="display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 1rem; margin-bottom: 2rem;">
 
   <div
-    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    style="background: var(--bg-card, #fff); border: 1.0px solid #e2e8f0; border-radius: 0.75rem; padding: 1.125rem 1.375rem;">
     <div
-      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 0.375rem;">
       ID</div>
-    <div style="font-size: 13px; font-weight: 600; color: #1e293b; word-break: break-all;">{{ selectedProject?.id }}
+    <div style="font-size: 0.8125rem; font-weight: 600; color: #1e293b; word-break: break-all;">{{ selectedProject?.id }}
     </div>
   </div>
 
   <div
-    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    style="background: var(--bg-card, #fff); border: 1.0px solid #e2e8f0; border-radius: 0.75rem; padding: 1.125rem 1.375rem;">
     <div
-      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 0.375rem;">
       State</div>
-    <div style="font-size: 14px; font-weight: 600; color: #16a34a;">{{ selectedProject?.state || 'Active' }}</div>
+    <div style="font-size: 0.875rem; font-weight: 600; color: #16a34a;">{{ selectedProject?.state || 'Active' }}</div>
   </div>
 
   <div
-    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    style="background: var(--bg-card, #fff); border: 1.0px solid #e2e8f0; border-radius: 0.75rem; padding: 1.125rem 1.375rem;">
     <div
-      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 0.375rem;">
       Visibility</div>
-    <div style="font-size: 14px; font-weight: 600; color: #2563eb;">{{ selectedProject?.visibility || 'Private' }}
+    <div style="font-size: 0.875rem; font-weight: 600; color: #2563eb;">{{ selectedProject?.visibility || 'Private' }}
     </div>
   </div>
 
   <div
-    style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px;">
+    style="background: var(--bg-card, #fff); border: 1.0px solid #e2e8f0; border-radius: 0.75rem; padding: 1.125rem 1.375rem;">
     <div
-      style="font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px;">
+      style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 0.375rem;">
       Azure DevOps</div>
     <a [href]="selectedProject?.url" target="_blank"
-      style="font-size: 14px; font-weight: 600; color: #2563eb; text-decoration: none;">Open in DevOps ↗</a>
+      style="font-size: 0.875rem; font-weight: 600; color: #2563eb; text-decoration: none;">Open in DevOps ↗</a>
   </div>
 
 </div>
 
 @if (selectedProject?.description) {
 <div
-  style="background: var(--bg-card, #fff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px; margin-bottom: 32px; color: #475569; font-size: 14px;">
+  style="background: var(--bg-card, #fff); border: 1.0px solid #e2e8f0; border-radius: 0.75rem; padding: 1.125rem 1.375rem; margin-bottom: 2rem; color: #475569; font-size: 0.875rem;">
   <span style="font-weight: 600; color: #1e293b;">Description: </span>{{ selectedProject?.description }}
 </div>
 }
 
 <!-- Repositories Section -->
 <h2
-  style="color: #1e293b; font-size: 18px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 16px;">
+  style="color: #1e293b; font-size: 1.125rem; font-weight: 700; border-bottom: 0.125rem solid #e2e8f0; padding-bottom: 0.625rem; margin-bottom: 1rem;">
   Repository Details &amp; Operations
-  <span style="font-size: 13px; font-weight: 500; color: #64748b; margin-left: 10px;">{{ totalReposCount }} repo(s)</span>
+  <span style="font-size: 0.8125rem; font-weight: 500; color: #64748b; margin-left: 0.625rem;">{{ totalReposCount }} repo(s)</span>
 </h2>
 
 @if (reposError) {
 <div class="error-banner">{{ reposError }}</div>
 } @else if (isLoadingRepos) {
-<div class="loading-container" style="padding: 40px 0;">
+<div class="loading-container" style="padding: 2.5rem 0;">
   <div class="spinner"></div>
   <span class="loading-text">Loading repositories...</span>
 </div>
 } @else if (selectedProjectRepos.length === 0) {
-<p style="color: #6b7280; font-size: 14px;">No repositories found in this project.</p>
+<p style="color: #6b7280; font-size: 0.875rem;">No repositories found in this project.</p>
 } @else {
 <table>
   <tr>
@@ -97,7 +97,7 @@
     <td>{{ repo.name }}</td>
     <td>{{ repo.defaultBranch || 'N/A' }}</td>
     <td>
-      <div style="display: flex; gap: 8px; width: 100%;">
+      <div style="display: flex; gap: 0.5rem; width: 100%;">
         <button class="action-small-btn commits-btn"
           [class.active]="selectedRepoForDetails?.id === repo.id && activeRepoDetailsTab === 'commits'"
           (click)="viewRepoCommits(repo)">Commits</button>
@@ -131,20 +131,20 @@
 
 <!-- Repository Dynamic Operations Sub-table -->
 @if (selectedRepoForDetails) {
-<div #repoDetailsAnchor style="margin-top: 32px; border-top: 2px solid #e2e8f0; padding-top: 20px;">
+<div #repoDetailsAnchor style="margin-top: 2rem; border-top: 0.125rem solid #e2e8f0; padding-top: 1.25rem;">
   <h3
-    style="color: #1e293b; text-transform: uppercase; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+    style="color: #1e293b; text-transform: uppercase; display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.75rem;">
     {{ activeRepoDetailsTab }} for {{ selectedRepoForDetails.name }}
     @if (activeRepoDetailsTab === 'branches' && repoBranchesCount !== null) {
     <span
-      style="font-size: 13px; font-weight: 600; background: #9333ea; color: #fff; border-radius: 20px; padding: 2px 10px; text-transform: none; letter-spacing: 0;">
+      style="font-size: 0.8125rem; font-weight: 600; background: #9333ea; color: #fff; border-radius: 1.25rem; padding: 0.125rem 0.625rem; text-transform: none; letter-spacing: 0;">
       {{ repoBranchesCount }} {{ repoBranchesCount === 1 ? 'branch' : 'branches' }}
     </span>
     }
   </h3>
 
   @if (isLoadingRepoDetails) {
-  <div style="position: relative; overflow: hidden; border-radius: 12px; background: white; padding: 20px;">
+  <div style="position: relative; overflow: hidden; border-radius: 0.75rem; background: white; padding: 1.25rem;">
     <div class="sleek-progress-bar"></div>
     @for (_ of [1, 2, 3, 4, 5]; track $index) {
     <div class="skeleton skeleton-row"></div>
@@ -156,7 +156,7 @@
 
   <!-- Commits sub-view -->
   @if (activeRepoDetailsTab === 'commits') {
-  <table style="font-size: 13px;">
+  <table style="font-size: 0.8125rem;">
     <tr>
       <th>Commit ID</th>
       <th>Author</th>
@@ -192,7 +192,7 @@
 
   <!-- PRs sub-view -->
   @if (activeRepoDetailsTab === 'prs') {
-  <table style="font-size: 13px;">
+  <table style="font-size: 0.8125rem;">
     <tr>
       <th>ID</th>
       <th>Title</th>
@@ -230,7 +230,7 @@
 
   <!-- Branches sub-view -->
   @if (activeRepoDetailsTab === 'branches') {
-  <table style="font-size: 13px;">
+  <table style="font-size: 0.8125rem;">
     <tr>
       <th>Branch Name</th>
       <th>Owner</th>
@@ -268,7 +268,7 @@
 
   <!-- Pushes sub-view -->
   @if (activeRepoDetailsTab === 'pushes') {
-  <table style="font-size: 13px;">
+  <table style="font-size: 0.8125rem;">
     <tr>
       <th>Push ID</th>
       <th>Date(MM/DD/YY)</th>
@@ -304,4 +304,4 @@
 </div>
 }
 
-  }
+  }

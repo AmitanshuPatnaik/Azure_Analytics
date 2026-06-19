@@ -1,6 +1,6 @@
 @if (!dashboardService.selectedProject) {
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-    <h1 style="margin:0; font-size:22px;">Pipelines</h1>
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem;">
+    <h1 style="margin:0;">Pipelines</h1>
   </div>
 
   @if (isLoadingProjects) {
@@ -39,8 +39,8 @@
   }
 } @else {
   <!-- UTC notice -->
-  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; justify-content: space-between;">
-    <div style="display: flex; align-items: center; gap: 16px;">
+  <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
       <div class="nav-controls">
         <button (click)="navigateBack()" [disabled]="!dashboardService.canGoBack()" class="nav-controls-btn btn-back" title="Back">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -53,21 +53,21 @@
           </svg>
         </button>
       </div>
-      <h1 style="margin: 0; font-size: 24px; color: #1e293b;">{{ dashboardService.selectedProject.name }}</h1>
+      <h1 style="margin: 0; font-size: 1.5rem; color: #1e293b;">{{ dashboardService.selectedProject.name }}</h1>
     </div>
   </div>
 
   @if (pipelinesError) {
     <div class="error-banner">Could not load pipelines: {{ pipelinesError }}</div>
   } @else if (isLoadingPipelines) {
-    <div class="loading-container" style="padding: 40px 0;">
+    <div class="loading-container" style="padding: 2.5rem 0;">
       <div class="spinner"></div>
       <span class="loading-text">Loading pipelines...</span>
     </div>
   } @else {
     <div class="material-card" style="padding:0; overflow:hidden;">
       <!-- Search filter (C) -->
-      <!-- <div style="padding:14px 18px; border-bottom:1px solid #f1f5f9;">
+      <!-- <div style="padding:0.875rem 1.125rem; border-bottom:1.0px solid #f1f5f9;">
         <input class="filter-search" type="text" [(ngModel)]="pipelineSearch" (ngModelChange)="currentPage = 1; loadPipelines(dashboardService.selectedProject.name)"
           placeholder="Search pipelines by name or folder…" style="margin:0;" />
       </div> -->
@@ -83,16 +83,16 @@
             <td>
               <span class="badge-purple">{{ pipeline.name }}</span>
             </td>
-            <td style="color:#64748b; font-size:13px;">{{ pipeline.folder || '/' }}</td>
+            <td style="color:#64748b; font-size:0.8125rem;">{{ pipeline.folder || '/' }}</td>
             <td>
-              <a [href]="pipeline.url" target="_blank" style="color:#2563eb; text-decoration:none; font-size:13px;">
+              <a [href]="pipeline.url" target="_blank" style="color:#2563eb; text-decoration:none; font-size:0.8125rem;">
                 Open Pipeline
               </a>
             </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="3" style="text-align:center; color:#94a3b8; padding:30px;">
+            <td colspan="3" style="text-align:center; color:#94a3b8; padding:1.875rem;">
               No pipelines found for this project.
             </td>
           </tr>

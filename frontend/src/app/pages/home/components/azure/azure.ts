@@ -90,7 +90,7 @@ export class AzureComponent implements OnInit {
     public dashboardService: DashboardService,
     private azureApi: AzureApiService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initCostTrendDates();
@@ -132,13 +132,19 @@ export class AzureComponent implements OnInit {
   loadAzureProjects() {
     this.azureApi.getAzureProjects().subscribe({
       next: (res: any) => {
-        if (res && res.projects) {
-          this.azureProjects = res.projects;
-          this.cdr.detectChanges();
+        let list = [];
+        if (res && res.projects && res.projects.length > 0) {
+          list = res.projects;
+        } else if (res && Array.isArray(res) && res.length > 0) {
+          list = res;
         }
+        this.azureProjects = list || [];
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Failed to load Azure projects', err);
+        console.warn('Could not fetch Azure projects', err);
+        this.azureProjects = [];
+        this.cdr.detectChanges();
       }
     });
   }

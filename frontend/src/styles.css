@@ -1,3 +1,7 @@
+html {
+  font-size: clamp(12px, 0.35vw + 11px, 18px);
+}
+
 body {
   margin: 0;
   padding: 0;

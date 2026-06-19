@@ -1,5 +1,5 @@
 @if (!dashboardService.selectedProject) {
-  <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
     <h1 style="margin: 0;">Repositories</h1>
   </div>
 
@@ -38,8 +38,8 @@
   </div>
   }
 } @else {
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px;">
-    <div style="display: flex; align-items: center; gap: 16px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
       <div class="nav-controls">
         <button (click)="navigateBack()" [disabled]="!dashboardService.canGoBack()" class="nav-controls-btn btn-back" title="Back">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -52,13 +52,13 @@
           </svg>
         </button>
       </div>
-      <h1 style="margin: 0; font-size: 24px; color: #1e293b;">{{ dashboardService.selectedProject.name }}</h1>
+      <h1 style="margin: 0; font-size: 1.5rem; color: #1e293b;">{{ dashboardService.selectedProject.name }}</h1>
     </div>
 
     <!-- Filter by Owner -->
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <label for="owner-filter-select" style="font-size: 14px; font-weight: 600; color: #475569; white-space: nowrap;">Filter by Owner:</label>
-      <select id="owner-filter-select" class="month-dropdown" style="padding: 6px 12px; font-size: 13.5px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; background: white;"
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <label for="owner-filter-select" style="font-size: 0.875rem; font-weight: 600; color: #475569; white-space: nowrap;">Filter by Owner:</label>
+      <select id="owner-filter-select" class="month-dropdown" style="padding: 0.375rem 0.75rem; font-size: 0.84375rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; background: white;"
         [value]="selectedOwner" (change)="selectedOwner = $any($event.target).value; currentPage = 1; loadProjectRepositories()">
         <option value="All">All Owners</option>
         @for (owner of uniqueOwners; track owner) {
@@ -72,7 +72,7 @@
     Could not load repositories: {{ reposError }}
   </div>
   } @else if (isLoadingRepos) {
-  <div class="loading-container" style="padding: 40px 0;">
+  <div class="loading-container" style="padding: 2.5rem 0;">
     <div class="spinner"></div>
     <span class="loading-text">Loading repositories...</span>
   </div>
