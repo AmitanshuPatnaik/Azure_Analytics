@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { combineLatest, of } from 'rxjs';
 import { finalize, catchError } from 'rxjs/operators';
 import { DashboardService } from '../../../../services/dashboard.service';
@@ -15,7 +16,7 @@ import { AzureCostPoint } from '../../../../models/azure-cost.models';
 
 @Component({
   selector: 'app-azure',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './azure.html',
   styleUrl: '../../home.css'
 })
@@ -29,6 +30,24 @@ export class AzureComponent implements OnInit {
   budgets: any[] = [];
   topResources: any[] = [];
   serviceCosts: any[] = [];
+
+  projectSearch = '';
+  subSearch = '';
+
+  get filteredAzureProjects(): string[] {
+    if (!this.projectSearch) return this.azureProjects;
+    const q = this.projectSearch.toLowerCase();
+    return this.azureProjects.filter(p => p.toLowerCase().includes(q));
+  }
+
+  get filteredSubscriptions(): any[] {
+    if (!this.subSearch) return this.subscriptions;
+    const q = this.subSearch.toLowerCase();
+    return this.subscriptions.filter(s =>
+      (s.displayName || '').toLowerCase().includes(q) ||
+      (s.subscriptionId || '').toLowerCase().includes(q)
+    );
+  }
 
   // Global overview states
   isLoadingOverview = false;
@@ -373,9 +392,12 @@ export class AzureComponent implements OnInit {
   }
 
   onSubscriptionChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const subId = select.value;
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const sub = this.subscriptions.find(s => s.displayName === value || s.subscriptionId === value);
+    const subId = sub ? sub.subscriptionId : '';
     this.selectedSubscriptionId = subId;
+    this.subSearch = sub ? sub.displayName : '';
 
     this.resourcesCurrentPage = 1;
     this.servicesCurrentPage = 1;
@@ -386,12 +408,20 @@ export class AzureComponent implements OnInit {
     this.costTrendPoints = [];
     this.costTrendRangeLabelUtc = '';
     this.azureRangeLoadSeq++;
+
+    if (!subId) {
+      return;
+    }
+    this.loadAzureSubscriptionData(subId);
   }
 
   onAzureProjectChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const proj = select.value;
-    this.selectedAzureProject = proj;
+    const input = event.target as HTMLInputElement;
+    const proj = input.value;
+    const match = this.azureProjects.find(p => p === proj);
+    this.selectedAzureProject = match || '';
+    this.projectSearch = match || '';
+    this.subSearch = '';
     this.selectedSubscriptionId = '';
     this.subscriptions = [];
     this.resourcesCurrentPage = 1;
@@ -404,7 +434,7 @@ export class AzureComponent implements OnInit {
     this.costTrendRangeLabelUtc = '';
     this.azureRangeLoadSeq++;
 
-    if (!proj) {
+    if (!this.selectedAzureProject) {
       this.loadGlobalOverview();
       return;
     }

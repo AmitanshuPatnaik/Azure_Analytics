@@ -10,6 +10,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from core.config import AZURE_BASE_URL, AZURE_PAT, AZURE_COLLECTION, AZURE_PROJECT
 from services.reviewer.repos_service import fetch_repos
 from services.reviewer.LLM_review_service import review_pr
+from services.reviewer.secrets_filter_service import sanitize_files
 
 class AzurePRManager:
     def __init__(self):
@@ -261,8 +262,10 @@ class AzurePRManager:
 
         if not delta_result["success"]:
             return delta_result
+        
+        sanitized_files = sanitize_files(delta_result["files"])
 
-        review_result = review_pr(delta_result["files"])
+        review_result = review_pr(sanitized_files)
 
         return review_result
     

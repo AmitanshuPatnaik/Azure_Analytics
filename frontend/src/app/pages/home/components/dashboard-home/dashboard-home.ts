@@ -27,6 +27,13 @@ export class DashboardHomeComponent implements OnInit {
   totalProjectsCount = 0;   // global total from API (never paginated)
   repositories: any[] = [];
   azureProjects: string[] = [];
+  homeProjSearch = '';
+
+  get filteredHomeProjects(): string[] {
+    if (!this.homeProjSearch) return this.azureProjects;
+    const query = this.homeProjSearch.toLowerCase();
+    return this.azureProjects.filter(proj => proj.toLowerCase().includes(query));
+  }
   servicesStatus: any[] = [];
   projectDistribution: any[] = [];
   projectPieSlices: any[] = [];
@@ -772,15 +779,17 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   onHomeAzureProjectChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const proj = select.value;
-    this.selectedHomeAzureProject = proj;
+    const input = event.target as HTMLInputElement;
+    const proj = input.value;
+    const match = this.azureProjects.find(p => p === proj);
+    this.selectedHomeAzureProject = match || '';
+    this.homeProjSearch = match || '';
     this.selectedHomeSubscriptionId = '';
     this.yearlyCost = 0;
 
     this.calculateProjectDistribution();
 
-    if (!proj) {
+    if (!this.selectedHomeAzureProject) {
       this.yearlyCost = 0;
       this.servicesStatus = [];
       this.workItemStates = [];
@@ -788,9 +797,9 @@ export class DashboardHomeComponent implements OnInit {
       this.loadServicesStatus();
       return;
     }
-    this.loadHomeSubscriptions(proj);
-    this.loadServicesStatus(proj);
-    this.loadWorkItemStatusDistribution(proj);
+    this.loadHomeSubscriptions(this.selectedHomeAzureProject);
+    this.loadServicesStatus(this.selectedHomeAzureProject);
+    this.loadWorkItemStatusDistribution(this.selectedHomeAzureProject);
   }
 
   getProjectDescription(projName: string): string {

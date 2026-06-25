@@ -2,10 +2,9 @@
 
 /* ── Control bar (dropdowns row) ────────────────────────────────────── */
 .rv-control-bar {
-  display: flex;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  flex-wrap: wrap;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
@@ -17,8 +16,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
-  min-width: 240px;
+  width: 100%;
 }
 
 .rv-select-label {

@@ -87,40 +87,68 @@
       <span style="font-size: 0.8125rem; color: #64748b; white-space: nowrap;">Filter by:</span>
 
       <!-- Sprint -->
-      <select class="month-dropdown" style="width: auto; font-size: 0.8125rem;" [value]="boardFilterSprint"
-        (change)="boardFilterSprint = $any($event.target).value; onFilterChange()">
-        <option value="">All Sprints</option>
-        @for (s of workItemSprints; track s) {
+      <input class="month-dropdown" style="width: 8rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
+        list="sprint-filter-list"
+        [value]="boardFilterSprint"
+        (input)="sprintSearch = $any($event.target).value"
+        (change)="onSprintChange($event)"
+        placeholder="All Sprints" />
+      <datalist id="sprint-filter-list">
+        @for (s of filteredSprints; track s) {
         <option [value]="s">{{ s }}</option>
         }
-      </select>
+        @empty {
+          <option [value]="sprintSearch">N/A</option>
+        }
+      </datalist>
 
       <!-- Type -->
-      <select class="month-dropdown" style="width: auto; font-size: 0.8125rem;" [value]="boardFilterType"
-        (change)="boardFilterType = $any($event.target).value; onFilterChange()">
-        <option value="">All Types</option>
-        @for (t of boardUniqueTypes; track t) {
+      <input class="month-dropdown" style="width: 8rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
+        list="type-filter-list"
+        [value]="boardFilterType"
+        (input)="typeSearch = $any($event.target).value"
+        (change)="onTypeChange($event)"
+        placeholder="All Types" />
+      <datalist id="type-filter-list">
+        @for (t of filteredTypes; track t) {
         <option [value]="t">{{ t }}</option>
         }
-      </select>
+        @empty {
+          <option [value]="typeSearch">N/A</option>
+        }
+      </datalist>
 
       <!-- State -->
-      <select class="month-dropdown" style="width: auto; font-size: 0.8125rem;" [value]="boardFilterState"
-        (change)="boardFilterState = $any($event.target).value; onFilterChange()">
-        <option value="">All States</option>
-        @for (s of boardUniqueStates; track s) {
+      <input class="month-dropdown" style="width: 8rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
+        list="state-filter-list"
+        [value]="boardFilterState"
+        (input)="stateSearch = $any($event.target).value"
+        (change)="onStateChange($event)"
+        placeholder="All States" />
+      <datalist id="state-filter-list">
+        @for (s of filteredStates; track s) {
         <option [value]="s">{{ s }}</option>
         }
-      </select>
+        @empty {
+          <option [value]="stateSearch">N/A</option>
+        }
+      </datalist>
 
       <!-- Assigned To -->
-      <select class="month-dropdown" style="width: auto; font-size: 0.8125rem;" [value]="boardFilterAssigned"
-        (change)="boardFilterAssigned = $any($event.target).value; onFilterChange()">
-        <option value="">All Assignees</option>
-        @for (a of boardUniqueAssignees; track a) {
+      <input class="month-dropdown" style="width: 10rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
+        list="assigned-filter-list"
+        [value]="boardFilterAssigned"
+        (input)="assignedSearch = $any($event.target).value"
+        (change)="onAssignedChange($event)"
+        placeholder="All Assignees" />
+      <datalist id="assigned-filter-list">
+        @for (a of filteredAssignees; track a) {
         <option [value]="a">{{ a }}</option>
         }
-      </select>
+        @empty {
+          <option [value]="assignedSearch">N/A</option>
+        }
+      </datalist>
 
       <!-- Clear -->
       @if (boardFilterSprint || boardFilterType || boardFilterState || boardFilterAssigned) {

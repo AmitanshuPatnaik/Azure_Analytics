@@ -64,6 +64,71 @@ export class BoardsComponent implements OnInit {
   boardFilterType = '';
   boardFilterState = '';
   boardFilterAssigned = '';
+
+  sprintSearch = '';
+  typeSearch = '';
+  stateSearch = '';
+  assignedSearch = '';
+
+  get filteredSprints(): string[] {
+    if (!this.sprintSearch) return this.workItemSprints;
+    const query = this.sprintSearch.toLowerCase();
+    return this.workItemSprints.filter(s => s.toLowerCase().includes(query));
+  }
+
+  get filteredTypes(): string[] {
+    if (!this.typeSearch) return this.boardUniqueTypes;
+    const query = this.typeSearch.toLowerCase();
+    return this.boardUniqueTypes.filter(t => t.toLowerCase().includes(query));
+  }
+
+  get filteredStates(): string[] {
+    if (!this.stateSearch) return this.boardUniqueStates;
+    const query = this.stateSearch.toLowerCase();
+    return this.boardUniqueStates.filter(s => s.toLowerCase().includes(query));
+  }
+
+  get filteredAssignees(): string[] {
+    if (!this.assignedSearch) return this.boardUniqueAssignees;
+    const query = this.assignedSearch.toLowerCase();
+    return this.boardUniqueAssignees.filter(a => a.toLowerCase().includes(query));
+  }
+
+  onSprintChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const match = this.workItemSprints.find(s => s === value);
+    this.boardFilterSprint = match || '';
+    this.sprintSearch = match || '';
+    this.onFilterChange();
+  }
+
+  onTypeChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const match = this.boardUniqueTypes.find(t => t === value);
+    this.boardFilterType = match || '';
+    this.typeSearch = match || '';
+    this.onFilterChange();
+  }
+
+  onStateChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const match = this.boardUniqueStates.find(s => s === value);
+    this.boardFilterState = match || '';
+    this.stateSearch = match || '';
+    this.onFilterChange();
+  }
+
+  onAssignedChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const match = this.boardUniqueAssignees.find(a => a === value);
+    this.boardFilterAssigned = match || '';
+    this.assignedSearch = match || '';
+    this.onFilterChange();
+  }
   collapsedSprints: Set<string> = new Set();
 
   constructor(
@@ -204,6 +269,10 @@ export class BoardsComponent implements OnInit {
     this.changesCurrentPage = 1;
     this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = project;
+    this.sprintSearch = '';
+    this.typeSearch = '';
+    this.stateSearch = '';
+    this.assignedSearch = '';
     this.loadWorkItems(project.name);
     this.loadRecentChanges(project.name);
   }
@@ -220,6 +289,10 @@ export class BoardsComponent implements OnInit {
     this.totalChangesCount = 0;
     this.workItemsError = null;
     this.changesError = null;
+    this.sprintSearch = '';
+    this.typeSearch = '';
+    this.stateSearch = '';
+    this.assignedSearch = '';
     this.loadProjects();
   }
 
@@ -261,6 +334,10 @@ export class BoardsComponent implements OnInit {
     this.boardFilterType = '';
     this.boardFilterState = '';
     this.boardFilterAssigned = '';
+    this.sprintSearch = '';
+    this.typeSearch = '';
+    this.stateSearch = '';
+    this.assignedSearch = '';
     this.onFilterChange();
   }
 

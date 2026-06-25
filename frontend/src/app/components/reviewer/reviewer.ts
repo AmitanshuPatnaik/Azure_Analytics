@@ -14,7 +14,6 @@ import { catchError } from 'rxjs/operators';
 })
 export class ReviewerComponent implements OnInit {
 
-  // ── Dropdowns ───────────────────────────────────────────────────────
   projects: any[] = [];
   repos: any[] = [];
   pullRequests: any[] = [];
@@ -22,6 +21,31 @@ export class ReviewerComponent implements OnInit {
   selectedProject: any = null;
   selectedRepo: any = null;
   selectedPR: any = null;
+
+  projectSearch = '';
+  repoSearch = '';
+  prSearch = '';
+
+  get filteredProjects(): any[] {
+    if (!this.projectSearch) return this.projects;
+    const q = this.projectSearch.toLowerCase();
+    return this.projects.filter(p => p.name.toLowerCase().includes(q));
+  }
+
+  get filteredRepos(): any[] {
+    if (!this.repoSearch) return this.repos;
+    const q = this.repoSearch.toLowerCase();
+    return this.repos.filter(r => r.name.toLowerCase().includes(q));
+  }
+
+  get filteredPRs(): any[] {
+    if (!this.prSearch) return this.pullRequests;
+    const q = this.prSearch.toLowerCase();
+    return this.pullRequests.filter(pr => {
+      const label = '#' + (pr.pullRequestId ?? pr.id) + ' — ' + pr.title;
+      return label.toLowerCase().includes(q);
+    });
+  }
 
   // ── Loading states ──────────────────────────────────────────────────
   isLoadingProjects = false;
@@ -88,10 +112,13 @@ export class ReviewerComponent implements OnInit {
 
   // ── Select project → load repos ──────────────────────────────────────
   onProjectChange(event: Event): void {
-    const name = (event.target as HTMLSelectElement).value;
+    const name = (event.target as HTMLInputElement).value;
     this.selectedProject = this.projects.find(p => p.name === name) ?? null;
+    this.projectSearch = this.selectedProject ? this.selectedProject.name : '';
     this.selectedRepo = null;
     this.selectedPR = null;
+    this.repoSearch = '';
+    this.prSearch = '';
     this.repos = [];
     this.pullRequests = [];
     this.reviewTriggered = false;
@@ -118,9 +145,11 @@ export class ReviewerComponent implements OnInit {
 
   // ── Select repo → load PRs ───────────────────────────────────────────
   onRepoChange(event: Event): void {
-    const name = (event.target as HTMLSelectElement).value;
+    const name = (event.target as HTMLInputElement).value;
     this.selectedRepo = this.repos.find(r => r.name === name) ?? null;
+    this.repoSearch = this.selectedRepo ? this.selectedRepo.name : '';
     this.selectedPR = null;
+    this.prSearch = '';
     this.pullRequests = [];
     this.reviewTriggered = false;
     this.diffFiles = [];
@@ -144,17 +173,22 @@ export class ReviewerComponent implements OnInit {
     });
   }
 
-  // ── Select PR ────────────────────────────────────────────────────────
   onPRChange(event: Event): void {
-    const idStr = (event.target as HTMLSelectElement).value;
+    const val = (event.target as HTMLInputElement).value;
+    const match = val.match(/^#(\d+)\b/);
+    const idStr = match ? match[1] : val;
     this.selectedPR = this.pullRequests.find(
       p => String(p.pullRequestId ?? p.id) === idStr
     ) ?? null;
-    // Reset review state whenever PR changes
+    this.prSearch = this.selectedPR ? '#' + (this.selectedPR.pullRequestId ?? this.selectedPR.id) + ' — ' + this.selectedPR.title : '';
     this.reviewTriggered = false;
     this.diffFiles = [];
     this.aiReviewContent = '';
     this.cdr.detectChanges();
+
+    if (this.selectedPR && this.selectedRepo && this.selectedProject) {
+      this.getReview();
+    }
   }
 
   // ── Get Review ───────────────────────────────────────────────────────

@@ -67,14 +67,21 @@
   style="background:white; border:1.0px solid #e2e8f0; padding:1rem 1.5rem; border-radius:0.75rem;
             box-shadow:0 0.125rem 0.5rem rgba(0,0,0,0.04); margin-top:1.25rem; display:flex; align-items:center; gap:0.75rem;">
   <span style="font-size:0.875rem; font-weight:600; color:#334155;">Project:</span>
-  <select id="home-azure-proj-select" class="month-dropdown"
+  <input id="home-azure-proj-select" class="month-dropdown"
     style="width:15rem; font-size:0.84375rem; padding:0.5rem 0.75rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
-    [value]="selectedHomeAzureProject" (change)="onHomeAzureProjectChange($event)">
-    <option value="">All Projects</option>
-    @for (proj of azureProjects; track proj) {
+    list="home-projects-list"
+    [value]="selectedHomeAzureProject || ''"
+    (input)="homeProjSearch = $any($event.target).value"
+    (change)="onHomeAzureProjectChange($event)"
+    placeholder="Select Project" />
+  <datalist id="home-projects-list">
+    @for (proj of filteredHomeProjects; track proj) {
     <option [value]="proj">{{ proj }}</option>
     }
-  </select>
+    @empty {
+      <option [value]="homeProjSearch">N/A</option>
+    }
+  </datalist>
 </div>
 
 <!-- PROJECT STATUS BADGES — shown when a project is selected -->

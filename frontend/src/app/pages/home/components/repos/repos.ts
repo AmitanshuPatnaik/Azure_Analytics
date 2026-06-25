@@ -4,9 +4,11 @@ import { DashboardService } from '../../../../services/dashboard.service';
 import { ProjectsApiService } from '../../../../services/api/projects-api.service';
 import { RepositoriesApiService } from '../../../../services/api/repositories-api.service';
 
+import { FormsModule } from '@angular/forms';
+
 @Component({
   selector: 'app-repos',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './repos.html',
   styleUrl: '../../home.css'
 })
@@ -24,6 +26,7 @@ export class ReposComponent implements OnInit {
   totalProjectsCount = 0;
   totalReposCount = 0;
   ownersList: string[] = [];
+  ownerSearch = '';
   selectedOwner = 'All';
   projectsSearchTerm = '';
   get Math() { return Math; }
@@ -116,8 +119,25 @@ export class ReposComponent implements OnInit {
     return this.ownersList;
   }
 
+  get filteredUniqueOwners(): string[] {
+    if (!this.ownerSearch) return this.ownersList;
+    const query = this.ownerSearch.toLowerCase();
+    return this.ownersList.filter(o => o.toLowerCase().includes(query));
+  }
+
+  onOwnerChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const match = this.ownersList.find(o => o === value) || (value === 'All' ? 'All' : '');
+    this.selectedOwner = match || 'All';
+    this.ownerSearch = match || '';
+    this.currentPage = 1;
+    this.loadProjectRepositories();
+  }
+
   selectProject(project: any) {
     this.selectedOwner = 'All';
+    this.ownerSearch = '';
     this.currentPage = 1;
     this.dashboardService.selectedProject = project;
     this.loadProjectRepositories();
@@ -125,6 +145,7 @@ export class ReposComponent implements OnInit {
 
   changeProject() {
     this.selectedOwner = 'All';
+    this.ownerSearch = '';
     this.currentPage = 1;
     this.projectsCurrentPage = 1;
     this.dashboardService.selectedProject = null;

@@ -3,91 +3,89 @@
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 
 <!-- ── Control bar: cascading dropdowns ──────────────────────────────── -->
-<div class="rv-control-bar">
+<div class="rv-control-bar" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; box-sizing: border-box;">
 
   <!-- Project -->
-  <div class="rv-select-group">
-    <label class="rv-select-label" for="rv-project-select">Project</label>
+  <div class="rv-select-group" style="display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box;">
+    <label class="rv-select-label" for="rv-project-select" style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px;">Project</label>
     @if (isLoadingProjects) {
-      <div class="rv-select-loading">
+      <div class="rv-select-loading" style="display: flex; align-items: center; height: 42px; padding-left: 4px;">
         <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
       </div>
     } @else {
-      <select id="rv-project-select" class="month-dropdown rv-select"
-        (change)="onProjectChange($event)">
-        <option value="">Select Project</option>
-        @for (p of projects; track p.name) {
+      <input id="rv-project-select" class="rv-select" style="width: 100%; height: 42px; padding: 8px 14px; font-size: 14px; font-weight: 500; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #1e293b; outline: none; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transition: all 0.2s ease; box-sizing: border-box;" list="rv-projects-list"
+        placeholder="Select Project"
+        [value]="selectedProject?.name || ''"
+        (input)="projectSearch = $any($event.target).value"
+        (change)="onProjectChange($event)" />
+      <datalist id="rv-projects-list">
+        @for (p of filteredProjects; track p.name) {
           <option [value]="p.name">{{ p.name }}</option>
         }
-      </select>
+        @empty {
+          <option [value]="projectSearch">N/A</option>
+        }
+      </datalist>
     }
     @if (projectsError) {
-      <span class="rv-error-hint">{{ projectsError }}</span>
+      <span class="rv-error-hint" style="font-size: 11px; color: #dc2626; margin-top: 2px;">{{ projectsError }}</span>
     }
   </div>
 
   <!-- Repository -->
-  <div class="rv-select-group">
-    <label class="rv-select-label" for="rv-repo-select">Repository</label>
+  <div class="rv-select-group" style="display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box;">
+    <label class="rv-select-label" for="rv-repo-select" style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px;">Repository</label>
     @if (isLoadingRepos) {
-      <div class="rv-select-loading">
+      <div class="rv-select-loading" style="display: flex; align-items: center; height: 42px; padding-left: 4px;">
         <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
       </div>
     } @else {
-      <select id="rv-repo-select" class="month-dropdown rv-select"
+      <input id="rv-repo-select" class="rv-select" style="width: 100%; height: 42px; padding: 8px 14px; font-size: 14px; font-weight: 500; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #1e293b; outline: none; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transition: all 0.2s ease; box-sizing: border-box;" list="rv-repos-list"
+        placeholder="Select Repository"
         [disabled]="!selectedProject"
-        (change)="onRepoChange($event)">
-        <option value="">Select Repository</option>
-        @for (r of repos; track r.name) {
+        [value]="selectedRepo?.name || ''"
+        (input)="repoSearch = $any($event.target).value"
+        (change)="onRepoChange($event)" />
+      <datalist id="rv-repos-list">
+        @for (r of filteredRepos; track r.name) {
           <option [value]="r.name">{{ r.name }}</option>
         }
-      </select>
+        @empty {
+          <option [value]="repoSearch">N/A</option>
+        }
+      </datalist>
     }
     @if (reposError) {
-      <span class="rv-error-hint">{{ reposError }}</span>
+      <span class="rv-error-hint" style="font-size: 11px; color: #dc2626; margin-top: 2px;">{{ reposError }}</span>
     }
   </div>
 
   <!-- Pull Request -->
-  <div class="rv-select-group">
-    <label class="rv-select-label" for="rv-pr-select">Pull Request</label>
+  <div class="rv-select-group" style="display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box;">
+    <label class="rv-select-label" for="rv-pr-select" style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px;">Pull Request</label>
     @if (isLoadingPRs) {
-      <div class="rv-select-loading">
+      <div class="rv-select-loading" style="display: flex; align-items: center; height: 42px; padding-left: 4px;">
         <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
       </div>
     } @else {
-      <select id="rv-pr-select" class="month-dropdown rv-select"
+      <input id="rv-pr-select" class="rv-select" style="width: 100%; height: 42px; padding: 8px 14px; font-size: 14px; font-weight: 500; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #1e293b; outline: none; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transition: all 0.2s ease; box-sizing: border-box;" list="rv-prs-list"
+        placeholder="Select Pull Request"
         [disabled]="!selectedRepo"
-        (change)="onPRChange($event)">
-        <option value="">Select Pull Request</option>
-        @for (pr of pullRequests; track (pr.pullRequestId ?? pr.id)) {
-          <option [value]="pr.pullRequestId ?? pr.id">
-            #{{ pr.pullRequestId ?? pr.id }} — {{ pr.title }}
-          </option>
+        [value]="selectedPR ? '#' + (selectedPR.pullRequestId ?? selectedPR.id) + ' — ' + selectedPR.title : ''"
+        (input)="prSearch = $any($event.target).value"
+        (change)="onPRChange($event)" />
+      <datalist id="rv-prs-list">
+        @for (pr of filteredPRs; track (pr.pullRequestId ?? pr.id)) {
+          <option [value]="'#' + (pr.pullRequestId ?? pr.id) + ' — ' + pr.title">{{ '#' + (pr.pullRequestId ?? pr.id) + ' — ' + pr.title }}</option>
         }
-      </select>
+        @empty {
+          <option [value]="prSearch">N/A</option>
+        }
+      </datalist>
     }
     @if (prsError) {
-      <span class="rv-error-hint">{{ prsError }}</span>
+      <span class="rv-error-hint" style="font-size: 11px; color: #dc2626; margin-top: 2px;">{{ prsError }}</span>
     }
-  </div>
-
-  <!-- Action Buttons -->
-  <div class="rv-action-buttons">
-    <button class="rv-btn rv-btn-primary"
-      [disabled]="!selectedPR || isLoadingReview"
-      (click)="getReview()">
-      @if (isLoadingReview) {
-        <span class="rv-btn-spinner"></span> Loading...
-      } @else {
-        Get Review
-      }
-    </button>
-    <button class="rv-btn rv-btn-secondary"
-      [disabled]="!reviewTriggered || !selectedPR || pullRequests.length === 0"
-      (click)="postReview()">
-      Post Review
-    </button>
   </div>
 
 </div>
@@ -141,8 +139,13 @@
     </div>
   </div>
   <div class="rv-changes-body">
-    @if (diffFiles.length === 0) {
-      <span class="rv-eval-placeholder">Select a project, repository, and pull request, then click <strong>Get Review</strong> to view code changes.</span>
+    @if (isLoadingReview) {
+      <div style="display: flex; align-items: center; gap: 8px; color: #64748b;">
+        <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
+        <span>Loading code changes and AI review...</span>
+      </div>
+    } @else if (diffFiles.length === 0) {
+      <span class="rv-eval-placeholder">Select a project, repository, and pull request to view code changes.</span>
     } @else {
       @for (file of diffFiles; track file.path) {
         <div style="margin-bottom: 1.5rem; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
@@ -171,8 +174,13 @@
     <button class="rv-copy-btn" (click)="copyOutput()">Copy</button>
   </div>
   <div class="rv-eval-body" id="rv-eval-content">
-    @if (!reviewTriggered) {
-      <span class="rv-eval-placeholder">Select a project, repository, and pull request, then click <strong>Get Review</strong> to view AI evaluation output.</span>
+    @if (isLoadingReview) {
+      <div style="display: flex; align-items: center; gap: 8px; color: #64748b;">
+        <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
+        <span>Loading code changes and AI review...</span>
+      </div>
+    } @else if (!reviewTriggered) {
+      <span class="rv-eval-placeholder">Select a project, repository, and pull request to view AI evaluation output.</span>
     } @else {
       {{ aiReviewContent }}
     }
