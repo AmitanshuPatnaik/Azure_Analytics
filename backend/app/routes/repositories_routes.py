@@ -31,19 +31,50 @@ async def get_all_repositories():
 
 
 @router.get("/projects/{project_name}/repos")
-async def get_repositories(project_name: str):
+async def get_repositories(
+    project_name: str,
+    page: int = 1,
+    page_size: int = 10,
+    owner: str = "All"
+):
     cached_repos = cache.get("repos")
     if isinstance(cached_repos, dict) and cached_repos.get("success"):
         proj_repos = [
             repo for repo in cached_repos.get("repositories", [])
             if isinstance(repo, dict) and repo.get("project", "").lower() == project_name.lower()
         ]
-        return {
-            "success": True,
-            "count": len(proj_repos),
-            "repositories": proj_repos
-        }
-    return fetch_repositories(project_name)
+    else:
+        res = fetch_repositories(project_name)
+        if isinstance(res, dict) and res.get("success"):
+            proj_repos = res.get("repositories", [])
+        else:
+            return res
+
+    # Extract all unique owners working on the specified project BEFORE filtering by owner
+    owners = sorted(list(set(
+        repo.get("owner") for repo in proj_repos
+        if isinstance(repo, dict) and repo.get("owner")
+    )))
+
+    # Filter by owner if specified
+    if owner and owner.lower() != "all":
+        proj_repos = [
+            repo for repo in proj_repos
+            if isinstance(repo, dict) and repo.get("owner") and repo.get("owner").lower() == owner.lower()
+        ]
+
+    total_count = len(proj_repos)
+    start = (page - 1) * page_size
+    end = start + page_size
+    sliced = proj_repos[start:end]
+
+    return {
+        "success": True,
+        "total_count": total_count,
+        "count": len(sliced),
+        "repositories": sliced,
+        "owners": owners
+    }
 
 
 @router.get("/projects/{project_name}/repos/{repo_name}/files")

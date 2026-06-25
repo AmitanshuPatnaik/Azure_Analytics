@@ -8,6 +8,13 @@ import os
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from typing import Optional
+from pydantic import BaseModel
+
+from services.reviewer.webhooks_service import fetch_webhooks
+from services.reviewer.repos_service import fetch_repos
+from services.reviewer.project_service import fetch_projects
+from services.reviewer.PR_service import AzurePRManager
 
 from routes.boards_routes import router as boards_router
 from routes.pipelines_routes import router as pipelines_router
@@ -68,6 +75,14 @@ app.include_router(auth_router)
 app.include_router(azure_router, prefix="/api")
 app.include_router(status_router, prefix="/api")
 
+manager = AzurePRManager()
+
+class ReviewRequest(BaseModel):
+    repo_id: str
+    pr_id: int
+    review: str
+    project: Optional[str] = None
+
 logger.info("[Main] Registered routers: projects, repositories, pipelines, boards, testplans, auth, azure, status")
 
 
@@ -92,6 +107,92 @@ async def log(lines: int = Query(default=100, description="Number of log lines t
     except Exception as e:
         logging.error(str(e))
         return ""
+    
+@app.get("/api/webhooks")
+async def get_webhooks():
+    return fetch_webhooks()
+
+
+@app.get("/api/projects")
+async def get_projects():
+    return fetch_projects()
+
+
+@app.get("/api/repos")
+async def get_repos():
+    return fetch_repos()
+
+
+@app.get("/api/pr")
+async def get_prs(repo: Optional[str] = Query(None), project: Optional[str] = Query(None)):
+    if project:
+        manager.project = project
+    return manager.fetch_prs(repo_target=repo)
+
+
+@app.get("/api/pr_iterations")
+async def get_pr_iterations(repo_id: Optional[str] = Query(None), pr_id: Optional[int] = Query(None), project: Optional[str] = Query(None)):
+    if repo_id and pr_id:
+        manager.repo_id = repo_id
+        manager.pr_id = pr_id
+    if project:
+        manager.project = project
+    return manager.fetch_latest_iteration()
+
+
+@app.get("/api/pr_changes")
+async def get_pr_changes(repo_id: Optional[str] = Query(None), pr_id: Optional[int] = Query(None),iteration_id: Optional[int] = Query(None), project: Optional[str] = Query(None)):
+    if repo_id and pr_id and iteration_id:
+        manager.repo_id = repo_id
+        manager.pr_id = pr_id
+        manager.iteration_id = iteration_id
+    if project:
+        manager.project = project
+    return manager.get_changed_files()
+
+
+@app.get("/api/pr_deltas")
+async def get_pr_deltas(repo_id: Optional[str] = Query(None),pr_id: Optional[int] = Query(None),iteration_id: Optional[int] = Query(None), project: Optional[str] = Query(None)):
+    if repo_id:
+        manager.repo_id = repo_id
+
+    if pr_id:
+        manager.pr_id = pr_id
+
+    if iteration_id:
+        manager.iteration_id = iteration_id
+
+    if project:
+        manager.project = project
+
+    return manager.get_file_deltas()
+
+
+@app.get("/api/pr_review")
+async def review_pr(repo_id: Optional[str] = Query(None),pr_id: Optional[int] = Query(None),iteration_id: Optional[int] = Query(None), project: Optional[str] = Query(None)):
+    if repo_id:
+        manager.repo_id = repo_id
+
+    if pr_id:
+        manager.pr_id = pr_id
+
+    if iteration_id:
+        manager.iteration_id = iteration_id
+
+    if project:
+        manager.project = project
+
+    return manager.review_current_pr()
+
+
+@app.post("/api/post_review")
+async def post_review(request: ReviewRequest):
+    manager.repo_id = request.repo_id
+    manager.pr_id = request.pr_id
+    if request.project:
+        manager.project = request.project
+
+    return manager.post_review(request.review)
 
 if __name__ == "__main__":
     port = int(os.environ.get("SERVER_PORT", 80))

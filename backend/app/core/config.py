@@ -45,3 +45,12 @@ integrelity_client_secret = config.get("INTEGRELITY_CLIENT_SECRET", "")
 
 azure_cost_base_url = config.get("azure_cost_base_url", "")
 azure_management_base_url = config.get("azure_management_base_url", "")
+
+MODEL = config["MODEL"]
+SUBSCRIPTION_KEY = config["SUBSCRIPTION_KEY"]
+MODEL_ENDPOINT = config["MODEL_ENDPOINT"]
+
+AZURE_PAT = config["AZURE_PAT"]
+AZURE_COLLECTION = config["AZURE_COLLECTION"]
+AZURE_BASE_URL = config["AZURE_BASE_URL"]
+AZURE_PROJECT = config["AZURE_PROJECT"]

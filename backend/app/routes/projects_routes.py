@@ -13,11 +13,17 @@ _COLD_CACHE_RESPONSE = {
 
 
 @router.get("")
-async def get_projects(page: int = 1, page_size: int = 10):
+async def get_projects(page: int = 1, page_size: int = 10, search: str | None = None):
     res = cache.get("projects", _COLD_CACHE_RESPONSE)
     if not res.get("success"):
         return res
     projects = res.get("projects", [])
+    if search:
+        s_lower = search.lower()
+        projects = [
+            p for p in projects
+            if isinstance(p, dict) and s_lower in (p.get("name") or "").lower()
+        ]
     total_count = len(projects)
     start = (page - 1) * page_size
     end = start + page_size
