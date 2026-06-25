@@ -89,7 +89,9 @@
       <!-- Sprint -->
       <input class="month-dropdown" style="width: 8rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
         list="sprint-filter-list"
-        [value]="boardFilterSprint"
+        [value]="sprintSearch || boardFilterSprint || ''"
+        (focus)="sprintSearch = ''; $any($event.target).value = ''"
+        (blur)="sprintSearch = boardFilterSprint || ''; $any($event.target).value = boardFilterSprint || ''"
         (input)="sprintSearch = $any($event.target).value"
         (change)="onSprintChange($event)"
         placeholder="All Sprints" />
@@ -105,7 +107,9 @@
       <!-- Type -->
       <input class="month-dropdown" style="width: 8rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
         list="type-filter-list"
-        [value]="boardFilterType"
+        [value]="typeSearch || boardFilterType || ''"
+        (focus)="typeSearch = ''; $any($event.target).value = ''"
+        (blur)="typeSearch = boardFilterType || ''; $any($event.target).value = boardFilterType || ''"
         (input)="typeSearch = $any($event.target).value"
         (change)="onTypeChange($event)"
         placeholder="All Types" />
@@ -121,7 +125,9 @@
       <!-- State -->
       <input class="month-dropdown" style="width: 8rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
         list="state-filter-list"
-        [value]="boardFilterState"
+        [value]="stateSearch || boardFilterState || ''"
+        (focus)="stateSearch = ''; $any($event.target).value = ''"
+        (blur)="stateSearch = boardFilterState || ''; $any($event.target).value = boardFilterState || ''"
         (input)="stateSearch = $any($event.target).value"
         (change)="onStateChange($event)"
         placeholder="All States" />
@@ -137,7 +143,9 @@
       <!-- Assigned To -->
       <input class="month-dropdown" style="width: 10rem; font-size: 0.8125rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; padding: 0.375rem 0.75rem;"
         list="assigned-filter-list"
-        [value]="boardFilterAssigned"
+        [value]="assignedSearch || boardFilterAssigned || ''"
+        (focus)="assignedSearch = ''; $any($event.target).value = ''"
+        (blur)="assignedSearch = boardFilterAssigned || ''; $any($event.target).value = boardFilterAssigned || ''"
         (input)="assignedSearch = $any($event.target).value"
         (change)="onAssignedChange($event)"
         placeholder="All Assignees" />

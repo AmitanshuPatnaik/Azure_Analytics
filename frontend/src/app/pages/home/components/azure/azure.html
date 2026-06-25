@@ -17,7 +17,9 @@
       <label for="azure-proj-select" style="font-size:0.8125rem; color:#475569; white-space:nowrap;">Azure Project:</label>
       <input id="azure-proj-select" class="month-dropdown" style="width:12rem; padding:0.375rem 0.75rem; font-size:0.8125rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
         list="azure-projects-list"
-        [value]="selectedAzureProject || ''"
+        [value]="projectSearch || selectedAzureProject || ''"
+        (focus)="projectSearch = ''; $any($event.target).value = ''"
+        (blur)="projectSearch = selectedAzureProject || ''; $any($event.target).value = selectedAzureProject || ''"
         (input)="projectSearch = $any($event.target).value"
         (change)="onAzureProjectChange($event)"
         placeholder="Select Azure Project" />
@@ -37,7 +39,9 @@
       <input id="sub-select" class="month-dropdown" style="width:12rem; padding:0.375rem 0.75rem; font-size:0.8125rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
         [disabled]="!selectedAzureProject"
         list="azure-subs-list"
-        [value]="selectedSubscriptionName || ''"
+        [value]="subSearch || selectedSubscriptionName || ''"
+        (focus)="subSearch = ''; $any($event.target).value = ''"
+        (blur)="subSearch = selectedSubscriptionName || ''; $any($event.target).value = selectedSubscriptionName || ''"
         (input)="subSearch = $any($event.target).value"
         (change)="onSubscriptionChange($event)"
         placeholder="Select Subscription" />

@@ -70,7 +70,9 @@
   <input id="home-azure-proj-select" class="month-dropdown"
     style="width:15rem; font-size:0.84375rem; padding:0.5rem 0.75rem; border:1.0px solid #cbd5e1; border-radius:0.5rem; outline:none;"
     list="home-projects-list"
-    [value]="selectedHomeAzureProject || ''"
+    [value]="homeProjSearch || selectedHomeAzureProject || ''"
+    (focus)="homeProjSearch = ''; $any($event.target).value = ''"
+    (blur)="homeProjSearch = selectedHomeAzureProject || ''; $any($event.target).value = selectedHomeAzureProject || ''"
     (input)="homeProjSearch = $any($event.target).value"
     (change)="onHomeAzureProjectChange($event)"
     placeholder="Select Project" />

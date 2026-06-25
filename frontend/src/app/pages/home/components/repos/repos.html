@@ -74,7 +74,9 @@
       <label for="owner-filter-select" style="font-size: 0.875rem; font-weight: 600; color: #475569; white-space: nowrap;">Filter by Owner:</label>
       <input id="owner-filter-select" class="month-dropdown" style="padding: 0.375rem 0.75rem; font-size: 0.84375rem; border: 1.0px solid #cbd5e1; border-radius: 0.5rem; outline: none; background: white; width: 12rem;"
         list="owner-filter-list"
-        [value]="selectedOwner || ''"
+        [value]="ownerSearch || selectedOwner || ''"
+        (focus)="ownerSearch = ''; $any($event.target).value = ''"
+        (blur)="ownerSearch = selectedOwner || ''; $any($event.target).value = selectedOwner || ''"
         (input)="ownerSearch = $any($event.target).value"
         (change)="onOwnerChange($event)"
         placeholder="Filter by Owner" />

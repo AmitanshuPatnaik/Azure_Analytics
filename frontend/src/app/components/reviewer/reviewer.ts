@@ -66,8 +66,10 @@ export class ReviewerComponent implements OnInit {
   // ── Derived info card values ─────────────────────────────────────────
   get sourceTarget(): string {
     if (!this.selectedPR) return '';
-    const src = this.selectedPR.sourceRefName?.replace('refs/heads/', '') ?? '';
-    const tgt = this.selectedPR.targetRefName?.replace('refs/heads/', '') ?? '';
+    const srcRaw = this.selectedPR.sourceBranch || this.selectedPR.sourceRefName || '';
+    const tgtRaw = this.selectedPR.targetBranch || this.selectedPR.targetRefName || '';
+    const src = srcRaw.replace('refs/heads/', '');
+    const tgt = tgtRaw.replace('refs/heads/', '');
     return src && tgt ? `${src} → ${tgt}` : '';
   }
 
