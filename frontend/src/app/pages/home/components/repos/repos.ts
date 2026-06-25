@@ -25,6 +25,7 @@ export class ReposComponent implements OnInit {
   totalReposCount = 0;
   ownersList: string[] = [];
   selectedOwner = 'All';
+  projectsSearchTerm = '';
   get Math() { return Math; }
 
   get reposTotalPages(): number {
@@ -51,7 +52,7 @@ export class ReposComponent implements OnInit {
 
   loadProjects() {
     this.isLoadingProjects = true;
-    this.projectsApi.getProjects(this.projectsCurrentPage, this.pageSize).subscribe({
+    this.projectsApi.getProjects(this.projectsCurrentPage, this.pageSize, this.projectsSearchTerm).subscribe({
       next: (res: any) => {
         let projs = [];
         let total = 0;
@@ -73,6 +74,12 @@ export class ReposComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  onProjectsSearchChange(value: string) {
+    this.projectsSearchTerm = value;
+    this.projectsCurrentPage = 1;
+    this.loadProjects();
   }
 
   loadProjectRepositories() {

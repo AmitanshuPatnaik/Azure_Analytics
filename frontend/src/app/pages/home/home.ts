@@ -11,6 +11,7 @@ import { PipelinesComponent } from './components/pipelines/pipelines';
 import { BoardsComponent } from './components/boards/boards';
 import { TestplansComponent } from './components/testplans/testplans';
 import { AzureComponent } from './components/azure/azure';
+import { ReviewerComponent } from '../../components/reviewer/reviewer';
 
 @Component({
   selector: 'app-home',
@@ -23,7 +24,8 @@ import { AzureComponent } from './components/azure/azure';
     PipelinesComponent,
     BoardsComponent,
     TestplansComponent,
-    AzureComponent
+    AzureComponent,
+    ReviewerComponent
   ],
   templateUrl: './home.html',
   styleUrl: './home.css'

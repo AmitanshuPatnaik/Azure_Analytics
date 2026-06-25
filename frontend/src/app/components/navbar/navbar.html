@@ -17,6 +17,12 @@
          (click)="selectAzure()">
         Azure
       </a>
+
+      <a routerLink="/home" class="nav-link nav-link-reviewer"
+         [class.active]="isReviewerActive()"
+         (click)="selectReviewer()">
+        Reviewer
+      </a>
     </div>
   </div>
 

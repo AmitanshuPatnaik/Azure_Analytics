@@ -15,6 +15,7 @@ export class ProjectsComponent implements OnInit {
   isLoadingProjects = false;
   projectsError: string | null = null;
 
+  searchTerm = '';
   currentPage = 1;
   pageSize = 10;
   totalProjectsCount = 0;
@@ -37,7 +38,7 @@ export class ProjectsComponent implements OnInit {
   loadProjects() {
     this.isLoadingProjects = true;
     this.projectsError = null;
-    this.projectsApi.getProjects(this.currentPage, this.pageSize).subscribe({
+    this.projectsApi.getProjects(this.currentPage, this.pageSize, this.searchTerm).subscribe({
       next: (res: any) => {
         let projs = [];
         let total = 0;
@@ -62,6 +63,12 @@ export class ProjectsComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  onSearchChange(value: string) {
+    this.searchTerm = value;
+    this.currentPage = 1;
+    this.loadProjects();
   }
 
   openProject(project: any) {

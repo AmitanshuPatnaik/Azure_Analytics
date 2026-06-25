@@ -24,6 +24,7 @@ export class DashboardHomeComponent implements OnInit {
 
   // Real data arrays
   projects: any[] = [];
+  totalProjectsCount = 0;   // global total from API (never paginated)
   repositories: any[] = [];
   azureProjects: string[] = [];
   servicesStatus: any[] = [];
@@ -63,10 +64,25 @@ export class DashboardHomeComponent implements OnInit {
   // Pie legend filter
   pieSearchQuery = '';
 
+  // Pie chart pagination
+  pieCurrentPage = 1;
+  piePageSize = 5;
+
+  get pieTotalPages(): number {
+    const dist = this.projectDistribution.filter(p => p.count > 0);
+    return Math.max(1, Math.ceil(dist.length / this.piePageSize));
+  }
+
+  get paginatedProjectDistribution(): any[] {
+    const dist = this.projectDistribution.filter(p => p.count > 0);
+    const start = (this.pieCurrentPage - 1) * this.piePageSize;
+    return dist.slice(start, start + this.piePageSize);
+  }
+
   get filteredProjectDistribution(): any[] {
-    if (!this.pieSearchQuery?.trim()) return this.projectDistribution;
+    if (!this.pieSearchQuery?.trim()) return this.paginatedProjectDistribution;
     const q = this.pieSearchQuery.trim().toLowerCase();
-    return this.projectDistribution.filter(item => item.name.toLowerCase().includes(q));
+    return this.paginatedProjectDistribution.filter(item => item.name.toLowerCase().includes(q));
   }
 
   // Project distribution popup
@@ -146,7 +162,7 @@ export class DashboardHomeComponent implements OnInit {
   loadAzureProjects() {
     forkJoin({
       azureRes: this.azureApi.getAzureProjects().pipe(catchError(() => of({ projects: [] }))),
-      devopsRes: this.projectsApi.getProjects().pipe(catchError(() => of({ projects: [] })))
+      devopsRes: this.projectsApi.getProjects(1, 999).pipe(catchError(() => of({ projects: [] })))
     }).subscribe({
       next: (res: any) => {
         let azureNames: string[] = [];
@@ -188,16 +204,21 @@ export class DashboardHomeComponent implements OnInit {
   loadProjects() {
     this.isLoadingProjects = true;
     this.projectsError = null;
-    this.projectsApi.getProjects().subscribe({
+    // Fetch ALL projects (large page size) so the distribution pie is complete
+    this.projectsApi.getProjects(1, 999).subscribe({
       next: (res: any) => {
         let projs = [];
+        let total = 0;
         if (res && res.success && res.projects) {
           projs = res.projects;
+          total = res.total_count ?? projs.length;
         } else if (res && res.projects) {
           projs = res.projects;
+          total = res.total_count ?? projs.length;
         }
 
         this.projects = projs || [];
+        this.totalProjectsCount = total || this.projects.length;
         this.isLoadingProjects = false;
         this.calculateProjectDistribution();
         this.cdr.detectChanges();
@@ -205,6 +226,7 @@ export class DashboardHomeComponent implements OnInit {
       error: (err) => {
         console.warn('Could not fetch projects from backend', err);
         this.projects = [];
+        this.totalProjectsCount = 0;
         this.projectsError = err.error?.detail || err.error?.message || err.message || 'Failed to load projects from backend.';
         this.isLoadingProjects = false;
         this.calculateProjectDistribution();
@@ -408,7 +430,7 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   calculateProjectDistribution() {
-    if (!this.projects.length || !this.repositories.length) {
+    if (!this.repositories.length) {
       this.projectDistribution = [];
       this.projectPieSlices = [];
       this.pieChartStyle = '';
@@ -416,49 +438,60 @@ export class DashboardHomeComponent implements OnInit {
     }
 
     const colors = ['#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#3b82f6'];
-    const greyColor = '#d1d5db'; // grey for non-selected sectors
+    const greyColor = '#d1d5db';
     const dist: any[] = [];
     const gradientParts: string[] = [];
 
-    // Always show global distribution across all projects
+    // Build counts from ALL repositories (not just from this.projects)
     const counts: { [key: string]: number } = {};
-    this.projects.forEach(p => {
-      counts[p.name] = 0;
-    });
-
+    this.projects.forEach(p => { counts[p.name] = 0; });
     this.repositories.forEach(r => {
-      if (counts[r.project] !== undefined) {
-        counts[r.project]++;
-      } else {
-        counts[r.project] = 1;
+      if (r.project) {
+        counts[r.project] = (counts[r.project] || 0) + 1;
       }
     });
 
     const totalRepos = this.repositories.length;
     let accumulatedDegrees = 0;
+    let colorIndex = 0;
 
-    this.projects.forEach((proj, index) => {
+    // First: add all API projects (in their original order)
+    const knownProjectNames = new Set(this.projects.map((p: any) => p.name));
+    this.projects.forEach((proj: any) => {
       const count = counts[proj.name] || 0;
       const percentage = totalRepos > 0 ? (count / totalRepos) : 0;
       const degrees = Math.round(percentage * 360);
-
-      // If a project is selected, grey out all non-selected sectors
       const isSelected = !this.selectedHomeAzureProject || proj.name === this.selectedHomeAzureProject;
-      const originalColor = colors[index % colors.length];
+      const originalColor = colors[colorIndex % colors.length];
       const color = isSelected ? originalColor : greyColor;
+      colorIndex++;
 
-      dist.push({
-        name: proj.name,
-        count: count,
-        color: color,
-        isSelected: isSelected
-      });
+      dist.push({ name: proj.name, count, color, isSelected });
 
       if (count > 0) {
         const nextDegrees = accumulatedDegrees + degrees;
         gradientParts.push(`${color} ${accumulatedDegrees}deg ${nextDegrees}deg`);
         accumulatedDegrees = nextDegrees;
       }
+    });
+
+    // Second: add any 'orphan' projects found in repos but not in this.projects
+    Object.keys(counts).forEach(projName => {
+      if (knownProjectNames.has(projName)) return;  // already handled above
+      const count = counts[projName];
+      if (!count) return;
+      const percentage = count / totalRepos;
+      const degrees = Math.round(percentage * 360);
+      const isSelected = !this.selectedHomeAzureProject || projName === this.selectedHomeAzureProject;
+      const originalColor = colors[colorIndex % colors.length];
+      const color = isSelected ? originalColor : greyColor;
+      colorIndex++;
+
+      dist.push({ name: projName, count, color, isSelected });
+
+      const nextDegrees = accumulatedDegrees + degrees;
+      gradientParts.push(`${color} ${accumulatedDegrees}deg ${nextDegrees}deg`);
+      accumulatedDegrees = nextDegrees;
     });
 
     if (gradientParts.length > 0 && accumulatedDegrees > 0) {
@@ -473,6 +506,7 @@ export class DashboardHomeComponent implements OnInit {
     this.projectDistribution = dist;
     this.projectPieSlices = this.buildProjectPieSlices(dist);
     this.pieChartStyle = gradientParts.length > 0 ? `conic-gradient(${gradientParts.join(', ')})` : 'gray';
+    this.pieCurrentPage = 1;
   }
 
   buildProjectPieSlices(distribution: any[]): any[] {
@@ -527,7 +561,10 @@ export class DashboardHomeComponent implements OnInit {
     });
   }
 
-  // Returns the subset of trends to display based on the selected project
+  get paginatedPieSlices(): any[] {
+    return this.buildProjectPieSlices(this.paginatedProjectDistribution);
+  }
+
   get visibleTrends(): any[] {
     if (!this.selectedHomeAzureProject) {
       return this.projectTrends;

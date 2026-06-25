@@ -1,7 +1,7 @@
 <div class="home-container">
 
   <div class="dashboard-content">
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 0.9375rem; margin-top: -10px;">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; margin-top: -10px;">
       <span class="utc-badge">All timings are in UTC</span>
     </div>
     <!-- Horizontal sub-nav tabs for DevOps sub-pages -->
@@ -81,6 +81,9 @@
     }
     @case ('azure') {
     <app-azure></app-azure>
+    }
+    @case ('reviewer') {
+    <app-reviewer></app-reviewer>
     }
     }
   </div>

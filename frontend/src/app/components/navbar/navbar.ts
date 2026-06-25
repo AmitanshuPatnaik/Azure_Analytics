@@ -33,6 +33,12 @@ export class Navbar {
            this.dashboardService.selectedPage !== 'home';
   }
 
+  isReviewerActive(): boolean {
+    return this.router.url.startsWith('/home') &&
+           this.dashboardService.selectedModule === 'Reviewer' &&
+           this.dashboardService.selectedPage !== 'home';
+  }
+
   isHomeActive(): boolean {
     return this.router.url.startsWith('/home') &&
            this.dashboardService.selectedPage === 'home';
@@ -75,6 +81,20 @@ export class Navbar {
     this.dashboardService.selectedPage = 'azure';
 
     this.dashboardService.sidebarVisible = true;
+
+    this.showCloudOps = false;
+
+    this.router.navigate(['/home']);
+
+  }
+
+  selectReviewer() {
+
+    this.dashboardService.setModule('Reviewer');
+
+    this.dashboardService.selectedPage = 'reviewer';
+
+    this.dashboardService.sidebarVisible = false;
 
     this.showCloudOps = false;
 

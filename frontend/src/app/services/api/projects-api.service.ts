@@ -16,13 +16,17 @@ export class ProjectsApiService {
     private cache: FrontendCacheService
   ) {}
 
-  getProjects(page: number = 1, pageSize: number = 10): Observable<any> {
-    const cacheKey = `projects:all:page:${page}:${pageSize}`;
+  getProjects(page: number = 1, pageSize: number = 10, search: string = ''): Observable<any> {
+    const cacheKey = `projects:all:page:${page}:${pageSize}:search:${search}`;
     const cachedData = this.cache.get(cacheKey);
     if (cachedData) {
       return of(cachedData);
     }
-    return this.http.get<any>(`${this.baseUrl}?page=${page}&page_size=${pageSize}`).pipe(
+    let url = `${this.baseUrl}?page=${page}&page_size=${pageSize}`;
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    return this.http.get<any>(url).pipe(
       tap(data => this.cache.set(cacheKey, data))
     );
   }

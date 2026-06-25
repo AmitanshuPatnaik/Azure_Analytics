@@ -107,4 +107,21 @@ export class RepositoriesApiService {
       tap(data => this.cache.set(cacheKey, data))
     );
   }
+
+  getPRReview(repoId: string, prId: number, projectName: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/pr_review?repo_id=${repoId}&pr_id=${prId}&project=${encodeURIComponent(projectName)}`);
+  }
+
+  getPRDeltas(repoId: string, prId: number, projectName: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/pr_deltas?repo_id=${repoId}&pr_id=${prId}&project=${encodeURIComponent(projectName)}`);
+  }
+
+  postPRReview(repoId: string, prId: number, review: string, projectName: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/post_review`, {
+      repo_id: repoId,
+      pr_id: prId,
+      review: review,
+      project: projectName
+    });
+  }
 }

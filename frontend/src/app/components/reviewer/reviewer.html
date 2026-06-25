@@ -1,0 +1,180 @@
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- REVIEWER PAGE                                                           -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+
+<!-- ── Control bar: cascading dropdowns ──────────────────────────────── -->
+<div class="rv-control-bar">
+
+  <!-- Project -->
+  <div class="rv-select-group">
+    <label class="rv-select-label" for="rv-project-select">Project</label>
+    @if (isLoadingProjects) {
+      <div class="rv-select-loading">
+        <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
+      </div>
+    } @else {
+      <select id="rv-project-select" class="month-dropdown rv-select"
+        (change)="onProjectChange($event)">
+        <option value="">Select Project</option>
+        @for (p of projects; track p.name) {
+          <option [value]="p.name">{{ p.name }}</option>
+        }
+      </select>
+    }
+    @if (projectsError) {
+      <span class="rv-error-hint">{{ projectsError }}</span>
+    }
+  </div>
+
+  <!-- Repository -->
+  <div class="rv-select-group">
+    <label class="rv-select-label" for="rv-repo-select">Repository</label>
+    @if (isLoadingRepos) {
+      <div class="rv-select-loading">
+        <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
+      </div>
+    } @else {
+      <select id="rv-repo-select" class="month-dropdown rv-select"
+        [disabled]="!selectedProject"
+        (change)="onRepoChange($event)">
+        <option value="">Select Repository</option>
+        @for (r of repos; track r.name) {
+          <option [value]="r.name">{{ r.name }}</option>
+        }
+      </select>
+    }
+    @if (reposError) {
+      <span class="rv-error-hint">{{ reposError }}</span>
+    }
+  </div>
+
+  <!-- Pull Request -->
+  <div class="rv-select-group">
+    <label class="rv-select-label" for="rv-pr-select">Pull Request</label>
+    @if (isLoadingPRs) {
+      <div class="rv-select-loading">
+        <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
+      </div>
+    } @else {
+      <select id="rv-pr-select" class="month-dropdown rv-select"
+        [disabled]="!selectedRepo"
+        (change)="onPRChange($event)">
+        <option value="">Select Pull Request</option>
+        @for (pr of pullRequests; track (pr.pullRequestId ?? pr.id)) {
+          <option [value]="pr.pullRequestId ?? pr.id">
+            #{{ pr.pullRequestId ?? pr.id }} — {{ pr.title }}
+          </option>
+        }
+      </select>
+    }
+    @if (prsError) {
+      <span class="rv-error-hint">{{ prsError }}</span>
+    }
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="rv-action-buttons">
+    <button class="rv-btn rv-btn-primary"
+      [disabled]="!selectedPR || isLoadingReview"
+      (click)="getReview()">
+      @if (isLoadingReview) {
+        <span class="rv-btn-spinner"></span> Loading...
+      } @else {
+        Get Review
+      }
+    </button>
+    <button class="rv-btn rv-btn-secondary"
+      [disabled]="!reviewTriggered || !selectedPR || pullRequests.length === 0"
+      (click)="postReview()">
+      Post Review
+    </button>
+  </div>
+
+</div>
+
+<!-- ── Info Cards Row ─────────────────────────────────────────────────── -->
+<div class="rv-info-row">
+
+  <div class="rv-info-card">
+    <div class="rv-info-label">PROJECT</div>
+    <div class="rv-info-value">{{ selectedProject?.name || '—' }}</div>
+  </div>
+
+  <div class="rv-info-card">
+    <div class="rv-info-label">REPOSITORY</div>
+    <div class="rv-info-value">{{ selectedRepo?.name || '—' }}</div>
+  </div>
+
+  <div class="rv-info-card">
+    <div class="rv-info-label">PULL REQUEST</div>
+    <div class="rv-info-value">
+      @if (selectedPR) {
+        #{{ selectedPR.pullRequestId ?? selectedPR.id }} — {{ selectedPR.title }}
+      } @else {
+        —
+      }
+    </div>
+  </div>
+
+  <div class="rv-info-card">
+    <div class="rv-info-label">SOURCE — TARGET</div>
+    <div class="rv-info-value">{{ sourceTarget || '—' }}</div>
+  </div>
+
+  <div class="rv-info-card">
+    <div class="rv-info-label">LAST UPDATED</div>
+    <div class="rv-info-value">{{ lastUpdated || '—' }}</div>
+  </div>
+
+</div>
+
+<!-- ── Code Changes ───────────────────────────────────────────────────── -->
+<div class="rv-changes-card">
+  <div class="rv-changes-header">
+    <div class="rv-changes-title">
+      <svg class="rv-changes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 18L22 12L16 6"></path>
+        <path d="M8 6L2 12L8 18"></path>
+      </svg>
+      Code Changes
+    </div>
+  </div>
+  <div class="rv-changes-body">
+    @if (diffFiles.length === 0) {
+      <span class="rv-eval-placeholder">Select a project, repository, and pull request, then click <strong>Get Review</strong> to view code changes.</span>
+    } @else {
+      @for (file of diffFiles; track file.path) {
+        <div style="margin-bottom: 1.5rem; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+          <div style="background: #f8fafc; padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #475569; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-family: monospace; word-break: break-all; margin-right: 12px;">{{ file.path }}</span>
+            <span class="badge-blue" style="text-transform: uppercase; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">{{ file.change_type }}</span>
+          </div>
+          <pre style="margin: 0; padding: 14px; background: #fafcff; font-family: 'Courier New', Courier, monospace; font-size: 12.5px; overflow-x: auto; white-space: pre-wrap; color: #334155; line-height: 1.6; border-radius: 0 0 8px 8px;">{{ file.diff }}</pre>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- ── AI Evaluation Output ───────────────────────────────────────────── -->
+<div class="rv-eval-card">
+  <div class="rv-eval-header">
+    <div class="rv-eval-title">
+      <svg class="rv-eval-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
+      </svg>
+      AI Evaluation Output
+    </div>
+    <button class="rv-copy-btn" (click)="copyOutput()">Copy</button>
+  </div>
+  <div class="rv-eval-body" id="rv-eval-content">
+    @if (!reviewTriggered) {
+      <span class="rv-eval-placeholder">Select a project, repository, and pull request, then click <strong>Get Review</strong> to view AI evaluation output.</span>
+    } @else {
+      {{ aiReviewContent }}
+    }
+  </div>
+</div>
